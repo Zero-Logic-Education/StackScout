@@ -18,6 +18,10 @@ export interface Library {
   healthScore: number;
   license: string;
   description: string;
+  repositoryUrl?: string;
+  downloads?: number;
+  lastUpdate?: string;
+  authors?: string[];
 }
 
 export interface LibrariesResponse {
@@ -25,6 +29,49 @@ export interface LibrariesResponse {
   totalElements: number;
   currentPage: number;
   totalPages: number;
+}
+
+// Детальная информация о библиотеке
+export interface LibraryDetail extends Library {
+  dependencies?: Dependency[];
+  vulnerabilities?: Vulnerability[];
+  versions?: VersionInfo[];
+}
+
+export interface Dependency {
+  id: number;
+  name: string;
+  version: string;
+  source: string;
+}
+
+export interface Vulnerability {
+  id: string;
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  description: string;
+  cve?: string;
+}
+
+export interface VersionInfo {
+  version: string;
+  releaseDate: string;
+  isLatest: boolean;
+}
+
+// Метрики здоровья
+export interface HealthMetrics {
+  actuality: MetricDetail;
+  activity: MetricDetail;
+  repository: MetricDetail;
+  community: MetricDetail;
+  overallScore: number;
+}
+
+export interface MetricDetail {
+  score: number;
+  label: string;
+  description?: string;
+  details?: Record<string, unknown>;
 }
 
 export const libraryApi = {
@@ -37,5 +84,8 @@ export const libraryApi = {
     return apiClient.get<LibrariesResponse>(url);
   },
 
-  getById: (id: number) => apiClient.get<Library>(`/libraries/${id}`),
+  getById: (id: number) => apiClient.get<LibraryDetail>(`/libraries/${id}`),
+
+  getHealth: (id: number) =>
+    apiClient.get<HealthMetrics>(`/libraries/${id}/health`),
 };
