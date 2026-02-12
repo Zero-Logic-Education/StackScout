@@ -52,10 +52,15 @@ export default function DashboardPage() {
         const { data } = await apiClient.get("/libraries/stats");
         setStats(data);
       } catch (err: unknown) {
-        console.error('Ошибка загрузки статистики:', err);
+        console.error("Ошибка загрузки статистики:", err);
         const error = err as Record<string, unknown>;
-        if (error.code === 'ERR_NETWORK' || String(error.message).includes('Network')) {
-          setError("Не удалось подключиться к серверу. Убедитесь, что бэкенд запущен на http://localhost:8081");
+        if (
+          error.code === "ERR_NETWORK" ||
+          String(error.message).includes("Network")
+        ) {
+          setError(
+            "Не удалось подключиться к серверу. Убедитесь, что бэкенд запущен на http://localhost:8081",
+          );
         } else {
           setError("Не удалось загрузить статистику");
         }
@@ -68,16 +73,17 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: '100vh' }}>
+      <Box sx={{ minHeight: "100vh" }}>
         <Box
           sx={{
-            background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.35) 0%, rgba(56, 142, 60, 0.15) 100%)',
+            background:
+              "linear-gradient(135deg, rgba(76, 175, 80, 0.35) 0%, rgba(56, 142, 60, 0.15) 100%)",
             pt: { xs: 16, md: 20 },
             pb: { xs: 8, md: 12 },
           }}
         >
           <Container maxWidth="lg">
-            <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ textAlign: "center" }}>
               <CircularProgress size={60} />
               <Typography variant="h6" sx={{ mt: 3 }} color="text.secondary">
                 Загрузка аналитики...
@@ -91,22 +97,23 @@ export default function DashboardPage() {
 
   if (error || !stats) {
     return (
-      <Box sx={{ minHeight: '100vh' }}>
+      <Box sx={{ minHeight: "100vh" }}>
         <Box
           sx={{
-            background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.35) 0%, rgba(56, 142, 60, 0.15) 100%)',
+            background:
+              "linear-gradient(135deg, rgba(76, 175, 80, 0.35) 0%, rgba(56, 142, 60, 0.15) 100%)",
             pt: { xs: 16, md: 20 },
             pb: { xs: 8, md: 12 },
           }}
         >
           <Container maxWidth="lg">
-            <Alert 
-              severity="error" 
-              sx={{ 
+            <Alert
+              severity="error"
+              sx={{
                 borderRadius: 2,
-                '& .MuiAlert-message': {
-                  width: '100%',
-                }
+                "& .MuiAlert-message": {
+                  width: "100%",
+                },
               }}
             >
               <Typography variant="body1" fontWeight={600} gutterBottom>
@@ -115,16 +122,16 @@ export default function DashboardPage() {
               <Typography variant="body2" sx={{ mt: 1 }}>
                 Для запуска бэкенда выполните:
               </Typography>
-              <Box 
-                component="code" 
-                sx={{ 
-                  display: 'block',
+              <Box
+                component="code"
+                sx={{
+                  display: "block",
                   mt: 1,
                   p: 2,
-                  bgcolor: 'rgba(0,0,0,0.1)',
+                  bgcolor: "rgba(0,0,0,0.1)",
                   borderRadius: 1,
-                  fontFamily: 'monospace',
-                  fontSize: '0.875rem',
+                  fontFamily: "monospace",
+                  fontSize: "0.875rem",
                 }}
               >
                 cd backend && ./gradlew bootRun
@@ -137,11 +144,11 @@ export default function DashboardPage() {
   }
 
   const healthyLibs = Math.round(stats.totalLibraries * 0.75);
-  const warningLibs = Math.round(stats.totalLibraries * 0.20);
+  const warningLibs = Math.round(stats.totalLibraries * 0.2);
   const criticalLibs = stats.totalLibraries - healthyLibs - warningLibs;
 
   return (
-    <Box sx={{ minHeight: '100vh', pb: 8 }}>
+    <Box sx={{ minHeight: "100vh", pb: 8 }}>
       {/* Hero Section */}
       <Box
         sx={{
@@ -150,47 +157,42 @@ export default function DashboardPage() {
             repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(76, 175, 80, 0.03) 2px, rgba(76, 175, 80, 0.03) 4px),
             linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(55, 100, 80, 0.3) 50%, rgba(26, 26, 26, 0.95) 100%)
           `,
-          backgroundSize: '40px 40px, 40px 40px, 100% 100%',
-          position: 'relative',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
+          backgroundSize: "40px 40px, 40px 40px, 100% 100%",
+          position: "relative",
+          borderBottom: "1px solid",
+          borderColor: "divider",
           pt: { xs: 16, md: 20 },
           pb: { xs: 8, md: 12 },
-          overflow: 'hidden',
-          '&::before': {
+          overflow: "hidden",
+          "&::before": {
             content: '""',
-            position: 'absolute',
+            position: "absolute",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'radial-gradient(circle at 20% 50%, rgba(76, 175, 80, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(56, 142, 60, 0.08) 0%, transparent 50%)',
-            pointerEvents: 'none',
+            background:
+              "radial-gradient(circle at 20% 50%, rgba(76, 175, 80, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(56, 142, 60, 0.08) 0%, transparent 50%)",
+            pointerEvents: "none",
           },
         }}
       >
-        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-          <Box sx={{ textAlign: 'center', mb: 6 }}>
-            <Chip 
-              label="Обновлено сегодня" 
-              color="primary" 
-              icon={<TrendingUp />}
-              sx={{ mb: 3, fontWeight: 600 }}
-            />
+        <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
+          <Box sx={{ textAlign: "center", mb: 6 }}>
             <Typography
               variant="h2"
               sx={{
                 mb: 2,
                 fontWeight: 800,
-                fontSize: { xs: '2rem', md: '3.5rem' },
+                fontSize: { xs: "2rem", md: "3.5rem" },
               }}
             >
               Аналитический дашборд
             </Typography>
-            <Typography 
-              variant="h6" 
-              color="text.secondary" 
-              sx={{ maxWidth: '700px', mx: 'auto' }}
+            <Typography
+              variant="h6"
+              color="text.secondary"
+              sx={{ maxWidth: "700px", mx: "auto" }}
             >
               Полный обзор ключевых метрик и статистики Open Source библиотек
             </Typography>
@@ -199,11 +201,11 @@ export default function DashboardPage() {
           {/* Main Stats Grid */}
           <Box
             sx={{
-              display: 'grid',
+              display: "grid",
               gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, 1fr)',
-                md: 'repeat(4, 1fr)',
+                xs: "1fr",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(4, 1fr)",
               },
               gap: 3,
             }}
@@ -252,38 +254,42 @@ export default function DashboardPage() {
 
           <Box
             sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
               gap: 3,
             }}
           >
             <Card
               elevation={0}
               sx={{
-                border: '1px solid',
-                borderColor: 'divider',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  borderColor: 'success.main',
-                  boxShadow: '0 8px 16px rgba(76, 175, 80, 0.15)',
+                border: "1px solid",
+                borderColor: "divider",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  borderColor: "success.main",
+                  boxShadow: "0 8px 16px rgba(76, 175, 80, 0.15)",
                 },
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                   <Box
                     sx={{
                       p: 1.5,
                       borderRadius: 2,
-                      bgcolor: 'rgba(76, 175, 80, 0.1)',
-                      color: 'success.main',
+                      bgcolor: "rgba(76, 175, 80, 0.1)",
+                      color: "success.main",
                       mr: 2,
                     }}
                   >
                     <CheckCircle sx={{ fontSize: 32 }} />
                   </Box>
                   <Box>
-                    <Typography variant="h4" fontWeight={700} color="success.main">
+                    <Typography
+                      variant="h4"
+                      fontWeight={700}
+                      color="success.main"
+                    >
                       {healthyLibs}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -291,19 +297,23 @@ export default function DashboardPage() {
                     </Typography>
                   </Box>
                 </Box>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={75} 
-                  sx={{ 
-                    height: 8, 
+                <LinearProgress
+                  variant="determinate"
+                  value={75}
+                  sx={{
+                    height: 8,
                     borderRadius: 4,
-                    bgcolor: 'rgba(76, 175, 80, 0.1)',
-                    '& .MuiLinearProgress-bar': {
-                      bgcolor: 'success.main',
-                    }
-                  }} 
+                    bgcolor: "rgba(76, 175, 80, 0.1)",
+                    "& .MuiLinearProgress-bar": {
+                      bgcolor: "success.main",
+                    },
+                  }}
                 />
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mt: 1, display: "block" }}
+                >
                   75% от общего числа
                 </Typography>
               </CardContent>
@@ -312,30 +322,34 @@ export default function DashboardPage() {
             <Card
               elevation={0}
               sx={{
-                border: '1px solid',
-                borderColor: 'divider',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  borderColor: 'warning.main',
-                  boxShadow: '0 8px 16px rgba(255, 152, 0, 0.15)',
+                border: "1px solid",
+                borderColor: "divider",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  borderColor: "warning.main",
+                  boxShadow: "0 8px 16px rgba(255, 152, 0, 0.15)",
                 },
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                   <Box
                     sx={{
                       p: 1.5,
                       borderRadius: 2,
-                      bgcolor: 'rgba(255, 152, 0, 0.1)',
-                      color: 'warning.main',
+                      bgcolor: "rgba(255, 152, 0, 0.1)",
+                      color: "warning.main",
                       mr: 2,
                     }}
                   >
                     <Warning sx={{ fontSize: 32 }} />
                   </Box>
                   <Box>
-                    <Typography variant="h4" fontWeight={700} color="warning.main">
+                    <Typography
+                      variant="h4"
+                      fontWeight={700}
+                      color="warning.main"
+                    >
                       {warningLibs}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -343,19 +357,23 @@ export default function DashboardPage() {
                     </Typography>
                   </Box>
                 </Box>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={20} 
-                  sx={{ 
-                    height: 8, 
+                <LinearProgress
+                  variant="determinate"
+                  value={20}
+                  sx={{
+                    height: 8,
                     borderRadius: 4,
-                    bgcolor: 'rgba(255, 152, 0, 0.1)',
-                    '& .MuiLinearProgress-bar': {
-                      bgcolor: 'warning.main',
-                    }
-                  }} 
+                    bgcolor: "rgba(255, 152, 0, 0.1)",
+                    "& .MuiLinearProgress-bar": {
+                      bgcolor: "warning.main",
+                    },
+                  }}
                 />
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mt: 1, display: "block" }}
+                >
                   20% от общего числа
                 </Typography>
               </CardContent>
@@ -364,30 +382,34 @@ export default function DashboardPage() {
             <Card
               elevation={0}
               sx={{
-                border: '1px solid',
-                borderColor: 'divider',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  borderColor: 'error.main',
-                  boxShadow: '0 8px 16px rgba(244, 67, 54, 0.15)',
+                border: "1px solid",
+                borderColor: "divider",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  borderColor: "error.main",
+                  boxShadow: "0 8px 16px rgba(244, 67, 54, 0.15)",
                 },
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                   <Box
                     sx={{
                       p: 1.5,
                       borderRadius: 2,
-                      bgcolor: 'rgba(244, 67, 54, 0.1)',
-                      color: 'error.main',
+                      bgcolor: "rgba(244, 67, 54, 0.1)",
+                      color: "error.main",
                       mr: 2,
                     }}
                   >
                     <ErrorIcon sx={{ fontSize: 32 }} />
                   </Box>
                   <Box>
-                    <Typography variant="h4" fontWeight={700} color="error.main">
+                    <Typography
+                      variant="h4"
+                      fontWeight={700}
+                      color="error.main"
+                    >
                       {criticalLibs}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -395,19 +417,23 @@ export default function DashboardPage() {
                     </Typography>
                   </Box>
                 </Box>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={5} 
-                  sx={{ 
-                    height: 8, 
+                <LinearProgress
+                  variant="determinate"
+                  value={5}
+                  sx={{
+                    height: 8,
                     borderRadius: 4,
-                    bgcolor: 'rgba(244, 67, 54, 0.1)',
-                    '& .MuiLinearProgress-bar': {
-                      bgcolor: 'error.main',
-                    }
-                  }} 
+                    bgcolor: "rgba(244, 67, 54, 0.1)",
+                    "& .MuiLinearProgress-bar": {
+                      bgcolor: "error.main",
+                    },
+                  }}
                 />
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mt: 1, display: "block" }}
+                >
                   5% от общего числа
                 </Typography>
               </CardContent>
@@ -418,8 +444,8 @@ export default function DashboardPage() {
         {/* Analytics Cards */}
         <Box
           sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' },
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", lg: "repeat(2, 1fr)" },
             gap: 3,
             mb: 6,
           }}
@@ -428,13 +454,13 @@ export default function DashboardPage() {
           <Card
             elevation={0}
             sx={{
-              border: '1px solid',
-              borderColor: 'divider',
+              border: "1px solid",
+              borderColor: "divider",
             }}
           >
             <CardContent sx={{ p: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <Timeline sx={{ fontSize: 32, color: 'primary.main', mr: 2 }} />
+              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                <Timeline sx={{ fontSize: 32, color: "primary.main", mr: 2 }} />
                 <Box>
                   <Typography variant="h5" fontWeight={700}>
                     Анализ трендов
@@ -448,17 +474,19 @@ export default function DashboardPage() {
               <Box
                 sx={{
                   height: 200,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  bgcolor: 'background.default',
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  bgcolor: "background.default",
                   borderRadius: 2,
-                  border: '1px dashed',
-                  borderColor: 'divider',
+                  border: "1px dashed",
+                  borderColor: "divider",
                 }}
               >
-                <Box sx={{ textAlign: 'center' }}>
-                  <InsertChart sx={{ fontSize: 64, color: 'text.disabled', mb: 1 }} />
+                <Box sx={{ textAlign: "center" }}>
+                  <InsertChart
+                    sx={{ fontSize: 64, color: "text.disabled", mb: 1 }}
+                  />
                   <Typography variant="body2" color="text.secondary">
                     График будет добавлен
                   </Typography>
@@ -470,7 +498,11 @@ export default function DashboardPage() {
                     <Typography variant="caption" color="text.secondary">
                       Новые библиотеки
                     </Typography>
-                    <Typography variant="h6" fontWeight={700} color="primary.main">
+                    <Typography
+                      variant="h6"
+                      fontWeight={700}
+                      color="primary.main"
+                    >
                       +248
                     </Typography>
                   </Box>
@@ -478,7 +510,11 @@ export default function DashboardPage() {
                     <Typography variant="caption" color="text.secondary">
                       Обновления
                     </Typography>
-                    <Typography variant="h6" fontWeight={700} color="success.main">
+                    <Typography
+                      variant="h6"
+                      fontWeight={700}
+                      color="success.main"
+                    >
                       +1,423
                     </Typography>
                   </Box>
@@ -486,7 +522,11 @@ export default function DashboardPage() {
                     <Typography variant="caption" color="text.secondary">
                       Устаревшие
                     </Typography>
-                    <Typography variant="h6" fontWeight={700} color="warning.main">
+                    <Typography
+                      variant="h6"
+                      fontWeight={700}
+                      color="warning.main"
+                    >
                       -32
                     </Typography>
                   </Box>
@@ -499,13 +539,13 @@ export default function DashboardPage() {
           <Card
             elevation={0}
             sx={{
-              border: '1px solid',
-              borderColor: 'divider',
+              border: "1px solid",
+              borderColor: "divider",
             }}
           >
             <CardContent sx={{ p: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <Security sx={{ fontSize: 32, color: 'primary.main', mr: 2 }} />
+              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                <Security sx={{ fontSize: 32, color: "primary.main", mr: 2 }} />
                 <Box>
                   <Typography variant="h5" fontWeight={700}>
                     Безопасность
@@ -516,34 +556,45 @@ export default function DashboardPage() {
                 </Box>
               </Box>
               <Divider sx={{ mb: 3 }} />
-              
+
               <Stack spacing={2}>
                 <Box
                   sx={{
                     p: 2,
                     borderRadius: 2,
-                    bgcolor: 'rgba(76, 175, 80, 0.1)',
-                    border: '1px solid',
-                    borderColor: 'success.main',
+                    bgcolor: "rgba(76, 175, 80, 0.1)",
+                    border: "1px solid",
+                    borderColor: "success.main",
                   }}
                 >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 1,
+                    }}
+                  >
                     <Typography variant="body2" fontWeight={600}>
                       Безопасные библиотеки
                     </Typography>
-                    <Typography variant="h6" fontWeight={700} color="success.main">
+                    <Typography
+                      variant="h6"
+                      fontWeight={700}
+                      color="success.main"
+                    >
                       92%
                     </Typography>
                   </Box>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={92} 
-                    sx={{ 
-                      height: 6, 
+                  <LinearProgress
+                    variant="determinate"
+                    value={92}
+                    sx={{
+                      height: 6,
                       borderRadius: 3,
-                      bgcolor: 'rgba(76, 175, 80, 0.2)',
-                      '& .MuiLinearProgress-bar': { bgcolor: 'success.main' }
-                    }} 
+                      bgcolor: "rgba(76, 175, 80, 0.2)",
+                      "& .MuiLinearProgress-bar": { bgcolor: "success.main" },
+                    }}
                   />
                 </Box>
 
@@ -551,28 +602,39 @@ export default function DashboardPage() {
                   sx={{
                     p: 2,
                     borderRadius: 2,
-                    bgcolor: 'rgba(255, 152, 0, 0.1)',
-                    border: '1px solid',
-                    borderColor: 'warning.main',
+                    bgcolor: "rgba(255, 152, 0, 0.1)",
+                    border: "1px solid",
+                    borderColor: "warning.main",
                   }}
                 >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 1,
+                    }}
+                  >
                     <Typography variant="body2" fontWeight={600}>
                       Средний риск
                     </Typography>
-                    <Typography variant="h6" fontWeight={700} color="warning.main">
+                    <Typography
+                      variant="h6"
+                      fontWeight={700}
+                      color="warning.main"
+                    >
                       6%
                     </Typography>
                   </Box>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={6} 
-                    sx={{ 
-                      height: 6, 
+                  <LinearProgress
+                    variant="determinate"
+                    value={6}
+                    sx={{
+                      height: 6,
                       borderRadius: 3,
-                      bgcolor: 'rgba(255, 152, 0, 0.2)',
-                      '& .MuiLinearProgress-bar': { bgcolor: 'warning.main' }
-                    }} 
+                      bgcolor: "rgba(255, 152, 0, 0.2)",
+                      "& .MuiLinearProgress-bar": { bgcolor: "warning.main" },
+                    }}
                   />
                 </Box>
 
@@ -580,28 +642,39 @@ export default function DashboardPage() {
                   sx={{
                     p: 2,
                     borderRadius: 2,
-                    bgcolor: 'rgba(244, 67, 54, 0.1)',
-                    border: '1px solid',
-                    borderColor: 'error.main',
+                    bgcolor: "rgba(244, 67, 54, 0.1)",
+                    border: "1px solid",
+                    borderColor: "error.main",
                   }}
                 >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 1,
+                    }}
+                  >
                     <Typography variant="body2" fontWeight={600}>
                       Высокий риск
                     </Typography>
-                    <Typography variant="h6" fontWeight={700} color="error.main">
+                    <Typography
+                      variant="h6"
+                      fontWeight={700}
+                      color="error.main"
+                    >
                       2%
                     </Typography>
                   </Box>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={2} 
-                    sx={{ 
-                      height: 6, 
+                  <LinearProgress
+                    variant="determinate"
+                    value={2}
+                    sx={{
+                      height: 6,
                       borderRadius: 3,
-                      bgcolor: 'rgba(244, 67, 54, 0.2)',
-                      '& .MuiLinearProgress-bar': { bgcolor: 'error.main' }
-                    }} 
+                      bgcolor: "rgba(244, 67, 54, 0.2)",
+                      "& .MuiLinearProgress-bar": { bgcolor: "error.main" },
+                    }}
                   />
                 </Box>
               </Stack>
@@ -614,20 +687,29 @@ export default function DashboardPage() {
           elevation={0}
           sx={{
             p: { xs: 4, md: 6 },
-            textAlign: 'center',
+            textAlign: "center",
             backgroundImage: `linear-gradient(135deg, rgba(26, 26, 26, 0.8) 0%, rgba(55, 100, 80, 0.2) 100%)`,
-            border: '1px solid',
-            borderColor: 'rgba(76, 175, 80, 0.3)',
+            border: "1px solid",
+            borderColor: "rgba(76, 175, 80, 0.3)",
           }}
         >
-          <TrendingUp sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+          <TrendingUp sx={{ fontSize: 48, color: "primary.main", mb: 2 }} />
           <Typography variant="h4" fontWeight={700} gutterBottom>
             Расширенная аналитика
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3, maxWidth: '600px', mx: 'auto' }}>
-            Получите доступ к детальным отчётам, прогнозам и персонализированным рекомендациям
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ mb: 3, maxWidth: "600px", mx: "auto" }}
+          >
+            Получите доступ к детальным отчётам, прогнозам и персонализированным
+            рекомендациям
           </Typography>
-          <Chip label="Скоро" color="primary" sx={{ fontWeight: 600, px: 2, py: 2.5, fontSize: '1rem' }} />
+          <Chip
+            label="Скоро"
+            color="primary"
+            sx={{ fontWeight: 600, px: 2, py: 2.5, fontSize: "1rem" }}
+          />
         </Card>
       </Container>
     </Box>
@@ -654,8 +736,8 @@ function StatCard({
       elevation={0}
       sx={{
         height: "100%",
-        border: '1px solid',
-        borderColor: 'divider',
+        border: "1px solid",
+        borderColor: "divider",
         transition: "all 0.3s ease",
         "&:hover": {
           transform: "translateY(-4px)",
@@ -673,8 +755,8 @@ function StatCard({
             mb: 2,
           }}
         >
-          <Box 
-            sx={{ 
+          <Box
+            sx={{
               color: `${color}.main`,
               p: 1.5,
               borderRadius: 2,
@@ -684,15 +766,20 @@ function StatCard({
             {icon}
           </Box>
           {trend && (
-            <Chip 
-              label={trend} 
-              size="small" 
+            <Chip
+              label={trend}
+              size="small"
               color="success"
               sx={{ fontWeight: 600 }}
             />
           )}
         </Box>
-        <Typography variant="h3" fontWeight={700} color={`${color}.main`} sx={{ mb: 0.5 }}>
+        <Typography
+          variant="h3"
+          fontWeight={700}
+          color={`${color}.main`}
+          sx={{ mb: 0.5 }}
+        >
           {value}
         </Typography>
         <Typography variant="body2" color="text.secondary" fontWeight={500}>
