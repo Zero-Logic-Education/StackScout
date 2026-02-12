@@ -9,13 +9,13 @@ RUN npm install -g pnpm
 # Копируем файлы зависимостей
 COPY package.json pnpm-lock.yaml ./
 
-# Устанавливаем зависимости
+# Устанавливаем ВСЕ зависимости (нужны для билда)
 RUN pnpm install --frozen-lockfile
 
 # Копируем исходный код
 COPY . .
 
-# Аргумент для API URL (чтобы запечь в билд)
+# Аргумент для API URL
 ARG NEXT_PUBLIC_API_URL=http://localhost:8081/api/v1
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
@@ -30,17 +30,17 @@ WORKDIR /app
 # Устанавливаем pnpm
 RUN npm install -g pnpm
 
-# Копируем конфиг и публичные файлы
-COPY --from=builder /app/next.config.ts ./
+# Копируем результаты сборки и необходимые файлы
+COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/pnpm-lock.yaml ./
+COPY --from=builder /app/next.config.ts ./
 
-# Копируем собранное приложение
-COPY --from=builder /app/.next ./.next
-
-# Устанавливаем только production зависимости
-RUN pnpm install --frozen-lockfile --prod
+# Устанавливаем зависимости. 
+# ВАЖНО: Мы НЕ используем --prod здесь, так как для работы next.config.ts 
+# в рантайме Next.js требует наличия typescript (который обычно в devDeps).
+RUN pnpm install --frozen-lockfile
 
 # Expose порт
 EXPOSE 3000
