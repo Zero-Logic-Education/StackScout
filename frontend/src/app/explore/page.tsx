@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { libraryApi, Library } from "@/lib/api";
 import {
   Container,
@@ -10,45 +11,70 @@ import {
   Button,
   Card,
   CardContent,
-  CircularProgress,
   Alert,
   Chip,
   InputAdornment,
   Stack,
   Tooltip,
+  Pagination,
 } from "@mui/material";
-import { 
-  Search, 
-  FiberManualRecord, 
+import {
+  Search,
+  FiberManualRecord,
   FilterList,
   TrendingUp,
   Security,
 } from "@mui/icons-material";
+import LibraryCardSkeleton from "@/components/skeletons/LibraryCardSkeleton";
+import toast from "react-hot-toast";
 
 export default function ExplorePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [libraries, setLibraries] = useState<Library[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const pageSize = 12;
+
+  useEffect(() => {
+    // Получаем параметры из URL
+    const page = parseInt(searchParams.get("page") || "0");
+    const searchQuery = searchParams.get("q") || "";
+
+    setCurrentPage(page);
+    setQuery(searchQuery);
+  }, [searchParams]);
 
   useEffect(() => {
     fetchLibraries();
-  }, []);
+  }, [currentPage]);
 
   const fetchLibraries = async () => {
     try {
       setLoading(true);
-      const { data } = await libraryApi.getAll();
+      const { data } = await libraryApi.getAll(currentPage, pageSize);
       setLibraries(data.libraries);
+      setTotalPages(data.totalPages);
+      setTotalElements(data.totalElements);
       setError(null);
     } catch (err: unknown) {
-      console.error('Ошибка загрузки библиотек:', err);
+      console.error("Ошибка загрузки библиотек:", err);
       const error = err as Record<string, unknown>;
-      if (error.code === 'ERR_NETWORK' || String(error.message).includes('Network')) {
-        setError("Не удалось подключиться к серверу. Убедитесь, что бэкенд запущен на http://localhost:8081");
+      if (
+        error.code === "ERR_NETWORK" ||
+        String(error.message).includes("Network")
+      ) {
+        setError(
+          "Не удалось подключиться к серверу. Убедитесь, что бэкенд запущен на http://localhost:8081",
+        );
       } else {
         setError("Не удалось загрузить данные");
       }
+      toast.error("Не удалось загрузить библиотеки");
     } finally {
       setLoading(false);
     }
@@ -57,40 +83,71 @@ export default function ExplorePage() {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query) {
-      fetchLibraries();
+      // Сбрасываем на первую страницу при пустом поиске
+      router.push("/explore?page=0");
+      setCurrentPage(0);
       return;
     }
     try {
       setLoading(true);
-      const { data } = await libraryApi.search(query);
+      const { data } = await libraryApi.search(query, undefined, 0, pageSize);
       setLibraries(data.libraries);
+      setTotalPages(data.totalPages);
+      setTotalElements(data.totalElements);
+      setCurrentPage(0);
       setError(null);
+
+      // Обновляем URL
+      router.push(`/explore?q=${encodeURIComponent(query)}&page=0`);
     } catch (err: unknown) {
       const error = err as Record<string, unknown>;
-      if (error.code === 'ERR_NETWORK' || String(error.message).includes('Network')) {
-        setError("Не удалось подключиться к серверу. Убедитесь, что бэкенд запущен на http://localhost:8081");
+      if (
+        error.code === "ERR_NETWORK" ||
+        String(error.message).includes("Network")
+      ) {
+        setError(
+          "Не удалось подключиться к серверу. Убедитесь, что бэкенд запущен на http://localhost:8081",
+        );
       } else {
         setError("Ошибка поиска");
       }
+      toast.error("Ошибка при поиске библиотек");
     } finally {
       setLoading(false);
     }
   };
 
+  const handlePageChange = (
+    _event: React.ChangeEvent<unknown>,
+    page: number,
+  ) => {
+    const newPage = page - 1; // Material-UI использует 1-based индексацию
+    setCurrentPage(newPage);
+
+    // Обновляем URL
+    const params = new URLSearchParams();
+    params.set("page", newPage.toString());
+    if (query) params.set("q", query);
+    router.push(`/explore?${params.toString()}`);
+
+    // Прокрутка к началу страницы
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const getHealthScoreColor = (score: number) => {
-    if (score >= 80) return 'success.main';
-    if (score >= 60) return 'warning.main';
-    return 'error.main';
+    if (score >= 80) return "success.main";
+    if (score >= 60) return "warning.main";
+    return "error.main";
   };
 
   const getHealthScoreLabel = (score: number) => {
-    if (score >= 80) return 'Отлично';
-    if (score >= 60) return 'Хорошо';
-    return 'Требует внимания';
+    if (score >= 80) return "Отлично";
+    if (score >= 60) return "Хорошо";
+    return "Требует внимания";
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', pb: 8 }}>
+    <Box sx={{ minHeight: "100vh", pb: 8 }}>
       {/* Hero Section */}
       <Box
         sx={{
@@ -99,64 +156,66 @@ export default function ExplorePage() {
             repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(76, 175, 80, 0.03) 2px, rgba(76, 175, 80, 0.03) 4px),
             linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(55, 100, 80, 0.3) 50%, rgba(26, 26, 26, 0.95) 100%)
           `,
-          backgroundSize: '40px 40px, 40px 40px, 100% 100%',
-          position: 'relative',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
+          backgroundSize: "40px 40px, 40px 40px, 100% 100%",
+          position: "relative",
+          borderBottom: "1px solid",
+          borderColor: "divider",
           pt: { xs: 16, md: 20 },
           pb: { xs: 8, md: 12 },
-          overflow: 'hidden',
-          '&::before': {
+          overflow: "hidden",
+          "&::before": {
             content: '""',
-            position: 'absolute',
+            position: "absolute",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'radial-gradient(circle at 20% 50%, rgba(76, 175, 80, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(56, 142, 60, 0.08) 0%, transparent 50%)',
-            pointerEvents: 'none',
+            background:
+              "radial-gradient(circle at 20% 50%, rgba(76, 175, 80, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(56, 142, 60, 0.08) 0%, transparent 50%)",
+            pointerEvents: "none",
           },
         }}
       >
-        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-          <Box sx={{ textAlign: 'center', mb: 6 }}>
+        <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
+          <Box sx={{ textAlign: "center", mb: 6 }}>
             <Typography
               variant="h2"
               sx={{
                 mb: 2,
                 fontWeight: 800,
-                fontSize: { xs: '2rem', md: '3.5rem' },
+                fontSize: { xs: "2rem", md: "3.5rem" },
               }}
             >
               Исследовать библиотеки
             </Typography>
-            <Typography 
-              variant="h6" 
-              color="text.secondary" 
-              sx={{ maxWidth: '700px', mx: 'auto', mb: 5 }}
+            <Typography
+              variant="h6"
+              color="text.secondary"
+              sx={{ maxWidth: "700px", mx: "auto", mb: 5 }}
             >
-              Находите и анализируйте Open Source библиотеки из различных экосистем
+              Находите и анализируйте Open Source библиотеки из различных
+              экосистем
             </Typography>
 
             {/* Search Box */}
             <Box
               component="form"
               onSubmit={handleSearch}
-              sx={{ 
-                maxWidth: 800, 
-                mx: 'auto',
+              sx={{
+                maxWidth: 800,
+                mx: "auto",
               }}
             >
-              <Box 
-                sx={{ 
-                  display: "flex", 
+              <Box
+                sx={{
+                  display: "flex",
                   gap: 2,
-                  bgcolor: 'background.paper',
+                  bgcolor: "background.paper",
                   p: 1,
                   borderRadius: 2,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                  border: "1px solid",
+                  borderColor: "divider",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                 }}
               >
                 <TextField
@@ -169,20 +228,20 @@ export default function ExplorePage() {
                     disableUnderline: true,
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Search sx={{ color: 'primary.main' }} />
+                        <Search sx={{ color: "primary.main" }} />
                       </InputAdornment>
                     ),
-                    sx: { px: 2 }
+                    sx: { px: 2 },
                   }}
                 />
                 <Button
                   type="submit"
                   variant="contained"
                   size="large"
-                  sx={{ 
-                    px: 4, 
+                  sx={{
+                    px: 4,
                     minWidth: 120,
-                    boxShadow: 'none',
+                    boxShadow: "none",
                   }}
                 >
                   Найти
@@ -190,18 +249,34 @@ export default function ExplorePage() {
               </Box>
 
               {/* Quick Filters */}
-              <Stack 
-                direction="row" 
-                spacing={1} 
+              <Stack
+                direction="row"
+                spacing={1}
                 sx={{ mt: 3 }}
                 justifyContent="center"
                 flexWrap="wrap"
                 useFlexGap
               >
-                <Chip label="Все" color="primary" onClick={() => setQuery('')} />
-                <Chip label="PyPI" variant="outlined" onClick={() => setQuery('pypi')} />
-                <Chip label="npm" variant="outlined" onClick={() => setQuery('npm')} />
-                <Chip label="Maven" variant="outlined" onClick={() => setQuery('maven')} />
+                <Chip
+                  label="Все"
+                  color="primary"
+                  onClick={() => setQuery("")}
+                />
+                <Chip
+                  label="PyPI"
+                  variant="outlined"
+                  onClick={() => setQuery("pypi")}
+                />
+                <Chip
+                  label="npm"
+                  variant="outlined"
+                  onClick={() => setQuery("npm")}
+                />
+                <Chip
+                  label="Maven"
+                  variant="outlined"
+                  onClick={() => setQuery("maven")}
+                />
                 <Chip label="Высокий рейтинг" variant="outlined" />
               </Stack>
             </Box>
@@ -212,17 +287,46 @@ export default function ExplorePage() {
       {/* Results Section */}
       <Container maxWidth="lg" sx={{ mt: 6 }}>
         {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}>
-            <CircularProgress size={60} />
-          </Box>
+          <>
+            {/* Results Header Skeleton */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 4,
+              }}
+            >
+              <Typography variant="h6" fontWeight={600}>
+                Загрузка...
+              </Typography>
+            </Box>
+
+            {/* Library Cards Skeleton */}
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  md: "repeat(2, 1fr)",
+                  lg: "repeat(3, 1fr)",
+                },
+                gap: 3,
+              }}
+            >
+              {[...Array(pageSize)].map((_, index) => (
+                <LibraryCardSkeleton key={index} />
+              ))}
+            </Box>
+          </>
         ) : error ? (
-          <Alert 
-            severity="error" 
-            sx={{ 
+          <Alert
+            severity="error"
+            sx={{
               borderRadius: 2,
-              '& .MuiAlert-message': {
-                width: '100%',
-              }
+              "& .MuiAlert-message": {
+                width: "100%",
+              },
             }}
           >
             <Typography variant="body1" fontWeight={600} gutterBottom>
@@ -231,16 +335,16 @@ export default function ExplorePage() {
             <Typography variant="body2" sx={{ mt: 1 }}>
               Для запуска бэкенда выполните:
             </Typography>
-            <Box 
-              component="code" 
-              sx={{ 
-                display: 'block',
+            <Box
+              component="code"
+              sx={{
+                display: "block",
                 mt: 1,
                 p: 2,
-                bgcolor: 'rgba(0,0,0,0.1)',
+                bgcolor: "rgba(0,0,0,0.1)",
                 borderRadius: 1,
-                fontFamily: 'monospace',
-                fontSize: '0.875rem',
+                fontFamily: "monospace",
+                fontSize: "0.875rem",
               }}
             >
               cd backend && ./gradlew bootRun
@@ -249,14 +353,23 @@ export default function ExplorePage() {
         ) : (
           <>
             {/* Results Header */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 4,
+              }}
+            >
               <Typography variant="h6" fontWeight={600}>
-                Найдено результатов: {libraries.length}
+                Найдено результатов: {totalElements}
+                {currentPage > 0 &&
+                  ` (страница ${currentPage + 1} из ${totalPages})`}
               </Typography>
-              <Button 
+              <Button
                 startIcon={<FilterList />}
                 variant="outlined"
-                sx={{ display: { xs: 'none', sm: 'flex' } }}
+                sx={{ display: { xs: "none", sm: "flex" } }}
               >
                 Фильтры
               </Button>
@@ -265,13 +378,14 @@ export default function ExplorePage() {
             {/* Library Cards */}
             <Box
               sx={{
-                display: 'grid',
+                display: "grid",
                 gridTemplateColumns: {
-                  xs: '1fr',
-                  md: 'repeat(2, 1fr)',
-                  lg: 'repeat(3, 1fr)',
+                  xs: "1fr",
+                  md: "repeat(2, 1fr)",
+                  lg: "repeat(3, 1fr)",
                 },
                 gap: 3,
+                mb: 4,
               }}
             >
               {libraries.map((lib) => (
@@ -282,15 +396,17 @@ export default function ExplorePage() {
                     height: "100%",
                     display: "flex",
                     flexDirection: "column",
-                    border: '1px solid',
-                    borderColor: 'divider',
+                    border: "1px solid",
+                    borderColor: "divider",
                     transition: "all 0.3s ease",
+                    cursor: "pointer",
                     "&:hover": {
                       transform: "translateY(-4px)",
-                      borderColor: 'primary.main',
-                      boxShadow: '0 12px 24px rgba(76, 175, 80, 0.15)',
+                      borderColor: "primary.main",
+                      boxShadow: "0 12px 24px rgba(76, 175, 80, 0.15)",
                     },
                   }}
+                  onClick={() => router.push(`/library/${lib.id}`)}
                 >
                   <CardContent sx={{ flexGrow: 1, p: 3 }}>
                     {/* Header */}
@@ -305,9 +421,9 @@ export default function ExplorePage() {
                       <Chip
                         label={lib.source}
                         size="small"
-                        sx={{ 
-                          bgcolor: 'primary.main',
-                          color: 'white',
+                        sx={{
+                          bgcolor: "primary.main",
+                          color: "white",
                           fontWeight: 600,
                         }}
                       />
@@ -319,11 +435,14 @@ export default function ExplorePage() {
                           px: 1.5,
                           py: 0.5,
                           borderRadius: 1,
-                          bgcolor: getHealthScoreColor(lib.healthScore) === 'success.main' 
-                            ? 'rgba(76, 175, 80, 0.1)' 
-                            : getHealthScoreColor(lib.healthScore) === 'warning.main'
-                            ? 'rgba(255, 152, 0, 0.1)'
-                            : 'rgba(244, 67, 54, 0.1)',
+                          bgcolor:
+                            getHealthScoreColor(lib.healthScore) ===
+                            "success.main"
+                              ? "rgba(76, 175, 80, 0.1)"
+                              : getHealthScoreColor(lib.healthScore) ===
+                                  "warning.main"
+                                ? "rgba(255, 152, 0, 0.1)"
+                                : "rgba(244, 67, 54, 0.1)",
                         }}
                       >
                         <FiberManualRecord
@@ -332,8 +451,8 @@ export default function ExplorePage() {
                             color: getHealthScoreColor(lib.healthScore),
                           }}
                         />
-                        <Typography 
-                          variant="caption" 
+                        <Typography
+                          variant="caption"
                           fontWeight={600}
                           sx={{ color: getHealthScoreColor(lib.healthScore) }}
                         >
@@ -343,15 +462,20 @@ export default function ExplorePage() {
                     </Box>
 
                     {/* Title */}
-                    <Typography variant="h6" gutterBottom fontWeight={700} sx={{ mb: 1 }}>
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      fontWeight={700}
+                      sx={{ mb: 1 }}
+                    >
                       {lib.name}
                     </Typography>
 
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        display: 'block',
-                        color: 'text.secondary',
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: "block",
+                        color: "text.secondary",
                         mb: 2,
                       }}
                     >
@@ -369,7 +493,7 @@ export default function ExplorePage() {
                         WebkitBoxOrient: "vertical",
                         overflow: "hidden",
                         lineHeight: 1.6,
-                        minHeight: '72px',
+                        minHeight: "72px",
                       }}
                     >
                       {lib.description || "Описание отсутствует"}
@@ -379,8 +503,16 @@ export default function ExplorePage() {
                     <Box sx={{ mb: 2 }}>
                       <Stack direction="row" spacing={2} sx={{ mb: 1 }}>
                         <Tooltip title="Рейтинг здоровья">
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <TrendingUp sx={{ fontSize: 16, color: 'primary.main' }} />
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                            }}
+                          >
+                            <TrendingUp
+                              sx={{ fontSize: 16, color: "primary.main" }}
+                            />
                             <Typography variant="caption">
                               {getHealthScoreLabel(lib.healthScore)}
                             </Typography>
@@ -388,9 +520,20 @@ export default function ExplorePage() {
                         </Tooltip>
                         {lib.license && (
                           <Tooltip title="Лицензия">
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                              <Security sx={{ fontSize: 16, color: 'text.secondary' }} />
-                              <Typography variant="caption" color="text.secondary">
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                              }}
+                            >
+                              <Security
+                                sx={{ fontSize: 16, color: "text.secondary" }}
+                              />
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
                                 {lib.license}
                               </Typography>
                             </Box>
@@ -408,11 +551,15 @@ export default function ExplorePage() {
                         borderColor: "divider",
                       }}
                     >
-                      <Button 
-                        fullWidth 
-                        variant="outlined" 
+                      <Button
+                        fullWidth
+                        variant="outlined"
                         size="small"
                         sx={{ fontWeight: 600 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/library/${lib.id}`);
+                        }}
                       >
                         Подробнее
                       </Button>
@@ -424,12 +571,14 @@ export default function ExplorePage() {
               {libraries.length === 0 && (
                 <Box
                   sx={{
-                    gridColumn: '1 / -1',
+                    gridColumn: "1 / -1",
                     textAlign: "center",
                     py: 10,
                   }}
                 >
-                  <Search sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
+                  <Search
+                    sx={{ fontSize: 64, color: "text.disabled", mb: 2 }}
+                  />
                   <Typography variant="h6" color="text.secondary" gutterBottom>
                     Библиотеки не найдены
                   </Typography>
@@ -439,6 +588,26 @@ export default function ExplorePage() {
                 </Box>
               )}
             </Box>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
+                <Pagination
+                  count={totalPages}
+                  page={currentPage + 1}
+                  onChange={handlePageChange}
+                  color="primary"
+                  size="large"
+                  showFirstButton
+                  showLastButton
+                  sx={{
+                    "& .MuiPaginationItem-root": {
+                      fontWeight: 600,
+                    },
+                  }}
+                />
+              </Box>
+            )}
           </>
         )}
       </Container>
