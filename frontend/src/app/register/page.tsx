@@ -20,7 +20,7 @@ import { useAuthStore } from "@/lib/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const login = useAuthStore((state) => state.login);
+  const register = useAuthStore((state) => state.register);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,11 +41,13 @@ export default function RegisterPage() {
     }
 
     if (name && email && password) {
-      // Имитация регистрации
-      setTimeout(() => {
-        login(email, name);
+      try {
+        await register(name, email, password);
         router.push("/dashboard");
-      }, 1000);
+      } catch (err) {
+        setError("Ошибка регистрации. Возможно, имя пользователя уже занято.");
+        setLoading(false);
+      }
     } else {
       setError("Пожалуйста, заполните все поля");
       setLoading(false);

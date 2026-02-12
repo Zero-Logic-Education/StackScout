@@ -60,16 +60,26 @@ export default function LibraryDetailView({
         if (libraryResponse.status === "fulfilled") {
           setLibrary(libraryResponse.value.data);
         } else {
-          throw new Error("Не удалось загрузить информацию о библиотеке");
+          // Вместо throw new Error, который может вызывать Error Overlay в dev-режиме,
+          // просто устанавливаем ошибку и выходим.
+          console.warn(
+            "Ошибка при получении библиотеки:",
+            libraryResponse.reason,
+          );
+          setError("Библиотека не найдена или произошла ошибка сервера");
+          // Если метрики тоже не загрузились, можно сразу выходить
+          setLoading(false);
+          return;
         }
 
         if (healthResponse.status === "fulfilled") {
           setHealthMetrics(healthResponse.value.data);
         } else {
           console.warn("Не удалось загрузить метрики здоровья");
-          toast.error("Не удалось загрузить метрики здоровья");
+          // Не критичная ошибка, не блокируем отображение библиотеки
         }
       } catch (err: unknown) {
+        // ... (остальной код catch)
         const error = err as { message?: string; code?: string };
         console.error("Ошибка загрузки данных:", err);
 

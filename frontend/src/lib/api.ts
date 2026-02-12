@@ -3,11 +3,45 @@ import axios from "axios";
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v1";
 
+// Типы для Auth
+export interface AuthResponse {
+  token: string;
+}
+
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
 export const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },
+});
+
+// Добавляем интерцептор для JWT токена
+apiClient.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const storage = localStorage.getItem("auth-storage");
+    if (storage) {
+      try {
+        const { state } = JSON.parse(storage);
+        if (state?.token) {
+          config.headers.Authorization = `Bearer ${state.token}`;
+        }
+      } catch (e) {
+        // Ошибка парсинга, игнорируем
+      }
+    }
+  }
+  return config;
 });
 
 export interface Library {
@@ -43,6 +77,7 @@ export interface Dependency {
   name: string;
   version: string;
   source: string;
+  mode: string;
 }
 
 export interface Vulnerability {
@@ -88,4 +123,12 @@ export const libraryApi = {
 
   getHealth: (id: number) =>
     apiClient.get<HealthMetrics>(`/libraries/${id}/health`),
+};
+
+// API методы для аутентификации
+export const authApi = {
+  login: (data: LoginRequest) =>
+    apiClient.post<AuthResponse>("/auth/login", data),
+  register: (data: RegisterRequest) =>
+    apiClient.post<AuthResponse>("/auth/register", data),
 };

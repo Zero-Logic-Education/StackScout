@@ -25,7 +25,7 @@ import { useAuthStore } from "@/lib/auth";
 export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,19 +36,19 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
 
-    // Имитация запроса к API
-    setTimeout(() => {
-      if (email && password) {
-        // В реальном приложении здесь был бы запрос к бэкенду
-        // Для демонстрации используем имя из email (часть до @)
-        const name = email.split("@")[0];
-        login(email, name);
+    if (username && password) {
+      try {
+        await login(username, password);
         router.push("/dashboard");
-      } else {
-        setError("Пожалуйста, заполните все поля");
+      } catch (err) {
+        // Здесь можно точнее обработать статус 401/403
+        setError("Неверное имя пользователя или пароль");
         setLoading(false);
       }
-    }, 1000);
+    } else {
+      setError("Пожалуйста, заполните все поля");
+      setLoading(false);
+    }
   };
 
   return (
@@ -102,13 +102,13 @@ export default function LoginPage() {
               <TextField
                 required
                 fullWidth
-                id="email"
-                label="Email адрес"
-                name="email"
-                autoComplete="email"
+                id="username"
+                label="Имя пользователя"
+                name="username"
+                autoComplete="username"
                 autoFocus
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
               <TextField
                 required

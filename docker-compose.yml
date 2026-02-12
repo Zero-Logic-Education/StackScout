@@ -57,7 +57,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://app:8081/api
+      - NEXT_PUBLIC_API_URL=http://localhost:8081/api/v1
     depends_on:
       - app
 
@@ -69,7 +69,7 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5433/stackscout
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/stackscout
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_RABBITMQ_HOST=rabbitmq
     depends_on:

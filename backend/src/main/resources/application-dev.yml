@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/stackscout
+    url: jdbc:postgresql://localhost:5433/stackscout
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -19,12 +19,12 @@ spring:
 
   cache:
     type: redis
-    
+
   data:
     redis:
       host: localhost
       port: 6379
-      
+
   rabbitmq:
     host: localhost
     port: 5672
