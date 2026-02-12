@@ -20,6 +20,33 @@ interface DistributionChartProps {
 }
 
 /**
+ * Кастомный tooltip для круговой диаграммы
+ */
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <Paper
+        elevation={3}
+        sx={{
+          p: 1.5,
+          bgcolor: "background.paper",
+          border: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Typography variant="body2" fontWeight={600}>
+          {payload[0].name}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {payload[0].value.toLocaleString()}
+        </Typography>
+      </Paper>
+    );
+  }
+  return null;
+};
+
+/**
  * Компонент для отображения круговой диаграммы
  * Используется для визуализации распределения по категориям
  */
@@ -28,43 +55,10 @@ export default function DistributionChart({
   title,
 }: DistributionChartProps) {
   // Кастомный label
-  const renderLabel = (entry: DistributionData) => {
-    const percent = (
-      (entry.value / data.reduce((acc, curr) => acc + curr.value, 0)) *
-      100
-    ).toFixed(0);
+  const renderLabel = (entry: any) => {
+    const total = data.reduce((acc, curr) => acc + curr.value, 0);
+    const percent = ((entry.value / total) * 100).toFixed(0);
     return `${entry.name}: ${percent}%`;
-  };
-
-  // Кастомный tooltip
-  const CustomTooltip = ({
-    active,
-    payload,
-  }: {
-    active?: boolean;
-    payload?: { name: string; value: number }[];
-  }) => {
-    if (active && payload && payload.length) {
-      return (
-        <Paper
-          elevation={3}
-          sx={{
-            p: 1.5,
-            bgcolor: "background.paper",
-            border: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <Typography variant="body2" fontWeight={600}>
-            {payload[0].name}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {payload[0].value.toLocaleString()}
-          </Typography>
-        </Paper>
-      );
-    }
-    return null;
   };
 
   return (

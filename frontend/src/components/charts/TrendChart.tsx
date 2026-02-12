@@ -22,6 +22,33 @@ interface TrendChartProps {
 }
 
 /**
+ * Кастомный tooltip для графика трендов
+ */
+const CustomTooltip = ({ active, payload, color }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <Paper
+        elevation={3}
+        sx={{
+          p: 1.5,
+          bgcolor: "background.paper",
+          border: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Typography variant="caption" display="block" color="text.secondary">
+          {payload[0].payload.date}
+        </Typography>
+        <Typography variant="body2" fontWeight={600} sx={{ color }}>
+          {payload[0].value.toLocaleString()}
+        </Typography>
+      </Paper>
+    );
+  }
+  return null;
+};
+
+/**
  * Компонент для отображения линейного графика трендов
  * Используется для визуализации динамики роста библиотек
  */
@@ -30,37 +57,6 @@ export default function TrendChart({
   title,
   color = "#4caf50",
 }: TrendChartProps) {
-  // Кастомный tooltip
-  const CustomTooltip = ({
-    active,
-    payload,
-  }: {
-    active?: boolean;
-    payload?: { value: number; payload: { date: string } }[];
-  }) => {
-    if (active && payload && payload.length) {
-      return (
-        <Paper
-          elevation={3}
-          sx={{
-            p: 1.5,
-            bgcolor: "background.paper",
-            border: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <Typography variant="caption" display="block" color="text.secondary">
-            {payload[0].payload.date}
-          </Typography>
-          <Typography variant="body2" fontWeight={600} sx={{ color }}>
-            {payload[0].value.toLocaleString()}
-          </Typography>
-        </Paper>
-      );
-    }
-    return null;
-  };
-
   return (
     <Paper
       elevation={0}
@@ -90,7 +86,9 @@ export default function TrendChart({
               style={{ fontSize: "12px" }}
             />
             <YAxis stroke="#b0b0b0" style={{ fontSize: "12px" }} />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip
+              content={(props) => <CustomTooltip {...props} color={color} />}
+            />
             <Legend />
             <Line
               type="monotone"

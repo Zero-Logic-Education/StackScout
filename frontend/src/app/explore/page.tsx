@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { libraryApi, Library } from "@/lib/api";
 import {
@@ -40,81 +40,67 @@ export default function ExplorePage() {
   const [totalElements, setTotalElements] = useState(0);
   const pageSize = 12;
 
+  const fetchLibraries = useCallback(
+    async (page: number, searchQuery: string) => {
+      try {
+        setLoading(true);
+        let data;
+        if (searchQuery) {
+          const response = await libraryApi.search(
+            searchQuery,
+            undefined,
+            page,
+            pageSize,
+          );
+          data = response.data;
+        } else {
+          const response = await libraryApi.getAll(page, pageSize);
+          data = response.data;
+        }
+
+        setLibraries(data.libraries);
+        setTotalPages(data.totalPages);
+        setTotalElements(data.totalElements);
+        setError(null);
+      } catch (err: unknown) {
+        console.error("Ошибка загрузки библиотек:", err);
+        const error = err as Record<string, unknown>;
+        if (
+          error.code === "ERR_NETWORK" ||
+          String(error.message).includes("Network")
+        ) {
+          setError(
+            "Не удалось подключиться к серверу. Убедитесь, что бэкенд запущен на http://localhost:8081",
+          );
+        } else {
+          setError("Не удалось загрузить данные");
+        }
+        // Toast показываем только если это не отмена запроса (если бы была)
+        toast.error("Не удалось загрузить библиотеки");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
-    // Получаем параметры из URL
     const page = parseInt(searchParams.get("page") || "0");
     const searchQuery = searchParams.get("q") || "";
 
-    setCurrentPage(page);
+    // Всегда синхронизируем input с URL (source of truth)
+    // Это безопасно, так как эффект запускается только при изменении URL (searchParams)
     setQuery(searchQuery);
-  }, [searchParams]);
+    setCurrentPage(page);
+    fetchLibraries(page, searchQuery);
+  }, [searchParams, fetchLibraries]);
 
-  useEffect(() => {
-    fetchLibraries();
-  }, [currentPage]);
-
-  const fetchLibraries = async () => {
-    try {
-      setLoading(true);
-      const { data } = await libraryApi.getAll(currentPage, pageSize);
-      setLibraries(data.libraries);
-      setTotalPages(data.totalPages);
-      setTotalElements(data.totalElements);
-      setError(null);
-    } catch (err: unknown) {
-      console.error("Ошибка загрузки библиотек:", err);
-      const error = err as Record<string, unknown>;
-      if (
-        error.code === "ERR_NETWORK" ||
-        String(error.message).includes("Network")
-      ) {
-        setError(
-          "Не удалось подключиться к серверу. Убедитесь, что бэкенд запущен на http://localhost:8081",
-        );
-      } else {
-        setError("Не удалось загрузить данные");
-      }
-      toast.error("Не удалось загрузить библиотеки");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = async (e: React.FormEvent) => {
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!query) {
-      // Сбрасываем на первую страницу при пустом поиске
-      router.push("/explore?page=0");
-      setCurrentPage(0);
-      return;
-    }
-    try {
-      setLoading(true);
-      const { data } = await libraryApi.search(query, undefined, 0, pageSize);
-      setLibraries(data.libraries);
-      setTotalPages(data.totalPages);
-      setTotalElements(data.totalElements);
-      setCurrentPage(0);
-      setError(null);
-
-      // Обновляем URL
-      router.push(`/explore?q=${encodeURIComponent(query)}&page=0`);
-    } catch (err: unknown) {
-      const error = err as Record<string, unknown>;
-      if (
-        error.code === "ERR_NETWORK" ||
-        String(error.message).includes("Network")
-      ) {
-        setError(
-          "Не удалось подключиться к серверу. Убедитесь, что бэкенд запущен на http://localhost:8081",
-        );
-      } else {
-        setError("Ошибка поиска");
-      }
-      toast.error("Ошибка при поиске библиотек");
-    } finally {
-      setLoading(false);
-    }
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    params.set("page", "0");
+    router.push(`/explore?${params.toString()}`);
   };
 
   const handlePageChange = (
@@ -122,15 +108,12 @@ export default function ExplorePage() {
     page: number,
   ) => {
     const newPage = page - 1; // Material-UI использует 1-based индексацию
-    setCurrentPage(newPage);
 
     // Обновляем URL
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(searchParams.toString());
     params.set("page", newPage.toString());
-    if (query) params.set("q", query);
     router.push(`/explore?${params.toString()}`);
 
-    // Прокрутка к началу страницы
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -406,7 +389,7 @@ export default function ExplorePage() {
                       boxShadow: "0 12px 24px rgba(76, 175, 80, 0.15)",
                     },
                   }}
-                  onClick={() => router.push(`/library/${lib.id}`)}
+                  onClick={() => router.push(`/dashboard?libraryId=${lib.id}`)}
                 >
                   <CardContent sx={{ flexGrow: 1, p: 3 }}>
                     {/* Header */}
@@ -558,7 +541,7 @@ export default function ExplorePage() {
                         sx={{ fontWeight: 600 }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          router.push(`/library/${lib.id}`);
+                          router.push(`/dashboard?libraryId=${lib.id}`);
                         }}
                       >
                         Подробнее

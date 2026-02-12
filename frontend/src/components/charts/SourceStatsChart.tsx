@@ -22,6 +22,33 @@ interface SourceStatsChartProps {
 }
 
 /**
+ * Кастомный tooltip для столбчатой диаграммы
+ */
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <Paper
+        elevation={3}
+        sx={{
+          p: 1.5,
+          bgcolor: "background.paper",
+          border: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Typography variant="body2" fontWeight={600}>
+          {payload[0].payload.source}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {payload[0].value.toLocaleString()} библиотек
+        </Typography>
+      </Paper>
+    );
+  }
+  return null;
+};
+
+/**
  * Компонент для отображения столбчатой диаграммы
  * Используется для визуализации статистики по источникам пакетов
  */
@@ -30,37 +57,6 @@ export default function SourceStatsChart({
   title,
   color = "#4caf50",
 }: SourceStatsChartProps) {
-  // Кастомный tooltip
-  const CustomTooltip = ({
-    active,
-    payload,
-  }: {
-    active?: boolean;
-    payload?: { value: number; payload: { source: string } }[];
-  }) => {
-    if (active && payload && payload.length) {
-      return (
-        <Paper
-          elevation={3}
-          sx={{
-            p: 1.5,
-            bgcolor: "background.paper",
-            border: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <Typography variant="body2" fontWeight={600}>
-            {payload[0].payload.source}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {payload[0].value.toLocaleString()} библиотек
-          </Typography>
-        </Paper>
-      );
-    }
-    return null;
-  };
-
   return (
     <Paper
       elevation={0}
