@@ -11,7 +11,7 @@ spring:
 
   # Настройки подключения к базе данных PostgreSQL
   datasource:
-    url: jdbc:postgresql://localhost:5433/stackscout
+    url: jdbc:postgresql://localhost:5432/stackscout
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
