@@ -1,11 +1,8 @@
-// File: LibraryDto.java
 package com.stackscout.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * Объект передачи данных (DTO) для представления информации о библиотеке в
@@ -25,6 +22,6 @@ public class LibraryDto {
     private String lastRelease;
     private String repository;
     private String description;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String createdAt;
+    private String updatedAt;
 }

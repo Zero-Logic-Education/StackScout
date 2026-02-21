@@ -54,8 +54,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/v1/health", "/api/v1/ping").permitAll()
-                        .requestMatchers("/api/v1/libraries/**").permitAll()
+                        .requestMatchers("/api/v1/health", "/api/v1/ping", "/error").permitAll()
+                        .requestMatchers("/api/v1/libraries", "/api/v1/libraries/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()

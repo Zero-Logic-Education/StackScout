@@ -32,8 +32,8 @@ public class LibraryMapper {
                 library.getLastRelease(),
                 library.getRepository(),
                 library.getDescription(),
-                library.getCreatedAt(),
-                library.getUpdatedAt());
+                library.getCreatedAt() != null ? library.getCreatedAt().toString() : null,
+                library.getUpdatedAt() != null ? library.getUpdatedAt().toString() : null);
     }
 
     /**

@@ -33,6 +33,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-amqp")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     
     // Flyway (версии управляются через Spring Boot BOM)
     implementation("org.flywaydb:flyway-core")
