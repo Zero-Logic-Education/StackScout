@@ -23,6 +23,8 @@ import { libraryApi, type LibraryDetail, type HealthMetrics } from "@/lib/api";
 import HealthMetricsDisplay from "@/components/library/HealthMetricsDisplay";
 import LibraryInfo from "@/components/library/LibraryInfo";
 import DetailPageSkeleton from "@/components/skeletons/DetailPageSkeleton";
+import { SubscribeButton, SubscriptionBadge } from "@/components/library";
+import { useLibrarySubscription } from "@/lib/hooks";
 import toast from "react-hot-toast";
 
 interface LibraryDetailViewProps {
@@ -39,6 +41,10 @@ export default function LibraryDetailView({
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Хук для работы с подписками
+  const libraryIdNum = parseInt(libraryId);
+  const { status, fetchSubscriptionStatus } = useLibrarySubscription(libraryIdNum);
 
   useEffect(() => {
     const fetchLibraryData = async () => {
@@ -92,6 +98,13 @@ export default function LibraryDetailView({
       } finally {
         setLoading(false);
       }
+  
+  // Загрузить статус подписки при монтировании
+  useEffect(() => {
+    if (!isNaN(libraryIdNum)) {
+      fetchSubscriptionStatus();
+    }
+  }, [libraryIdNum, fetchSubscriptionStatus]);
     };
 
     fetchLibraryData();
@@ -233,7 +246,23 @@ export default function LibraryDetailView({
                 sx={{
                   fontSize: 10,
                   color: getHealthScoreColor(library.healthScore),
+            {status && (
+              <SubscriptionBadge
+                isSubscribed={status.isSubscribed}
+                subscribersCount={status.subscribersCount}
+              />
+            )}
                 }}
+            <SubscribeButton
+              libraryId={libraryIdNum}
+              libraryName={library.name}
+              variant="contained"
+              size="large"
+              onSubscriptionChange={(isSubscribed) => {
+                // Обновить статус после изменения подписки
+                fetchSubscriptionStatus();
+              }}
+            />
               />
               <Typography
                 variant="body2"
