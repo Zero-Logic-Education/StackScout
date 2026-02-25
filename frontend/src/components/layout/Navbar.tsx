@@ -19,6 +19,8 @@ import {
   Home as HomeIcon,
   Info as InfoIcon,
   Menu as MenuIcon,
+  Update as UpdateIcon,
+  Subscriptions as SubscriptionsIcon,
 } from "@mui/icons-material";
 
 // Динамическая загрузка компонента авторизации только на клиенте.
@@ -44,6 +46,16 @@ export default function Navbar() {
       href: "/dashboard",
       label: "Аналитика",
       icon: <DashboardIcon fontSize="small" />,
+    },
+    {
+      href: "/updates",
+      label: "Обновления",
+      icon: <UpdateIcon fontSize="small" />,
+    },
+    {
+      href: "/subscriptions",
+      label: "Подписки",
+      icon: <SubscriptionsIcon fontSize="small" />,
     },
     { href: "/about", label: "О нас", icon: <InfoIcon fontSize="small" /> },
   ];

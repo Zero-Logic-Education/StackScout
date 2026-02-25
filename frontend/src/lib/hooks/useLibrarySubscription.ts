@@ -13,6 +13,20 @@ export function useLibrarySubscription(libraryId: number) {
   const [subscription, setSubscription] = useState<LibrarySubscription | null>(null);
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
 
+  // Получить статус подписки
+  const fetchSubscriptionStatus = useCallback(async () => {
+    try {
+      const response = await subscriptionApi.getSubscriptionStatus(libraryId);
+      setStatus(response.data);
+      return response.data;
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>;
+      const errorMessage = error.response?.data?.message || "Failed to fetch subscription status";
+      setError(errorMessage);
+      return null;
+    }
+  }, [libraryId]);
+
   // Подписаться на библиотеку
   const subscribe = useCallback(async () => {
     setIsLoading(true);
@@ -31,7 +45,7 @@ export function useLibrarySubscription(libraryId: number) {
     } finally {
       setIsLoading(false);
     }
-  }, [libraryId]);
+  }, [libraryId, fetchSubscriptionStatus]);
 
   // Отписаться от библиотеки
   const unsubscribe = useCallback(async () => {
@@ -50,21 +64,7 @@ export function useLibrarySubscription(libraryId: number) {
     } finally {
       setIsLoading(false);
     }
-  }, [libraryId]);
-
-  // Получить статус подписки
-  const fetchSubscriptionStatus = useCallback(async () => {
-    try {
-      const response = await subscriptionApi.getSubscriptionStatus(libraryId);
-      setStatus(response.data);
-      return response.data;
-    } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
-      const errorMessage = error.response?.data?.message || "Failed to fetch subscription status";
-      setError(errorMessage);
-      return null;
-    }
-  }, [libraryId]);
+  }, [libraryId, fetchSubscriptionStatus]);
 
   // Включить/выключить уведомления
   const toggleNotifications = useCallback(async (enabled: boolean) => {
