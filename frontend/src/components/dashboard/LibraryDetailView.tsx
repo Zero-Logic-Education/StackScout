@@ -246,23 +246,7 @@ export default function LibraryDetailView({
                 sx={{
                   fontSize: 10,
                   color: getHealthScoreColor(library.healthScore),
-            {status && (
-              <SubscriptionBadge
-                isSubscribed={status.isSubscribed}
-                subscribersCount={status.subscribersCount}
-              />
-            )}
                 }}
-            <SubscribeButton
-              libraryId={libraryIdNum}
-              libraryName={library.name}
-              variant="contained"
-              size="large"
-              onSubscriptionChange={(isSubscribed) => {
-                // Обновить статус после изменения подписки
-                fetchSubscriptionStatus();
-              }}
-            />
               />
               <Typography
                 variant="body2"
@@ -273,9 +257,25 @@ export default function LibraryDetailView({
                 {library.healthScore}%
               </Typography>
             </Box>
+            {status && (
+              <SubscriptionBadge
+                isSubscribed={status.isSubscribed}
+                subscribersCount={status.subscribersCount}
+              />
+            )}
           </Stack>
 
           <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+            <SubscribeButton
+              libraryId={libraryIdNum}
+              libraryName={library.name}
+              variant="contained"
+              size="large"
+              onSubscriptionChange={(isSubscribed) => {
+                // Обновить статус после изменения подписки
+                fetchSubscriptionStatus();
+              }}
+            />
             {library.repositoryUrl && (
               <Button
                 variant="outlined"
