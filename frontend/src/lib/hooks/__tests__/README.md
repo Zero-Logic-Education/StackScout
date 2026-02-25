@@ -1,5 +1,14 @@
 # Настройка и запуск тестов
 
+## ⚠️ ВАЖНО
+
+Тестовые файлы переименованы в `.example.ts` до установки необходимых зависимостей:
+- `useLibrarySubscription.test.example.ts`
+- `useLibraryUpdates.test.example.ts`  
+- `useUserSubscriptions.test.example.ts`
+
+После установки зависимостей переименуйте их обратно в `.test.ts`
+
 ## Установка зависимостей для тестирования
 
 ```bash
