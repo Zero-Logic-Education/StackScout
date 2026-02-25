@@ -27,6 +27,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Устанавливаем wget для health checks
+RUN apk add --no-cache wget
+
 # Устанавливаем pnpm
 RUN npm install -g pnpm
 
@@ -41,6 +44,10 @@ COPY --from=builder /app/next.config.ts ./
 # ВАЖНО: Мы НЕ используем --prod здесь, так как для работы next.config.ts 
 # в рантайме Next.js требует наличия typescript (который обычно в devDeps).
 RUN pnpm install --frozen-lockfile
+
+# Создаем непривилегированного пользователя
+RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
+USER nextjs
 
 # Expose порт
 EXPOSE 3000

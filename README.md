@@ -5,8 +5,9 @@
 **Интеллектуальная платформа для анализа Open Source библиотек**
  
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.10-6DB33F?logo=springboot)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.11-6DB33F?logo=springboot)](https://spring.io/projects/spring-boot)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs)](https://nextjs.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
  
 [О проекте](#о-проекте) • [Архитектура](#архитектура) • [Структура проекта](#структура-проекта) • [Roadmap](#roadmap)
  
@@ -50,7 +51,7 @@
 - **[frontend/](./frontend/README.md)**: Пользовательский интерфейс на Next.js. Визуализация данных и дашборды.
 - **[docs/](./docs/)**: Общая проектная документация, технические задания и диаграммы.
 - **[infrastructure/](./infrastructure/)**: Конфигурации для развертывания (Docker, CI/CD).
- 
+
 ---
  
 ## Общий технологический стек
