@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { libraryUpdateApi, LibraryUpdate, UpdatesResponse, UpdateStats } from "@/lib/api";
+import { libraryUpdateApi, LibraryUpdate, UpdateStats } from "@/lib/api";
 import { AxiosError } from "axios";
 
 interface UseLibraryUpdatesOptions {
@@ -130,7 +130,7 @@ export function useLibraryUpdateHistory(libraryId: number, options: UseLibraryUp
     try {
       const response = await libraryUpdateApi.getLatestUpdate(libraryId);
       return response.data;
-    } catch (err) {
+    } catch {
       // Если обновлений нет, это норма
       return null;
     }

@@ -6,7 +6,6 @@ import {
   Typography,
   Chip,
   Box,
-  Link as MuiLink,
 } from "@mui/material";
 import {
   TrendingUp as TrendingUpIcon,

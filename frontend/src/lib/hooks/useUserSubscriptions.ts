@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { subscriptionApi, LibrarySubscription, SubscriptionsResponse } from "@/lib/api";
+import { subscriptionApi, LibrarySubscription } from "@/lib/api";
 import { AxiosError } from "axios";
 
 interface UseUserSubscriptionsOptions {
