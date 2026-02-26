@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -9,6 +9,7 @@ import {
   Typography,
   IconButton,
   Avatar,
+  Badge,
   Menu,
   MenuItem,
   Divider,
@@ -23,12 +24,15 @@ import {
   Subscriptions as SubscriptionsIcon,
 } from "@mui/icons-material";
 import { useAuthStore } from "@/lib/auth";
+import { useUpdateStats } from "@/lib/hooks";
 
 export default function AuthSection() {
   const router = useRouter();
   const theme = useTheme();
   const { user, isAuthenticated, logout } = useAuthStore();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [hasNewUpdates, setHasNewUpdates] = useState(false);
+  const { stats, fetchStats } = useUpdateStats();
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -43,6 +47,52 @@ export default function AuthSection() {
     logout();
     router.push("/");
   };
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setHasNewUpdates(false);
+      return;
+    }
+
+    fetchStats();
+    const intervalId = window.setInterval(() => {
+      fetchStats();
+    }, 60000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [fetchStats, isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    const recentUpdates = stats?.recentUpdates || [];
+    if (recentUpdates.length === 0) {
+      setHasNewUpdates(false);
+      return;
+    }
+
+    const latestUpdate = new Date(recentUpdates[0].updateDate).getTime();
+    if (!Number.isFinite(latestUpdate)) {
+      setHasNewUpdates(false);
+      return;
+    }
+
+    let lastSeen = 0;
+    try {
+      const stored = localStorage.getItem("updates-last-seen");
+      if (stored) {
+        lastSeen = new Date(stored).getTime();
+      }
+    } catch (err) {
+      lastSeen = 0;
+    }
+
+    setHasNewUpdates(latestUpdate > lastSeen);
+  }, [stats, isAuthenticated]);
 
   if (isAuthenticated) {
     return (
@@ -68,19 +118,26 @@ export default function AuthSection() {
               transition: "all 0.2s",
             }}
           >
-            <Avatar
-              src={user?.avatar}
-              alt={user?.name}
-              sx={{
-                width: 38,
-                height: 38,
-                bgcolor: "primary.main",
-                fontSize: "1rem",
-                fontWeight: 700,
-              }}
+            <Badge
+              color="error"
+              variant="dot"
+              overlap="circular"
+              invisible={!hasNewUpdates}
             >
-              {user?.name?.[0]}
-            </Avatar>
+              <Avatar
+                src={user?.avatar}
+                alt={user?.name}
+                sx={{
+                  width: 38,
+                  height: 38,
+                  bgcolor: "primary.main",
+                  fontSize: "1rem",
+                  fontWeight: 700,
+                }}
+              >
+                {user?.name?.[0]}
+              </Avatar>
+            </Badge>
           </IconButton>
         </Box>
 
@@ -143,10 +200,15 @@ export default function AuthSection() {
             href="/updates"
             sx={{ py: 1.5, px: 2.5, borderRadius: 1, mx: 1 }}
           >
-            <UpdateIcon
-              fontSize="small"
-              sx={{ mr: 2, color: "text.secondary" }}
-            />
+            <Badge
+              color="error"
+              variant="dot"
+              overlap="circular"
+              invisible={!hasNewUpdates}
+              sx={{ mr: 2 }}
+            >
+              <UpdateIcon fontSize="small" sx={{ color: "text.secondary" }} />
+            </Badge>
             Обновления
           </MenuItem>
           <Divider sx={{ my: 1 }} />

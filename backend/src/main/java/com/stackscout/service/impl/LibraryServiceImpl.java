@@ -7,8 +7,10 @@ import com.stackscout.dto.UpdateLibraryRequest;
 import com.stackscout.exception.ResourceNotFoundException;
 import com.stackscout.mapper.LibraryMapper;
 import com.stackscout.model.Library;
+import com.stackscout.model.UpdateType;
 import com.stackscout.repository.LibraryRepository;
 import com.stackscout.service.LibraryService;
+import com.stackscout.service.LibraryUpdateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -32,6 +35,7 @@ public class LibraryServiceImpl implements LibraryService {
     
     private final LibraryRepository libraryRepository;
     private final LibraryMapper libraryMapper;
+    private final LibraryUpdateService libraryUpdateService;
     
     @Override
     public Page<LibraryDto> getAllLibraries(Pageable pageable) {
@@ -82,10 +86,27 @@ public class LibraryServiceImpl implements LibraryService {
         
         Library library = libraryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Библиотека не найдена с ID: " + id));
+
+        String oldVersion = library.getVersion();
+        Integer oldHealthScore = library.getHealthScore();
         
         libraryMapper.updateEntityFromDto(library, request);
         @SuppressWarnings("null")
         Library updatedLibrary = libraryRepository.save(library);
+
+        String newVersion = updatedLibrary.getVersion();
+        if (oldVersion != null && newVersion != null && !Objects.equals(oldVersion, newVersion)) {
+            UpdateType updateType = determineUpdateType(oldVersion, newVersion);
+            libraryUpdateService.createUpdate(
+                    updatedLibrary.getId(),
+                    oldVersion,
+                    newVersion,
+                    updateType,
+                    null,
+                    oldHealthScore,
+                    updatedLibrary.getHealthScore()
+            );
+        }
         
         log.info("Библиотека успешно обновлена: {}", id);
         return libraryMapper.toDto(updatedLibrary);
@@ -137,5 +158,38 @@ public class LibraryServiceImpl implements LibraryService {
                 .stream()
                 .map(libraryMapper::toDto)
                 .collect(Collectors.toList());
+    }
+
+    private UpdateType determineUpdateType(String oldVersion, String newVersion) {
+        int[] oldParts = parseVersion(oldVersion);
+        int[] newParts = parseVersion(newVersion);
+
+        if (newParts[0] > oldParts[0]) {
+            return UpdateType.MAJOR;
+        }
+        if (newParts[1] > oldParts[1]) {
+            return UpdateType.MINOR;
+        }
+        return UpdateType.PATCH;
+    }
+
+    private int[] parseVersion(String version) {
+        int[] parts = new int[] {0, 0, 0};
+        if (version == null || version.isBlank()) {
+            return parts;
+        }
+
+        String[] tokens = version.split("\\.");
+        for (int i = 0; i < Math.min(tokens.length, 3); i++) {
+            String numeric = tokens[i].replaceAll("[^0-9]", "");
+            if (!numeric.isBlank()) {
+                try {
+                    parts[i] = Integer.parseInt(numeric);
+                } catch (NumberFormatException ex) {
+                    parts[i] = 0;
+                }
+            }
+        }
+        return parts;
     }
 }

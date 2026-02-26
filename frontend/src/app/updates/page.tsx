@@ -111,6 +111,17 @@ import { useLibraryUpdates, useUpdateStats } from "@/lib/hooks";
     }
   }, [fetchStats, isAuthenticated]);
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+    try {
+      localStorage.setItem("updates-last-seen", new Date().toISOString());
+    } catch (err) {
+      // ignore storage errors
+    }
+  }, [isAuthenticated]);
+
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
     setCurrentPage(0);
@@ -150,7 +161,7 @@ import { useLibraryUpdates, useUpdateStats } from "@/lib/hooks";
       </Box>
 
       {/* Stats Cards */}
-      {stats && !statsLoading && (
+      {isAuthenticated && stats && !statsLoading && (
         <Box
           sx={{
             display: "grid",
