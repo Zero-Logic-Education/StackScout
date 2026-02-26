@@ -24,7 +24,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"\",\n  \"email\": \"\",\n  \"password\": \"\"\n}"
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
             },
             "url": {
               "raw": "http://localhost:8081/api/v1/auth/register",
@@ -61,7 +61,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"\",\n  \"password\": \"\"\n}"
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
             },
             "url": {
               "raw": "http://localhost:8081/api/v1/auth/login",
@@ -148,11 +148,11 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/libraries/1",
+              "raw": "http://localhost:8081/api/v1/libraries/{{libraryId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "libraries", "1"]
+              "path": ["api", "v1", "libraries", "{{libraryId}}"]
             }
           }
         },
@@ -161,11 +161,11 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/libraries/1/health",
+              "raw": "http://localhost:8081/api/v1/libraries/{{libraryId}}/health",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "libraries", "1", "health"]
+              "path": ["api", "v1", "libraries", "{{libraryId}}", "health"]
             }
           }
         },
@@ -174,14 +174,14 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/libraries/search?query=react&source=npm",
+              "raw": "http://localhost:8081/api/v1/libraries/search?query={{query}}&source={{source}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
               "path": ["api", "v1", "libraries", "search"],
               "query": [
-                { "key": "query", "value": "react" },
-                { "key": "source", "value": "npm" }
+                { "key": "query", "value": "{{query}}" },
+                { "key": "source", "value": "{{source}}" }
               ]
             }
           }
@@ -195,7 +195,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"demo-lib\",\n  \"source\": \"npm\",\n  \"version\": \"1.0.0\"\n}"
+              "raw": "{\n  \"name\": \"{{libraryName}}\",\n  \"source\": \"{{librarySource}}\",\n  \"version\": \"{{libraryVersion}}\",\n  \"license\": \"{{libraryLicense}}\",\n  \"healthScore\": {{healthScore}}\n}"
             },
             "url": {
               "raw": "http://localhost:8081/api/v1/libraries",
@@ -215,14 +215,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"demo-lib\",\n  \"source\": \"npm\",\n  \"version\": \"1.0.1\"\n}"
+              "raw": "{\n  \"name\": \"{{libraryName}}\",\n  \"source\": \"{{librarySource}}\",\n  \"version\": \"{{libraryVersion}}\",\n  \"license\": \"{{libraryLicense}}\",\n  \"healthScore\": {{healthScore}}\n}"
             },
             "url": {
-              "raw": "http://localhost:8081/api/v1/libraries/1",
+              "raw": "http://localhost:8081/api/v1/libraries/{{libraryId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "libraries", "1"]
+              "path": ["api", "v1", "libraries", "{{libraryId}}"]
             }
           }
         },
@@ -231,11 +231,11 @@
           "request": {
             "method": "DELETE",
             "url": {
-              "raw": "http://localhost:8081/api/v1/libraries/1",
+              "raw": "http://localhost:8081/api/v1/libraries/{{libraryId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "libraries", "1"]
+              "path": ["api", "v1", "libraries", "{{libraryId}}"]
             }
           }
         },
@@ -244,13 +244,13 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/libraries/healthy?minScore=80",
+              "raw": "http://localhost:8081/api/v1/libraries/healthy?minScore={{minScore}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
               "path": ["api", "v1", "libraries", "healthy"],
               "query": [
-                { "key": "minScore", "value": "80" }
+                { "key": "minScore", "value": "{{minScore}}" }
               ]
             }
           }
@@ -297,11 +297,11 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "http://localhost:8081/api/v1/subscriptions/1",
+              "raw": "http://localhost:8081/api/v1/subscriptions/{{libraryId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "subscriptions", "1"]
+              "path": ["api", "v1", "subscriptions", "{{libraryId}}"]
             }
           }
         },
@@ -310,11 +310,11 @@
           "request": {
             "method": "DELETE",
             "url": {
-              "raw": "http://localhost:8081/api/v1/subscriptions/1",
+              "raw": "http://localhost:8081/api/v1/subscriptions/{{libraryId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "subscriptions", "1"]
+              "path": ["api", "v1", "subscriptions", "{{libraryId}}"]
             }
           }
         },
@@ -323,11 +323,11 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/subscriptions/1/status",
+              "raw": "http://localhost:8081/api/v1/subscriptions/{{libraryId}}/status",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "subscriptions", "1", "status"]
+              "path": ["api", "v1", "subscriptions", "{{libraryId}}", "status"]
             }
           }
         },
@@ -340,14 +340,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"notificationsEnabled\": true\n}"
+              "raw": "{\n  \"notificationsEnabled\": {{notificationsEnabled}}\n}"
             },
             "url": {
-              "raw": "http://localhost:8081/api/v1/subscriptions/1/notifications",
+              "raw": "http://localhost:8081/api/v1/subscriptions/{{libraryId}}/notifications",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "subscriptions", "1", "notifications"]
+              "path": ["api", "v1", "subscriptions", "{{libraryId}}", "notifications"]
             }
           }
         },
@@ -356,11 +356,11 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/subscriptions/count/1",
+              "raw": "http://localhost:8081/api/v1/subscriptions/count/{{libraryId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "subscriptions", "count", "1"]
+              "path": ["api", "v1", "subscriptions", "count", "{{libraryId}}"]
             }
           }
         }
@@ -391,11 +391,11 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/library-updates/library/1?page=0&size=20",
+              "raw": "http://localhost:8081/api/v1/library-updates/library/{{libraryId}}?page=0&size=20",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "library-updates", "library", "1"],
+              "path": ["api", "v1", "library-updates", "library", "{{libraryId}}"],
               "query": [
                 { "key": "page", "value": "0" },
                 { "key": "size", "value": "20" }
@@ -408,13 +408,13 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/library-updates/recent?days=7",
+              "raw": "http://localhost:8081/api/v1/library-updates/recent?days={{days}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
               "path": ["api", "v1", "library-updates", "recent"],
               "query": [
-                { "key": "days", "value": "7" }
+                { "key": "days", "value": "{{days}}" }
               ]
             }
           }
@@ -424,13 +424,13 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/library-updates/by-type?updateType=PATCH&page=0&size=20",
+              "raw": "http://localhost:8081/api/v1/library-updates/by-type?updateType={{updateType}}&page=0&size=20",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
               "path": ["api", "v1", "library-updates", "by-type"],
               "query": [
-                { "key": "updateType", "value": "PATCH" },
+                { "key": "updateType", "value": "{{updateType}}" },
                 { "key": "page", "value": "0" },
                 { "key": "size", "value": "20" }
               ]
@@ -442,11 +442,11 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/library-updates/library/1/latest",
+              "raw": "http://localhost:8081/api/v1/library-updates/library/{{libraryId}}/latest",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "library-updates", "library", "1", "latest"]
+              "path": ["api", "v1", "library-updates", "library", "{{libraryId}}", "latest"]
             }
           }
         },
@@ -490,11 +490,11 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/licenses/1",
+              "raw": "http://localhost:8081/api/v1/licenses/{{licenseId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "licenses", "1"]
+              "path": ["api", "v1", "licenses", "{{licenseId}}"]
             }
           }
         },
@@ -507,7 +507,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"MIT\",\n  \"type\": \"PERMISSIVE\",\n  \"osiApproved\": true\n}"
+              "raw": "{\n  \"name\": \"{{licenseName}}\",\n  \"type\": \"{{licenseType}}\",\n  \"osiApproved\": {{osiApproved}}\n}"
             },
             "url": {
               "raw": "http://localhost:8081/api/v1/licenses",
@@ -527,14 +527,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"MIT\",\n  \"type\": \"PERMISSIVE\",\n  \"osiApproved\": true\n}"
+              "raw": "{\n  \"name\": \"{{licenseName}}\",\n  \"type\": \"{{licenseType}}\",\n  \"osiApproved\": {{osiApproved}}\n}"
             },
             "url": {
-              "raw": "http://localhost:8081/api/v1/licenses/1",
+              "raw": "http://localhost:8081/api/v1/licenses/{{licenseId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "licenses", "1"]
+              "path": ["api", "v1", "licenses", "{{licenseId}}"]
             }
           }
         },
@@ -543,11 +543,11 @@
           "request": {
             "method": "DELETE",
             "url": {
-              "raw": "http://localhost:8081/api/v1/licenses/1",
+              "raw": "http://localhost:8081/api/v1/licenses/{{licenseId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "licenses", "1"]
+              "path": ["api", "v1", "licenses", "{{licenseId}}"]
             }
           }
         },
@@ -556,13 +556,13 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/licenses/search?name=MIT",
+              "raw": "http://localhost:8081/api/v1/licenses/search?name={{licenseName}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
               "path": ["api", "v1", "licenses", "search"],
               "query": [
-                { "key": "name", "value": "MIT" }
+                { "key": "name", "value": "{{licenseName}}" }
               ]
             }
           }
@@ -572,11 +572,11 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/licenses/type/PERMISSIVE",
+              "raw": "http://localhost:8081/api/v1/licenses/type/{{licenseType}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "licenses", "type", "PERMISSIVE"]
+              "path": ["api", "v1", "licenses", "type", "{{licenseType}}"]
             }
           }
         },
@@ -620,11 +620,11 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/scan-jobs/1",
+              "raw": "http://localhost:8081/api/v1/scan-jobs/{{scanJobId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "scan-jobs", "1"]
+              "path": ["api", "v1", "scan-jobs", "{{scanJobId}}"]
             }
           }
         },
@@ -637,7 +637,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"source\": \"pypi\",\n  \"packageName\": \"demo-package\"\n}"
+              "raw": "{\n  \"source\": \"{{scanSource}}\",\n  \"packageName\": \"{{packageName}}\"\n}"
             },
             "url": {
               "raw": "http://localhost:8081/api/v1/scan-jobs",
@@ -653,13 +653,13 @@
           "request": {
             "method": "PATCH",
             "url": {
-              "raw": "http://localhost:8081/api/v1/scan-jobs/1/status?status=COMPLETED",
+              "raw": "http://localhost:8081/api/v1/scan-jobs/{{scanJobId}}/status?status={{scanStatus}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "scan-jobs", "1", "status"],
+              "path": ["api", "v1", "scan-jobs", "{{scanJobId}}", "status"],
               "query": [
-                { "key": "status", "value": "COMPLETED" }
+                { "key": "status", "value": "{{scanStatus}}" }
               ]
             }
           }
@@ -669,11 +669,11 @@
           "request": {
             "method": "DELETE",
             "url": {
-              "raw": "http://localhost:8081/api/v1/scan-jobs/1",
+              "raw": "http://localhost:8081/api/v1/scan-jobs/{{scanJobId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "scan-jobs", "1"]
+              "path": ["api", "v1", "scan-jobs", "{{scanJobId}}"]
             }
           }
         },
@@ -682,11 +682,11 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/scan-jobs/status/COMPLETED?page=0&size=10",
+              "raw": "http://localhost:8081/api/v1/scan-jobs/status/{{scanStatus}}?page=0&size=10",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "scan-jobs", "status", "COMPLETED"],
+              "path": ["api", "v1", "scan-jobs", "status", "{{scanStatus}}"],
               "query": [
                 { "key": "page", "value": "0" },
                 { "key": "size", "value": "10" }
@@ -699,11 +699,11 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/scan-jobs/source/pypi?page=0&size=10",
+              "raw": "http://localhost:8081/api/v1/scan-jobs/source/{{scanSource}}?page=0&size=10",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
-              "path": ["api", "v1", "scan-jobs", "source", "pypi"],
+              "path": ["api", "v1", "scan-jobs", "source", "{{scanSource}}"],
               "query": [
                 { "key": "page", "value": "0" },
                 { "key": "size", "value": "10" }
@@ -716,14 +716,14 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8081/api/v1/scan-jobs/recent?source=pypi&limit=5",
+              "raw": "http://localhost:8081/api/v1/scan-jobs/recent?source={{scanSource}}&limit={{limit}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8081",
               "path": ["api", "v1", "scan-jobs", "recent"],
               "query": [
-                { "key": "source", "value": "pypi" },
-                { "key": "limit", "value": "5" }
+                { "key": "source", "value": "{{scanSource}}" },
+                { "key": "limit", "value": "{{limit}}" }
               ]
             }
           }
@@ -755,7 +755,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"source\": \"pypi\",\n  \"packages\": [\"demo-package\"]\n}"
+              "raw": "{\n  \"source\": \"{{scanSource}}\",\n  \"packages\": [\"{{packageName}}\"]\n}"
             },
             "url": {
               "raw": "http://localhost:8081/api/v1/collector/scan",
