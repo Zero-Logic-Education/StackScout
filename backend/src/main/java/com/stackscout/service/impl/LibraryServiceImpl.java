@@ -91,7 +91,6 @@ public class LibraryServiceImpl implements LibraryService {
         Integer oldHealthScore = library.getHealthScore();
         
         libraryMapper.updateEntityFromDto(library, request);
-        @SuppressWarnings("null")
         Library updatedLibrary = libraryRepository.save(library);
 
         String newVersion = updatedLibrary.getVersion();

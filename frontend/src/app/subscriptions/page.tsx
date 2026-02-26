@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Container,
   Box,
@@ -9,7 +9,6 @@ import {
   CircularProgress,
   Alert,
   Button,
-  Grid,
   IconButton,
   Switch,
   FormControlLabel,
@@ -21,6 +20,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useUserSubscriptions } from "@/lib/hooks";
 import { subscriptionApi } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth";
 import { toast } from "react-hot-toast";
 
 /**
@@ -28,6 +28,7 @@ import { toast } from "react-hot-toast";
  */
 export default function SubscriptionsPage() {
   const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 20;
 
@@ -37,15 +38,18 @@ export default function SubscriptionsPage() {
     error,
     pagination,
     fetchSubscriptions,
-  } = useUserSubscriptions({ autoFetch: true, page: currentPage, size: pageSize });
+  } = useUserSubscriptions({
+    autoFetch: isAuthenticated,
+    page: currentPage,
+    size: pageSize,
+  });
 
   const handleUnsubscribe = async (libraryId: number, libraryName: string) => {
     try {
       await subscriptionApi.unsubscribe(libraryId);
       toast.success(`Вы отписались от ${libraryName}`);
-      // Перезагрузить подписки
       fetchSubscriptions(currentPage, pageSize);
-    } catch (err) {
+    } catch {
       toast.error("Не удалось отписаться");
     }
   };
@@ -62,9 +66,8 @@ export default function SubscriptionsPage() {
           ? `Уведомления для ${libraryName} включены`
           : `Уведомления для ${libraryName} выключены`
       );
-      // Перезагрузить подписки
       fetchSubscriptions(currentPage, pageSize);
-    } catch (err) {
+    } catch {
       toast.error("Не удалось обновить настройки");
     }
   };
@@ -85,7 +88,27 @@ export default function SubscriptionsPage() {
       </Box>
 
       {/* Content */}
-      {isLoading ? (
+      {!isAuthenticated ? (
+        <Paper
+          elevation={0}
+          sx={{
+            p: 6,
+            textAlign: "center",
+            border: "1px solid",
+            borderColor: "divider",
+          }}
+        >
+          <Typography variant="h6" gutterBottom>
+            Войдите, чтобы увидеть подписки
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            После входа вы сможете подписываться на библиотеки и отслеживать их обновления
+          </Typography>
+          <Button variant="contained" onClick={() => router.push("/login")}>
+            Войти
+          </Button>
+        </Paper>
+      ) : isLoading ? (
         <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
           <CircularProgress />
         </Box>
@@ -112,11 +135,9 @@ export default function SubscriptionsPage() {
           </Typography>
           <Button variant="contained" onClick={() => router.push("/explore")}>
             Найти библиотеки
-          import { useAuthStore } from "@/lib/auth";
           </Button>
         </Paper>
       ) : (
-            const { isAuthenticated } = useAuthStore();
         <>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {subscriptions.map((subscription) => (
@@ -126,7 +147,7 @@ export default function SubscriptionsPage() {
                   sx={{
                     p: 3,
                     border: "1px solid",
-            } = useUserSubscriptions({ autoFetch: isAuthenticated, page: currentPage, size: pageSize });
+                    borderColor: "divider",
                     transition: "all 0.2s",
                     "&:hover": {
                       boxShadow: 2,
@@ -140,8 +161,12 @@ export default function SubscriptionsPage() {
                       alignItems: "center",
                     }}
                   >
-                    <Box sx={{ flex: 1, cursor: "pointer" }}
-                         onClick={() => router.push(`/library/${subscription.libraryId}`)}>
+                    <Box
+                      sx={{ flex: 1, cursor: "pointer" }}
+                      onClick={() =>
+                        router.push(`/library/${subscription.libraryId}`)
+                      }
+                    >
                       <Typography variant="h6" fontWeight={700}>
                         {subscription.libraryName}
                       </Typography>
@@ -155,27 +180,6 @@ export default function SubscriptionsPage() {
                       <FormControlLabel
                         control={
                           <Switch
-                {!isAuthenticated ? (
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 6,
-                      textAlign: "center",
-                      border: "1px solid",
-                      borderColor: "divider",
-                    }}
-                  >
-                    <Typography variant="h6" gutterBottom>
-                      Войдите, чтобы увидеть подписки
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                      После входа вы сможете подписываться на библиотеки и отслеживать их обновления
-                    </Typography>
-                    <Button variant="contained" onClick={() => router.push("/login")}>
-                      Войти
-                    </Button>
-                  </Paper>
-                ) : isLoading ? (
                             checked={subscription.notificationsEnabled}
                             onChange={(e) =>
                               handleToggleNotifications(
