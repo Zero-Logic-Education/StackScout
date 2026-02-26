@@ -6,6 +6,9 @@ import {
   Download,
   GitHub,
   Person,
+  Inventory2,
+  Cloud,
+  LibraryBooks,
 } from "@mui/icons-material";
 import type { LibraryDetail } from "@/lib/api";
 import { format } from "date-fns";
@@ -39,15 +42,15 @@ export default function LibraryInfo({ library }: LibraryInfoProps) {
   const getSourceIcon = (source: string) => {
     switch (source.toLowerCase()) {
       case "pypi":
-        return "🐍";
+        return <Code sx={{ fontSize: 18 }} />;
       case "npm":
-        return "📦";
+        return <Inventory2 sx={{ fontSize: 18 }} />;
       case "maven":
-        return "☕";
+        return <Code sx={{ fontSize: 18 }} />;
       case "docker_hub":
-        return "🐳";
+        return <Cloud sx={{ fontSize: 18 }} />;
       default:
-        return "📚";
+        return <LibraryBooks sx={{ fontSize: 18 }} />;
     }
   };
 
@@ -81,17 +84,16 @@ export default function LibraryInfo({ library }: LibraryInfoProps) {
           </Typography>
           <Chip
             label={library.source}
-            icon={
-              <span style={{ fontSize: "1.2rem", marginLeft: "8px" }}>
-                {getSourceIcon(library.source)}
-              </span>
-            }
+            icon={getSourceIcon(library.source)}
             sx={{
               bgcolor: "primary.main",
               color: "white",
               fontWeight: 600,
               "& .MuiChip-label": {
                 px: 1,
+              },
+              "& .MuiChip-icon": {
+                color: "inherit",
               },
             }}
           />

@@ -11,7 +11,6 @@ import {
   CircularProgress,
   Alert,
   Button,
-  Chip,
   Stack,
 } from "@mui/material";
 import {
@@ -21,77 +20,37 @@ import {
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import { useLibraryUpdates, useUpdateStats } from "@/lib/hooks";
-      {!isAuthenticated ? (
-        <Paper
-          elevation={0}
-          sx={{
-            p: 6,
-            textAlign: "center",
-            border: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            Войдите, чтобы видеть обновления
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Подпишитесь на библиотеки и отслеживайте их обновления здесь
-          </Typography>
-          <Button variant="contained" onClick={() => router.push("/login")}>
-            Войти
-          </Button>
-        </Paper>
-      ) : (
-        <>
-          <TabPanel value={currentTab} index={0}>
-            {updates.map((update) => (
-              <LibraryUpdateCard key={update.id} update={update} />
-            ))}
-          </TabPanel>
+import { LibraryUpdateCard } from "@/components/library";
+import { useAuthStore } from "@/lib/auth";
 
-          <TabPanel value={currentTab} index={1}>
-            {updates.map((update) => (
-              <LibraryUpdateCard key={update.id} update={update} />
-            ))}
-          </TabPanel>
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
 
-          <TabPanel value={currentTab} index={2}>
-            {updates.map((update) => (
-              <LibraryUpdateCard key={update.id} update={update} />
-            ))}
-          </TabPanel>
+function TabPanel({ children, value, index, ...other }: TabPanelProps) {
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`updates-tabpanel-${index}`}
+      aria-labelledby={`updates-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+    </div>
+  );
+}
 
-          {/* Pagination */}
-          {currentTab === 0 && pagination.totalPages > 1 && (
-            <Box sx={{ display: "flex", justifyContent: "center", gap: 1, mt: 4 }}>
-              <Button
-                variant="outlined"
-                disabled={currentPage === 0}
-                onClick={() => handlePageChange(currentPage - 1)}
-              >
-                Предыдущая
-              </Button>
-              <Stack direction="row" spacing={1}>
-                {Array.from({ length: pagination.totalPages }, (_, i) => (
-                  <Button
-                    key={i}
-                    variant={currentPage === i ? "contained" : "outlined"}
-                    onClick={() => handlePageChange(i)}
-                  >
-                    {i + 1}
-                  </Button>
-                ))}
-              </Stack>
-              <Button
-                variant="outlined"
-                disabled={currentPage >= pagination.totalPages - 1}
-                onClick={() => handlePageChange(currentPage + 1)}
-              >
-                Следующая
-              </Button>
-            </Box>
-          )}
-        </>
+/**
+ * Страница ленты обновлений библиотек
+ */
+export default function UpdatesPage() {
+  const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
+  const [currentTab, setCurrentTab] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 20;
 
   const {
@@ -117,7 +76,7 @@ import { useLibraryUpdates, useUpdateStats } from "@/lib/hooks";
     }
     try {
       localStorage.setItem("updates-last-seen", new Date().toISOString());
-    } catch (err) {
+    } catch {
       // ignore storage errors
     }
   }, [isAuthenticated]);
@@ -127,13 +86,13 @@ import { useLibraryUpdates, useUpdateStats } from "@/lib/hooks";
     setCurrentPage(0);
 
     switch (newValue) {
-      case 0: // Все обновления
+      case 0:
         fetchUpdates(0, pageSize);
         break;
-      case 1: // Последние 7 дней
+      case 1:
         fetchRecentUpdates(7);
         break;
-      case 2: // Последние 30 дней
+      case 2:
         fetchRecentUpdates(30);
         break;
     }
@@ -291,10 +250,7 @@ import { useLibraryUpdates, useUpdateStats } from "@/lib/hooks";
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 Подпишитесь на библиотеки, чтобы отслеживать их обновления
               </Typography>
-              <Button
-                variant="contained"
-                onClick={() => router.push("/explore")}
-              >
+              <Button variant="contained" onClick={() => router.push("/explore")}>
                 Найти библиотеки
               </Button>
             </Paper>

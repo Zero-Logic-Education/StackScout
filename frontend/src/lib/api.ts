@@ -44,6 +44,26 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (typeof window !== "undefined") {
+      const status = error?.response?.status;
+      if (status === 401 || status === 403) {
+        try {
+          localStorage.removeItem("auth-storage");
+        } catch {
+          // ignore storage errors
+        }
+        if (!window.location.pathname.startsWith("/login")) {
+          window.location.assign("/login");
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export interface Library {
   id: number;
   name: string;
