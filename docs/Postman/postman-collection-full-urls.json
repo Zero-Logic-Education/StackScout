@@ -24,7 +24,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"\",\n  \"email\": \"\",\n  \"password\": \"\",\n  \"confirmPassword\": \"\"\n}"
+              "raw": "{\n  \"username\": \"\",\n  \"email\": \"\",\n  \"password\": \"\"\n}"
             },
             "url": {
               "raw": "http://localhost:8081/api/v1/auth/register",
@@ -91,94 +91,6 @@
       ]
     },
     {
-      "name": "Users",
-      "item": [
-        {
-          "name": "Get All Users",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "http://localhost:8081/api/v1/users?page=0&size=10",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8081",
-              "path": ["api", "v1", "users"],
-              "query": [
-                { "key": "page", "value": "0" },
-                { "key": "size", "value": "10" }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get User by ID",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "http://localhost:8081/api/v1/users/1",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8081",
-              "path": ["api", "v1", "users", "1"]
-            }
-          }
-        },
-        {
-          "name": "Update User",
-          "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"new-username\",\n  \"email\": \"new-email@example.com\"\n}"
-            },
-            "url": {
-              "raw": "http://localhost:8081/api/v1/users/1",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8081",
-              "path": ["api", "v1", "users", "1"]
-            }
-          }
-        },
-        {
-          "name": "Delete User",
-          "request": {
-            "method": "DELETE",
-            "url": {
-              "raw": "http://localhost:8081/api/v1/users/1",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8081",
-              "path": ["api", "v1", "users", "1"]
-            }
-          }
-        },
-        {
-          "name": "Change User Password",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"oldPassword\": \"old-pass\",\n  \"newPassword\": \"new-pass\"\n}"
-            },
-            "url": {
-              "raw": "http://localhost:8081/api/v1/users/1/password",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8081",
-              "path": ["api", "v1", "users", "1", "password"]
-            }
-          }
-        }
-      ]
-    },
-    {
       "name": "Health & Status",
       "item": [
         {
@@ -241,6 +153,19 @@
               "host": ["localhost"],
               "port": "8081",
               "path": ["api", "v1", "libraries", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Library Health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8081/api/v1/libraries/1/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api", "v1", "libraries", "1", "health"]
             }
           }
         },
@@ -340,6 +265,201 @@
               "host": ["localhost"],
               "port": "8081",
               "path": ["api", "v1", "libraries", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "Get User Subscriptions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8081/api/v1/subscriptions?page=0&size=20&sortBy=subscribedAt&sortDirection=DESC",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api", "v1", "subscriptions"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "sortBy", "value": "subscribedAt" },
+                { "key": "sortDirection", "value": "DESC" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Subscribe",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "http://localhost:8081/api/v1/subscriptions/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api", "v1", "subscriptions", "1"]
+            }
+          }
+        },
+        {
+          "name": "Unsubscribe",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:8081/api/v1/subscriptions/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api", "v1", "subscriptions", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Subscription Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8081/api/v1/subscriptions/1/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api", "v1", "subscriptions", "1", "status"]
+            }
+          }
+        },
+        {
+          "name": "Update Notifications",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notificationsEnabled\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/api/v1/subscriptions/1/notifications",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api", "v1", "subscriptions", "1", "notifications"]
+            }
+          }
+        },
+        {
+          "name": "Get Subscribers Count",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8081/api/v1/subscriptions/count/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api", "v1", "subscriptions", "count", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Library Updates",
+      "item": [
+        {
+          "name": "Get Updates For User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8081/api/v1/library-updates?page=0&size=20",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api", "v1", "library-updates"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Library Updates",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8081/api/v1/library-updates/library/1?page=0&size=20",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api", "v1", "library-updates", "library", "1"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Recent Updates",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8081/api/v1/library-updates/recent?days=7",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api", "v1", "library-updates", "recent"],
+              "query": [
+                { "key": "days", "value": "7" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Updates By Type",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8081/api/v1/library-updates/by-type?updateType=PATCH&page=0&size=20",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api", "v1", "library-updates", "by-type"],
+              "query": [
+                { "key": "updateType", "value": "PATCH" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Latest Update",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8081/api/v1/library-updates/library/1/latest",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api", "v1", "library-updates", "library", "1", "latest"]
+            }
+          }
+        },
+        {
+          "name": "Get Update Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8081/api/v1/library-updates/stats",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api", "v1", "library-updates", "stats"]
             }
           }
         }
