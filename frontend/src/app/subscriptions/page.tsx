@@ -112,9 +112,11 @@ export default function SubscriptionsPage() {
           </Typography>
           <Button variant="contained" onClick={() => router.push("/explore")}>
             Найти библиотеки
+          import { useAuthStore } from "@/lib/auth";
           </Button>
         </Paper>
       ) : (
+            const { isAuthenticated } = useAuthStore();
         <>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {subscriptions.map((subscription) => (
@@ -124,7 +126,7 @@ export default function SubscriptionsPage() {
                   sx={{
                     p: 3,
                     border: "1px solid",
-                    borderColor: "divider",
+            } = useUserSubscriptions({ autoFetch: isAuthenticated, page: currentPage, size: pageSize });
                     transition: "all 0.2s",
                     "&:hover": {
                       boxShadow: 2,
@@ -153,6 +155,27 @@ export default function SubscriptionsPage() {
                       <FormControlLabel
                         control={
                           <Switch
+                {!isAuthenticated ? (
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 6,
+                      textAlign: "center",
+                      border: "1px solid",
+                      borderColor: "divider",
+                    }}
+                  >
+                    <Typography variant="h6" gutterBottom>
+                      Войдите, чтобы увидеть подписки
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                      После входа вы сможете подписываться на библиотеки и отслеживать их обновления
+                    </Typography>
+                    <Button variant="contained" onClick={() => router.push("/login")}>
+                      Войти
+                    </Button>
+                  </Paper>
+                ) : isLoading ? (
                             checked={subscription.notificationsEnabled}
                             onChange={(e) =>
                               handleToggleNotifications(

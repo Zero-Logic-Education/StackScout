@@ -21,35 +21,77 @@ import {
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import { useLibraryUpdates, useUpdateStats } from "@/lib/hooks";
-import { LibraryUpdateCard } from "@/components/library";
+      {!isAuthenticated ? (
+        <Paper
+          elevation={0}
+          sx={{
+            p: 6,
+            textAlign: "center",
+            border: "1px solid",
+            borderColor: "divider",
+          }}
+        >
+          <Typography variant="h6" gutterBottom>
+            Войдите, чтобы видеть обновления
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Подпишитесь на библиотеки и отслеживайте их обновления здесь
+          </Typography>
+          <Button variant="contained" onClick={() => router.push("/login")}>
+            Войти
+          </Button>
+        </Paper>
+      ) : (
+        <>
+          <TabPanel value={currentTab} index={0}>
+            {updates.map((update) => (
+              <LibraryUpdateCard key={update.id} update={update} />
+            ))}
+          </TabPanel>
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
+          <TabPanel value={currentTab} index={1}>
+            {updates.map((update) => (
+              <LibraryUpdateCard key={update.id} update={update} />
+            ))}
+          </TabPanel>
 
-function TabPanel({ children, value, index, ...other }: TabPanelProps) {
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`updates-tabpanel-${index}`}
-      aria-labelledby={`updates-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
-    </div>
-  );
-}
+          <TabPanel value={currentTab} index={2}>
+            {updates.map((update) => (
+              <LibraryUpdateCard key={update.id} update={update} />
+            ))}
+          </TabPanel>
 
-/**
- * Страница ленты обновлений библиотек
- */
-export default function UpdatesPage() {
-  const router = useRouter();
-  const [currentTab, setCurrentTab] = useState(0);
-  const [currentPage, setCurrentPage] = useState(0);
+          {/* Pagination */}
+          {currentTab === 0 && pagination.totalPages > 1 && (
+            <Box sx={{ display: "flex", justifyContent: "center", gap: 1, mt: 4 }}>
+              <Button
+                variant="outlined"
+                disabled={currentPage === 0}
+                onClick={() => handlePageChange(currentPage - 1)}
+              >
+                Предыдущая
+              </Button>
+              <Stack direction="row" spacing={1}>
+                {Array.from({ length: pagination.totalPages }, (_, i) => (
+                  <Button
+                    key={i}
+                    variant={currentPage === i ? "contained" : "outlined"}
+                    onClick={() => handlePageChange(i)}
+                  >
+                    {i + 1}
+                  </Button>
+                ))}
+              </Stack>
+              <Button
+                variant="outlined"
+                disabled={currentPage >= pagination.totalPages - 1}
+                onClick={() => handlePageChange(currentPage + 1)}
+              >
+                Следующая
+              </Button>
+            </Box>
+          )}
+        </>
   const pageSize = 20;
 
   const {
@@ -59,13 +101,15 @@ export default function UpdatesPage() {
     pagination,
     fetchUpdates,
     fetchRecentUpdates,
-  } = useLibraryUpdates({ autoFetch: true, page: currentPage, size: pageSize });
+  } = useLibraryUpdates({ autoFetch: isAuthenticated, page: currentPage, size: pageSize });
 
   const { stats, isLoading: statsLoading, fetchStats } = useUpdateStats();
 
   useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+    if (isAuthenticated) {
+      fetchStats();
+    }
+  }, [fetchStats, isAuthenticated]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
@@ -171,33 +215,7 @@ export default function UpdatesPage() {
         </Box>
       )}
 
-      {/* Tabs */}
-      <Paper
-        elevation={0}
-        sx={{ mb: 3, border: "1px solid", borderColor: "divider" }}
-      >
-        <Tabs
-          value={currentTab}
-          onChange={handleTabChange}
-          aria-label="updates tabs"
-          sx={{ borderBottom: 1, borderColor: "divider" }}
-        >
-          <Tab label="Все обновления" />
-          <Tab label="За 7 дней" />
-          <Tab label="За 30 дней" />
-        </Tabs>
-      </Paper>
-
-      {/* Content */}
-      {isLoading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-          <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      ) : updates.length === 0 ? (
+      {!isAuthenticated ? (
         <Paper
           elevation={0}
           sx={{
@@ -207,69 +225,119 @@ export default function UpdatesPage() {
             borderColor: "divider",
           }}
         >
-          <UpdateIcon sx={{ fontSize: 64, color: "text.secondary", mb: 2 }} />
           <Typography variant="h6" gutterBottom>
-            Нет обновлений
+            Войдите, чтобы видеть обновления
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Подпишитесь на библиотеки, чтобы отслеживать их обновления
+            Подпишитесь на библиотеки и отслеживайте их обновления здесь
           </Typography>
-          <Button
-            variant="contained"
-            onClick={() => router.push("/explore")}
-          >
-            Найти библиотеки
+          <Button variant="contained" onClick={() => router.push("/login")}>
+            Войти
           </Button>
         </Paper>
       ) : (
         <>
-          <TabPanel value={currentTab} index={0}>
-            {updates.map((update) => (
-              <LibraryUpdateCard key={update.id} update={update} />
-            ))}
-          </TabPanel>
+          {/* Tabs */}
+          <Paper
+            elevation={0}
+            sx={{ mb: 3, border: "1px solid", borderColor: "divider" }}
+          >
+            <Tabs
+              value={currentTab}
+              onChange={handleTabChange}
+              aria-label="updates tabs"
+              sx={{ borderBottom: 1, borderColor: "divider" }}
+            >
+              <Tab label="Все обновления" />
+              <Tab label="За 7 дней" />
+              <Tab label="За 30 дней" />
+            </Tabs>
+          </Paper>
 
-          <TabPanel value={currentTab} index={1}>
-            {updates.map((update) => (
-              <LibraryUpdateCard key={update.id} update={update} />
-            ))}
-          </TabPanel>
-
-          <TabPanel value={currentTab} index={2}>
-            {updates.map((update) => (
-              <LibraryUpdateCard key={update.id} update={update} />
-            ))}
-          </TabPanel>
-
-          {/* Pagination */}
-          {currentTab === 0 && pagination.totalPages > 1 && (
-            <Box sx={{ display: "flex", justifyContent: "center", gap: 1, mt: 4 }}>
-              <Button
-                variant="outlined"
-                disabled={currentPage === 0}
-                onClick={() => handlePageChange(currentPage - 1)}
-              >
-                Предыдущая
-              </Button>
-              <Stack direction="row" spacing={1}>
-                {Array.from({ length: pagination.totalPages }, (_, i) => (
-                  <Button
-                    key={i}
-                    variant={currentPage === i ? "contained" : "outlined"}
-                    onClick={() => handlePageChange(i)}
-                  >
-                    {i + 1}
-                  </Button>
-                ))}
-              </Stack>
-              <Button
-                variant="outlined"
-                disabled={currentPage >= pagination.totalPages - 1}
-                onClick={() => handlePageChange(currentPage + 1)}
-              >
-                Следующая
-              </Button>
+          {/* Content */}
+          {isLoading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+              <CircularProgress />
             </Box>
+          ) : error ? (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error}
+            </Alert>
+          ) : updates.length === 0 ? (
+            <Paper
+              elevation={0}
+              sx={{
+                p: 6,
+                textAlign: "center",
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <UpdateIcon sx={{ fontSize: 64, color: "text.secondary", mb: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                Нет обновлений
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                Подпишитесь на библиотеки, чтобы отслеживать их обновления
+              </Typography>
+              <Button
+                variant="contained"
+                onClick={() => router.push("/explore")}
+              >
+                Найти библиотеки
+              </Button>
+            </Paper>
+          ) : (
+            <>
+              <TabPanel value={currentTab} index={0}>
+                {updates.map((update) => (
+                  <LibraryUpdateCard key={update.id} update={update} />
+                ))}
+              </TabPanel>
+
+              <TabPanel value={currentTab} index={1}>
+                {updates.map((update) => (
+                  <LibraryUpdateCard key={update.id} update={update} />
+                ))}
+              </TabPanel>
+
+              <TabPanel value={currentTab} index={2}>
+                {updates.map((update) => (
+                  <LibraryUpdateCard key={update.id} update={update} />
+                ))}
+              </TabPanel>
+
+              {/* Pagination */}
+              {currentTab === 0 && pagination.totalPages > 1 && (
+                <Box sx={{ display: "flex", justifyContent: "center", gap: 1, mt: 4 }}>
+                  <Button
+                    variant="outlined"
+                    disabled={currentPage === 0}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                  >
+                    Предыдущая
+                  </Button>
+                  <Stack direction="row" spacing={1}>
+                    {Array.from({ length: pagination.totalPages }, (_, i) => (
+                      <Button
+                        key={i}
+                        variant={currentPage === i ? "contained" : "outlined"}
+                        onClick={() => handlePageChange(i)}
+                      >
+                        {i + 1}
+                      </Button>
+                    ))}
+                  </Stack>
+                  <Button
+                    variant="outlined"
+                    disabled={currentPage >= pagination.totalPages - 1}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                  >
+                    Следующая
+                  </Button>
+                </Box>
+              )}
+            </>
           )}
         </>
       )}
