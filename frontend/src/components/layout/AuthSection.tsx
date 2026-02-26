@@ -19,6 +19,8 @@ import {
   PersonAdd as PersonAddIcon,
   Logout as LogoutIcon,
   Person as PersonIcon,
+  Update as UpdateIcon,
+  Subscriptions as SubscriptionsIcon,
 } from "@mui/icons-material";
 import { useAuthStore } from "@/lib/auth";
 
@@ -122,6 +124,32 @@ export default function AuthSection() {
             />
             Профиль
           </MenuItem>
+          <Divider sx={{ my: 1 }} />
+          <MenuItem
+            onClick={handleClose}
+            component={Link}
+            href="/subscriptions"
+            sx={{ py: 1.5, px: 2.5, borderRadius: 1, mx: 1 }}
+          >
+            <SubscriptionsIcon
+              fontSize="small"
+              sx={{ mr: 2, color: "text.secondary" }}
+            />
+            Подписки
+          </MenuItem>
+          <MenuItem
+            onClick={handleClose}
+            component={Link}
+            href="/updates"
+            sx={{ py: 1.5, px: 2.5, borderRadius: 1, mx: 1 }}
+          >
+            <UpdateIcon
+              fontSize="small"
+              sx={{ mr: 2, color: "text.secondary" }}
+            />
+            Обновления
+          </MenuItem>
+          <Divider sx={{ my: 1 }} />
           <MenuItem
             onClick={handleLogout}
             sx={{ py: 1.5, px: 2.5, borderRadius: 1, mx: 1 }}

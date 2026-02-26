@@ -25,7 +25,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/library-updates")
+@RequestMapping("/api/v1/library-updates")
 @RequiredArgsConstructor
 @Tag(name = "Library Updates", description = "API для получения обновлений библиотек")
 public class LibraryUpdateController {

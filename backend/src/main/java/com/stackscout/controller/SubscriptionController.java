@@ -28,7 +28,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/subscriptions")
+@RequestMapping("/api/v1/subscriptions")
 @RequiredArgsConstructor
 @Tag(name = "Subscriptions", description = "API для управления подписками на библиотеки")
 public class SubscriptionController {

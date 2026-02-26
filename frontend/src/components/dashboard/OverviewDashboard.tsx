@@ -126,28 +126,41 @@ export default function OverviewDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchStats = async () => {
       try {
         const { data } = await apiClient.get("/libraries/stats");
-        setStats(data);
+        if (isMounted) {
+          setStats(data);
+        }
       } catch (err: unknown) {
         console.error("Ошибка загрузки статистики:", err);
-        const error = err as Record<string, unknown>;
-        if (
-          error.code === "ERR_NETWORK" ||
-          String(error.message).includes("Network")
-        ) {
-          setError(
-            "Не удалось подключиться к серверу. Убедитесь, что бэкенд запущен на http://localhost:8081",
-          );
-        } else {
-          setError("Не удалось загрузить статистику");
+        if (isMounted) {
+          const error = err as Record<string, unknown>;
+          if (
+            error.code === "ERR_NETWORK" ||
+            String(error.message).includes("Network")
+          ) {
+            setError(
+              "Не удалось подключиться к серверу. Убедитесь, что бэкенд запущен на http://localhost:8081",
+            );
+          } else {
+            setError("Не удалось загрузить статистику");
+          }
         }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
+
     fetchStats();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   if (loading) {

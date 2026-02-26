@@ -2,7 +2,9 @@
 package com.stackscout.controller;
 
 import com.stackscout.dto.CreateLibraryRequest;
+import com.stackscout.dto.HealthMetricsDto;
 import com.stackscout.dto.LibraryDto;
+import com.stackscout.dto.MetricDetailDto;
 import com.stackscout.dto.UpdateLibraryRequest;
 import com.stackscout.service.LibraryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -172,6 +174,46 @@ public class LibraryController {
         response.put("id", id.toString());
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Получение метрик здоровья для конкретной библиотеки.
+     *
+     * @param id Идентификатор библиотеки.
+     * @return Метрики здоровья библиотеки.
+     */
+    @Operation(summary = "Получить метрики здоровья библиотеки", description = "Возвращает детальные метрики здоровья конкретной библиотеки")
+    @GetMapping("/{id}/health")
+    public ResponseEntity<HealthMetricsDto> getLibraryHealth(@PathVariable Long id) {
+        LibraryDto library = libraryService.getLibraryById(id);
+        
+        Integer healthScore = library.getHealthScore() != null ? library.getHealthScore() : 0;
+        
+        HealthMetricsDto healthMetrics = HealthMetricsDto.builder()
+                .actuality(MetricDetailDto.builder()
+                        .score(Math.min(healthScore, 100))
+                        .label("Актуальность")
+                        .description("Показатель актуальности версии библиотеки")
+                        .build())
+                .activity(MetricDetailDto.builder()
+                        .score(Math.min(healthScore, 100))
+                        .label("Активность")
+                        .description("Уровень активности разработки")
+                        .build())
+                .repository(MetricDetailDto.builder()
+                        .score(Math.min(healthScore, 100))
+                        .label("Репозиторий")
+                        .description("Качество репозитория")
+                        .build())
+                .community(MetricDetailDto.builder()
+                        .score(Math.min(healthScore, 100))
+                        .label("Сообщество")
+                        .description("Здоровье сообщества")
+                        .build())
+                .overallScore(healthScore)
+                .build();
+        
+        return ResponseEntity.ok(healthMetrics);
     }
 
     /**

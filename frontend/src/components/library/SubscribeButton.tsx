@@ -10,6 +10,8 @@ import {
 } from "@mui/icons-material";
 import { useLibrarySubscription } from "@/lib/hooks";
 import { toast } from "react-hot-toast";
+import { useAuthStore } from "@/lib/auth";
+import { useRouter } from "next/navigation";
 
 interface SubscribeButtonProps {
   libraryId: number;
@@ -40,16 +42,34 @@ export default function SubscribeButton({
     fetchSubscriptionStatus,
   } = useLibrarySubscription(libraryId);
 
+  const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
+
   const [isSubscribed, setIsSubscribed] = useState(false);
 
   // Загрузить статус подписки при монтировании
   useEffect(() => {
-    fetchSubscriptionStatus().then((statusData) => {
-      if (statusData) {
+    let isMounted = true;
+
+    const loadStatus = async () => {
+      if (!isAuthenticated) {
+        if (isMounted) {
+          setIsSubscribed(false);
+        }
+        return;
+      }
+      const statusData = await fetchSubscriptionStatus();
+      if (isMounted && statusData) {
         setIsSubscribed(statusData.isSubscribed);
       }
-    });
-  }, [fetchSubscriptionStatus]);
+    };
+
+    loadStatus();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchSubscriptionStatus, isAuthenticated]);
 
   // Обновить локальное состояние при изменении статуса
   useEffect(() => {
@@ -61,6 +81,11 @@ export default function SubscribeButton({
   // Обработать нажатие на кнопку
   const handleClick = async () => {
     try {
+      if (!isAuthenticated) {
+        toast.error("Войдите, чтобы управлять подписками");
+        router.push("/login");
+        return;
+      }
       if (isSubscribed) {
         await unsubscribe();
         toast.success(`Вы отписались от ${libraryName}`);
