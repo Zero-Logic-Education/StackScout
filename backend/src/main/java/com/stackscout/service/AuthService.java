@@ -24,11 +24,12 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
     public AuthResponse register(RegisterRequest request) {
+        Role role = request.getRole() == null ? Role.USER : request.getRole();
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
+                .role(role)
                 .build();
         repository.save(Objects.requireNonNull(user));
         var jwtToken = jwtService.generateToken(user);

@@ -1,5 +1,6 @@
 package com.stackscout.dto;
 
+import com.stackscout.model.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,4 +14,5 @@ public class RegisterRequest {
     private String username;
     private String email;
     private String password;
+    private Role role;
 }
