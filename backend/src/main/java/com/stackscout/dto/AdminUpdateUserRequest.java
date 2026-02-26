@@ -13,5 +13,8 @@ import lombok.NoArgsConstructor;
 public class AdminUpdateUserRequest {
     private String username;
     private String email;
+    private String password;
     private Role role;
+    private Boolean enabled;
+    private Boolean locked;
 }

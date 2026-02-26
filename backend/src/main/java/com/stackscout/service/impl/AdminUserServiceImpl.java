@@ -49,8 +49,17 @@ public class AdminUserServiceImpl implements AdminUserService {
         if (request.getEmail() != null) {
             user.setEmail(request.getEmail());
         }
+        if (request.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
         if (request.getRole() != null) {
             user.setRole(request.getRole());
+        }
+        if (request.getEnabled() != null) {
+            user.setEnabled(request.getEnabled());
+        }
+        if (request.getLocked() != null) {
+            user.setLocked(request.getLocked());
         }
 
         return toDto(userRepository.save(user));
