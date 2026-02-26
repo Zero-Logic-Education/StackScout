@@ -38,6 +38,12 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Role role;
 
+    @Column(nullable = false)
+    private Boolean enabled;
+
+    @Column(nullable = false)
+    private Boolean locked;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -45,6 +51,12 @@ public class User implements UserDetails {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (enabled == null) {
+            enabled = true;
+        }
+        if (locked == null) {
+            locked = false;
+        }
     }
 
     @PreUpdate
@@ -64,7 +76,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return locked == null ? true : !locked;
     }
 
     @Override
@@ -74,6 +86,6 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled == null ? true : enabled;
     }
 }
