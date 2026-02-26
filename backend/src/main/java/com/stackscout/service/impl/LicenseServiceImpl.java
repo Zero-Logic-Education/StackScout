@@ -83,7 +83,6 @@ public class LicenseServiceImpl implements LicenseService {
                 .orElseThrow(() -> new ResourceNotFoundException("Лицензия не найдена с ID: " + id));
 
         updateEntityFromDto(license, request);
-        @SuppressWarnings("null")
         License updatedLicense = licenseRepository.save(license);
 
         log.info("Лицензия успешно обновлена: {}", id);

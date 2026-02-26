@@ -70,7 +70,6 @@ public class LibraryUpdateServiceImpl implements LibraryUpdateService {
 
     @Override
     @Transactional
-    @SuppressWarnings("null")
     public LibraryUpdateDto createUpdate(Long libraryId, String oldVersion, String newVersion,
                                          UpdateType updateType, String changeLog,
                                          Integer oldHealthScore, Integer newHealthScore) {

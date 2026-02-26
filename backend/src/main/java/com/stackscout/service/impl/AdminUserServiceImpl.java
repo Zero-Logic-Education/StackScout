@@ -8,6 +8,7 @@ import com.stackscout.exception.ResourceNotFoundException;
 import com.stackscout.model.User;
 import com.stackscout.repository.UserRepository;
 import com.stackscout.service.AdminUserService;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,20 +26,20 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<AdminUserDto> getAll(Pageable pageable) {
+    public Page<AdminUserDto> getAll(@NonNull Pageable pageable) {
         return userRepository.findAll(pageable).map(this::toDto);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public AdminUserDto getById(Long id) {
+    public AdminUserDto getById(@NonNull Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
         return toDto(user);
     }
 
     @Override
-    public AdminUserDto updateUser(Long id, AdminUpdateUserRequest request) {
+    public AdminUserDto updateUser(@NonNull Long id, AdminUpdateUserRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
 
@@ -56,7 +57,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     @Override
-    public AdminUserDto updateStatus(Long id, AdminUpdateUserStatusRequest request) {
+    public AdminUserDto updateStatus(@NonNull Long id, AdminUpdateUserStatusRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
 
@@ -71,7 +72,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     @Override
-    public AdminUserDto resetPassword(Long id, AdminResetPasswordRequest request) {
+    public AdminUserDto resetPassword(@NonNull Long id, AdminResetPasswordRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
 
@@ -80,14 +81,14 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     @Override
-    public void deleteUser(Long id) {
+    public void deleteUser(@NonNull Long id) {
         if (!userRepository.existsById(id)) {
             throw new ResourceNotFoundException("User not found: " + id);
         }
         userRepository.deleteById(id);
     }
 
-    private AdminUserDto toDto(User user) {
+    private AdminUserDto toDto(@NonNull User user) {
         return AdminUserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())

@@ -35,7 +35,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     @Transactional
-    @SuppressWarnings("null")
     public LibrarySubscriptionDto subscribe(Long userId, CreateSubscriptionRequest request) {
         log.info("User {} subscribing to library {}", userId, request.getLibraryId());
         
