@@ -1,14 +1,40 @@
 "use client";
 
+import { useEffect } from "react";
 import { Suspense } from "react";
+import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { Box, CircularProgress, Typography } from "@mui/material";
+import { useAuthStore } from "@/lib/auth";
 import OverviewDashboard from "@/components/dashboard/OverviewDashboard";
 import LibraryDetailView from "@/components/dashboard/LibraryDetailView";
 
 function DashboardContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const { isAuthenticated } = useAuthStore();
   const libraryId = searchParams.get("libraryId");
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, router]);
+
+  if (!isAuthenticated) {
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   if (libraryId) {
     return <LibraryDetailView libraryId={libraryId} />;

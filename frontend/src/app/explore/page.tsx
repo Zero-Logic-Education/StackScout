@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { libraryApi, Library } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth";
 import {
   Container,
   Box,
@@ -26,11 +27,13 @@ import {
   Security,
 } from "@mui/icons-material";
 import LibraryCardSkeleton from "@/components/skeletons/LibraryCardSkeleton";
+import LoginModal from "@/components/LoginModal";
 import toast from "react-hot-toast";
 
 function ExploreContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isAuthenticated } = useAuthStore();
   const [libraries, setLibraries] = useState<Library[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -38,6 +41,7 @@ function ExploreContent() {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const pageSize = 12;
 
   const fetchLibraries = useCallback(
@@ -363,7 +367,13 @@ function ExploreContent() {
                       boxShadow: "0 12px 24px rgba(76, 175, 80, 0.15)",
                     },
                   }}
-                  onClick={() => router.push(`/dashboard?libraryId=${lib.id}`)}
+                  onClick={() => {
+                    if (isAuthenticated) {
+                      router.push(`/dashboard?libraryId=${lib.id}`);
+                    } else {
+                      setLoginModalOpen(true);
+                    }
+                  }}
                 >
                   <CardContent sx={{ flexGrow: 1, p: 3 }}>
                     <Box
@@ -504,7 +514,11 @@ function ExploreContent() {
                         sx={{ fontWeight: 600 }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          router.push(`/dashboard?libraryId=${lib.id}`);
+                          if (isAuthenticated) {
+                            router.push(`/dashboard?libraryId=${lib.id}`);
+                          } else {
+                            setLoginModalOpen(true);
+                          }
                         }}
                       >
                         Подробнее
@@ -547,6 +561,13 @@ function ExploreContent() {
           </>
         )}
       </Container>
+
+      <LoginModal
+        open={loginModalOpen}
+        onClose={() => setLoginModalOpen(false)}
+        title="Требуется вход в аккаунт"
+        message="Для просмотра подробной информации о библиотеке необходимо авторизироваться"
+      />
     </Box>
   );
 }
