@@ -9,7 +9,6 @@ import {
   Check as CheckIcon,
 } from "@mui/icons-material";
 import { useLibrarySubscription } from "@/lib/hooks";
-import { toast } from "react-hot-toast";
 import { useAuthStore } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 
@@ -82,23 +81,19 @@ export default function SubscribeButton({
   const handleClick = async () => {
     try {
       if (!isAuthenticated) {
-        toast.error("Войдите, чтобы управлять подписками");
         router.push("/login");
         return;
       }
       if (isSubscribed) {
         await unsubscribe();
-        toast.success(`Вы отписались от ${libraryName}`);
         setIsSubscribed(false);
         onSubscriptionChange?.(false);
       } else {
         await subscribe();
-        toast.success(`Вы подписались на ${libraryName}`);
         setIsSubscribed(true);
         onSubscriptionChange?.(true);
       }
     } catch (err) {
-      toast.error(error || "Произошла ошибка");
     }
   };
 

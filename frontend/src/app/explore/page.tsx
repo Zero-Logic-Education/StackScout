@@ -28,7 +28,6 @@ import {
 } from "@mui/icons-material";
 import LibraryCardSkeleton from "@/components/skeletons/LibraryCardSkeleton";
 import LoginModal from "@/components/LoginModal";
-import toast from "react-hot-toast";
 
 function ExploreContent() {
   const router = useRouter();
@@ -79,7 +78,6 @@ function ExploreContent() {
         } else {
           setError("Не удалось загрузить данные");
         }
-        toast.error("Не удалось загрузить библиотеки");
       } finally {
         setLoading(false);
       }

@@ -53,6 +53,27 @@ export default function UpdatesPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 20;
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, router]);
+
+  if (!isAuthenticated) {
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   const {
     updates,
     isLoading,

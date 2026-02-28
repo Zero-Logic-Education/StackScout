@@ -25,7 +25,6 @@ import LibraryInfo from "@/components/library/LibraryInfo";
 import DetailPageSkeleton from "@/components/skeletons/DetailPageSkeleton";
 import { SubscribeButton, SubscriptionBadge } from "@/components/library";
 import { useLibrarySubscription } from "@/lib/hooks";
-import toast from "react-hot-toast";
 
 interface LibraryDetailViewProps {
   libraryId: string;
@@ -81,7 +80,6 @@ export default function LibraryDetailView({ libraryId }: LibraryDetailViewProps)
         } else {
           setError(error.message || "Произошла ошибка при загрузке данных");
         }
-        toast.error("Не удалось загрузить информацию о библиотеке");
       } finally {
         setLoading(false);
       }
@@ -111,9 +109,8 @@ export default function LibraryDetailView({ libraryId }: LibraryDetailViewProps)
   const handleShare = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      toast.success("Ссылка скопирована в буфер обмена!");
     } catch {
-      toast.error("Не удалось скопировать ссылку");
+      // Handle copy error silently
     }
   };
 

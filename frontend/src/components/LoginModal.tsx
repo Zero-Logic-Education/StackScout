@@ -17,7 +17,6 @@ import {
 } from "@mui/material";
 import { Person as PersonIcon, Lock as LockIcon } from "@mui/icons-material";
 import { useAuthStore } from "@/lib/auth";
-import toast from "react-hot-toast";
 import Link from "next/link";
 
 interface LoginModalProps {
@@ -46,7 +45,6 @@ export default function LoginModal({
 
     try {
       await login(username, password);
-      toast.success("Успешный вход!");
       setUsername("");
       setPassword("");
       onClose();
@@ -54,7 +52,6 @@ export default function LoginModal({
       const errorMessage =
         err instanceof Error ? err.message : "Неверное имя пользователя или пароль";
       setError(errorMessage);
-      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

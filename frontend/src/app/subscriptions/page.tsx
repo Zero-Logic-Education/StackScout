@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Container,
   Box,
@@ -21,7 +21,6 @@ import { useRouter } from "next/navigation";
 import { useUserSubscriptions } from "@/lib/hooks";
 import { subscriptionApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth";
-import { toast } from "react-hot-toast";
 
 /**
  * Страница управления подписками
@@ -31,6 +30,27 @@ export default function SubscriptionsPage() {
   const { isAuthenticated } = useAuthStore();
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 20;
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, router]);
+
+  if (!isAuthenticated) {
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   const {
     subscriptions,
@@ -47,10 +67,9 @@ export default function SubscriptionsPage() {
   const handleUnsubscribe = async (libraryId: number, libraryName: string) => {
     try {
       await subscriptionApi.unsubscribe(libraryId);
-      toast.success(`Вы отписались от ${libraryName}`);
       fetchSubscriptions(currentPage, pageSize);
     } catch {
-      toast.error("Не удалось отписаться");
+      // Handle error silently
     }
   };
 
@@ -61,14 +80,9 @@ export default function SubscriptionsPage() {
   ) => {
     try {
       await subscriptionApi.updateNotifications(libraryId, enabled);
-      toast.success(
-        enabled
-          ? `Уведомления для ${libraryName} включены`
-          : `Уведомления для ${libraryName} выключены`
-      );
       fetchSubscriptions(currentPage, pageSize);
     } catch {
-      toast.error("Не удалось обновить настройки");
+      // Handle error silently
     }
   };
 
