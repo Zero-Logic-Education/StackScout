@@ -55,7 +55,7 @@ export default function RegisterPage() {
         const redirectTo = previousPage && previousPage !== "/register" ? previousPage : "/dashboard";
         clearPreviousPage();
         router.push(redirectTo);
-      } catch (err) {
+      } catch {
         setError("Ошибка регистрации. Возможно, имя пользователя уже занято.");
         setLoading(false);
       }

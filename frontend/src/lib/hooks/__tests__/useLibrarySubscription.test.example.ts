@@ -143,7 +143,7 @@ describe('useLibrarySubscription', () => {
     await act(async () => {
       try {
         await result.current.subscribe();
-      } catch (error) {
+      } catch {
         // Ожидаем ошибку
       }
     });

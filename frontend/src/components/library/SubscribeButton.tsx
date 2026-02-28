@@ -32,7 +32,6 @@ export default function SubscribeButton({
 }: SubscribeButtonProps) {
   const {
     isLoading,
-    error,
     status,
     subscribe,
     unsubscribe,

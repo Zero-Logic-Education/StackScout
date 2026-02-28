@@ -9,7 +9,7 @@ const parseJWT = (token: string): { role?: string } => {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
     return JSON.parse(jsonPayload);
-  } catch (error) {
+  } catch {
     return {};
   }
 };
@@ -35,7 +35,7 @@ export function middleware(request: NextRequest) {
         const loginUrl = new URL('/admin/login', request.url);
         return NextResponse.redirect(loginUrl);
       }
-    } catch (error) {
+    } catch {
       // Если токен невалидный - редирект на админ логин
       const loginUrl = new URL('/admin/login', request.url);
       return NextResponse.redirect(loginUrl);

@@ -51,7 +51,7 @@ export default function LoginPage() {
         const redirectTo = previousPage && previousPage !== "/login" ? previousPage : "/dashboard";
         clearPreviousPage();
         router.push(redirectTo);
-      } catch (err) {
+      } catch {
         // Здесь можно точнее обработать статус 401/403
         setError("Неверное имя пользователя или пароль");
         setLoading(false);
