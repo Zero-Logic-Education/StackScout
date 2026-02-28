@@ -5,25 +5,32 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import com.stackscout.service.AdminUserService;
+import com.stackscout.service.ScraperTaskService;
+import com.stackscout.service.LibraryService;
 
 /**
  * REST контроллер для регламентных работ
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/admin/maintenance")
+@RequestMapping("/api/v1/admin/statistics")
 @RequiredArgsConstructor
-@Tag(name = "Admin Maintenance", description = "API для регламентных работ")
+@Tag(name = "Admin Statistics", description = "API для получения статистики администратора")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminMaintenanceController {
 
     private final CacheManager cacheManager;
+    private final AdminUserService adminUserService;
+    private final ScraperTaskService scraperTaskService;
+    private final LibraryService libraryService;
 
     @PostMapping("/clear-cache")
     @Operation(summary = "Очистить кэш", description = "Очищает все кэши Redis")
@@ -70,5 +77,39 @@ public class AdminMaintenanceController {
         health.put("timestamp", java.time.LocalDateTime.now().toString());
         
         return ResponseEntity.ok(health);
+    }
+
+    @GetMapping("/dashboard")
+    @Operation(summary = "Получить статистику для админ дашборда")
+    public ResponseEntity<Map<String, Object>> getDashboardStats() {
+        log.debug("GET /api/v1/admin/statistics/dashboard");
+        
+        try {
+            Map<String, Object> stats = new HashMap<>();
+            
+            // Получить количество активных скрейперов
+            long activeScrapers = scraperTaskService.getActiveScrapers().size();
+            stats.put("activeScraper", activeScrapers);
+            
+            // Получить общую статистику по библиотекам
+            var libraryStats = libraryService.getLibrariesStats();
+            long totalLibraries = (long) libraryStats.get("totalLibraries");
+            stats.put("totalLibraries", totalLibraries);
+            
+            // Получить количество пользователей
+            var allUsers = adminUserService.getAll(Pageable.unpaged());
+            long totalUsers = allUsers.getTotalElements();
+            stats.put("totalUsers", totalUsers);
+            
+            // Системный статус
+            stats.put("systemStatus", "OK");
+            
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            log.error("Ошибка при получении статистики дашборда", e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Не удалось получить статистику");
+            return ResponseEntity.status(500).body(errorResponse);
+        }
     }
 }

@@ -78,4 +78,6 @@ public interface LibraryService {
      * Удалить дубликаты библиотек
      */
     void removeDuplicates();
+
+	Object getLibrariesStats();
 }

@@ -251,4 +251,10 @@ public class LibraryServiceImpl implements LibraryService {
         
         log.info("Удаление дубликатов завершено");
     }
+
+    @Override
+    public Object getLibrariesStats() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getLibrariesStats'");
+    }
 }
