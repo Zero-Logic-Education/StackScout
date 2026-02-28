@@ -56,6 +56,20 @@ public class Library {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "moderation_status", length = 50)
+    @Builder.Default
+    private ModerationStatus moderationStatus = ModerationStatus.PENDING;
+
+    @Column(name = "moderated_by")
+    private Long moderatedBy;
+
+    @Column(name = "moderated_at")
+    private LocalDateTime moderatedAt;
+
+    @Column(name = "moderation_notes", columnDefinition = "TEXT")
+    private String moderationNotes;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
