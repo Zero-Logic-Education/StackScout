@@ -17,10 +17,17 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff, PersonAdd } from "@mui/icons-material";
 import { useAuthStore } from "@/lib/auth";
+import { usePreviousPage } from "@/lib/hooks/usePreviousPage";
 
 export default function RegisterPage() {
   const router = useRouter();
   const register = useAuthStore((state) => state.register);
+  const getPreviousPage = useAuthStore((state) => state.getPreviousPage);
+  const clearPreviousPage = useAuthStore((state) => state.clearPreviousPage);
+  
+  // Track previous page for redirect after registration
+  usePreviousPage();
+  
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,7 +50,11 @@ export default function RegisterPage() {
     if (name && email && password) {
       try {
         await register(name, email, password);
-        router.push("/dashboard");
+        // Redirect to previous page or dashboard
+        const previousPage = getPreviousPage();
+        const redirectTo = previousPage && previousPage !== "/register" ? previousPage : "/dashboard";
+        clearPreviousPage();
+        router.push(redirectTo);
       } catch (err) {
         setError("Ошибка регистрации. Возможно, имя пользователя уже занято.");
         setLoading(false);

@@ -14,6 +14,7 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   token: string | null;
+  previousPage: string | null;
   login: (username: string, password: string) => Promise<void>;
   register: (
     username: string,
@@ -22,6 +23,9 @@ interface AuthState {
   ) => Promise<void>;
   logout: () => void;
   isAdmin: () => boolean;
+  setPreviousPage: (page: string) => void;
+  getPreviousPage: () => string | null;
+  clearPreviousPage: () => void;
 }
 
 // Функция для парсинга JWT и извлечения роли
@@ -45,6 +49,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       token: null,
+      previousPage: null,
 
       login: async (username, password) => {
         try {
@@ -101,6 +106,19 @@ export const useAuthStore = create<AuthState>()(
       isAdmin: () => {
         const state = get();
         return state.user?.role === "ADMIN";
+      },
+
+      setPreviousPage: (page: string) => {
+        set({ previousPage: page });
+      },
+
+      getPreviousPage: () => {
+        const state = get();
+        return state.previousPage;
+      },
+
+      clearPreviousPage: () => {
+        set({ previousPage: null });
       },
     }),
     {

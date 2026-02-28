@@ -21,10 +21,17 @@ import {
   Login as LoginIcon,
 } from "@mui/icons-material";
 import { useAuthStore } from "@/lib/auth";
+import { usePreviousPage } from "@/lib/hooks/usePreviousPage";
 
 export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
+  const getPreviousPage = useAuthStore((state) => state.getPreviousPage);
+  const clearPreviousPage = useAuthStore((state) => state.clearPreviousPage);
+  
+  // Track previous page for redirect after login
+  usePreviousPage();
+  
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -39,7 +46,11 @@ export default function LoginPage() {
     if (username && password) {
       try {
         await login(username, password);
-        router.push("/dashboard");
+        // Redirect to previous page or dashboard
+        const previousPage = getPreviousPage();
+        const redirectTo = previousPage && previousPage !== "/login" ? previousPage : "/dashboard";
+        clearPreviousPage();
+        router.push(redirectTo);
       } catch (err) {
         // Здесь можно точнее обработать статус 401/403
         setError("Неверное имя пользователя или пароль");
