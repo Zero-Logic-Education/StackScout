@@ -65,10 +65,12 @@ export default function DistributionChart({
   title,
 }: DistributionChartProps) {
   // Кастомный label
-  const renderLabel = (entry: DistributionData) => {
+  const renderLabel = (entry: { name?: string | number; value?: number | string }) => {
     const total = data.reduce((acc, curr) => acc + curr.value, 0);
-    const percent = ((entry.value / total) * 100).toFixed(0);
-    return `${entry.name}: ${percent}%`;
+    const value = Number(entry.value ?? 0);
+    const percent = total > 0 ? ((value / total) * 100).toFixed(0) : "0";
+    const name = entry.name !== undefined ? String(entry.name) : "Unknown";
+    return `${name}: ${percent}%`;
   };
 
   return (

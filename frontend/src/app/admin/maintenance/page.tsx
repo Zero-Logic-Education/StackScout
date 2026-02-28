@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   CircularProgress,
   Box,
@@ -15,6 +16,7 @@ import {
   useTheme,
 } from '@mui/material';
 import {
+  ArrowBack,
   DeleteOutline,
   Refresh,
   Storage,
@@ -24,6 +26,7 @@ import { useAdminProtection } from '@/lib/useAdminProtection';
 import { adminApi, type AdminDashboardStats, type CacheStats } from '@/lib/api';
 
 export default function AdminMaintenancePage() {
+  const router = useRouter();
   const theme = useTheme();
   const { isAdminAuthenticated } = useAdminProtection();
   const [loading, setLoading] = useState(false);
@@ -113,6 +116,11 @@ export default function AdminMaintenancePage() {
       <Container maxWidth="lg">
         {/* Header */}
         <Stack spacing={4} sx={{ mb: 6 }}>
+          <Box>
+            <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => router.push('/admin')}>
+              Назад
+            </Button>
+          </Box>
           <Box>
             <Typography variant="h3" component="h1" sx={{
               fontWeight: 800,

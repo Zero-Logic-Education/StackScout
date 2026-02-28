@@ -12,6 +12,7 @@ import {
   Typography,
   Card,
   CardContent,
+  Button,
   Stack,
   alpha,
   useTheme,
@@ -24,6 +25,7 @@ import {
   Build,
   TrendingUp,
   Autorenew,
+  ArrowBack,
 } from '@mui/icons-material';
 
 export default function AdminDashboardPage() {
@@ -119,6 +121,11 @@ export default function AdminDashboardPage() {
       <Container maxWidth="lg">
         {/* Header */}
         <Stack spacing={4} sx={{ mb: 6 }}>
+          <Box>
+            <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => router.push('/admin')}>
+              Назад
+            </Button>
+          </Box>
           <Box>
             <Typography
               variant="h3"

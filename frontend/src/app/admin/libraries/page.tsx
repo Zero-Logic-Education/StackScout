@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   CircularProgress,
   Box,
@@ -21,6 +22,7 @@ import {
   useTheme,
 } from '@mui/material';
 import {
+  ArrowBack,
   Search as SearchIcon,
   Delete,
   Refresh,
@@ -43,6 +45,7 @@ interface Library {
 }
 
 export default function AdminLibrariesPage() {
+  const router = useRouter();
   const theme = useTheme();
   const { isAdminAuthenticated } = useAdminProtection();
   const [libraries, setLibraries] = useState<Library[]>([]);
@@ -123,6 +126,11 @@ export default function AdminLibrariesPage() {
       <Container maxWidth="lg">
         {/* Header */}
         <Stack spacing={4} sx={{ mb: 6 }}>
+          <Box>
+            <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => router.push('/admin')}>
+              Назад
+            </Button>
+          </Box>
           <Box>
             <Typography variant="h3" component="h1" sx={{
               fontWeight: 800,

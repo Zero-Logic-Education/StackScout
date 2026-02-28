@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   CircularProgress,
   Box,
@@ -18,6 +19,7 @@ import {
   useTheme,
 } from '@mui/material';
 import {
+  ArrowBack,
   PlayArrow,
   Pause as PauseIcon,
   Refresh,
@@ -47,6 +49,7 @@ interface ScraperTask {
 }
 
 export default function ScrapersMonitorPage() {
+  const router = useRouter();
   const theme = useTheme();
   const { isAdminAuthenticated } = useAdminProtection();
   const [scrapers, setScrapers] = useState<ScraperTask[]>([]);
@@ -136,6 +139,11 @@ export default function ScrapersMonitorPage() {
       <Container maxWidth="lg">
         {/* Header */}
         <Stack spacing={4} sx={{ mb: 6 }}>
+          <Box>
+            <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => router.push('/admin')}>
+              Назад
+            </Button>
+          </Box>
           <Box>
             <Typography variant="h3" component="h1" sx={{
               fontWeight: 800,
@@ -265,14 +273,23 @@ export default function ScrapersMonitorPage() {
                 </CardContent>
 
                 {/* Actions */}
-                <CardActions sx={{ gap: 1, pt: 0 }}>
+                <CardActions
+                  sx={{
+                    pt: 0,
+                    px: 2,
+                    pb: 2,
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                    gap: 1,
+                  }}
+                >
                   <Button
                     size="small"
                     variant="contained"
                     startIcon={<PlayArrow />}
                     onClick={() => handleStart(scraper.scraperName)}
                     disabled={scraper.status === 'RUNNING'}
-                    sx={{ flex: 1 }}
+                    fullWidth
                   >
                     Запустить
                   </Button>
@@ -282,7 +299,7 @@ export default function ScrapersMonitorPage() {
                     startIcon={<PauseIcon />}
                     onClick={() => handlePause(scraper.scraperName)}
                     disabled={scraper.status !== 'RUNNING'}
-                    sx={{ flex: 1 }}
+                    fullWidth
                   >
                     Пауза
                   </Button>
@@ -291,6 +308,7 @@ export default function ScrapersMonitorPage() {
                     variant="outlined"
                     startIcon={<Refresh />}
                     onClick={() => handleRestart(scraper.scraperName)}
+                    fullWidth
                   >
                     Перезапуск
                   </Button>
@@ -298,6 +316,7 @@ export default function ScrapersMonitorPage() {
                     size="small"
                     variant="outlined"
                     startIcon={<Settings />}
+                    fullWidth
                   >
                     Настройки
                   </Button>

@@ -22,13 +22,13 @@ interface TrendChartProps {
 }
 
 interface TooltipPayloadItem {
-  value: number;
-  payload: TrendData;
+  value?: number | string;
+  payload?: TrendData;
 }
 
 interface TooltipProps {
   active?: boolean;
-  payload?: TooltipPayloadItem[];
+  payload?: readonly TooltipPayloadItem[];
   color: string;
 }
 
@@ -37,6 +37,10 @@ interface TooltipProps {
  */
 const CustomTooltip = ({ active, payload, color }: TooltipProps) => {
   if (active && payload && payload.length) {
+    const firstItem = payload[0];
+    const rawValue = Number(firstItem?.value ?? 0);
+    const dateLabel = firstItem?.payload?.date || "—";
+
     return (
       <Paper
         elevation={3}
@@ -48,10 +52,10 @@ const CustomTooltip = ({ active, payload, color }: TooltipProps) => {
         }}
       >
         <Typography variant="caption" display="block" color="text.secondary">
-          {payload[0].payload.date}
+          {dateLabel}
         </Typography>
         <Typography variant="body2" fontWeight={600} sx={{ color }}>
-          {payload[0].value.toLocaleString()}
+          {rawValue.toLocaleString()}
         </Typography>
       </Paper>
     );
