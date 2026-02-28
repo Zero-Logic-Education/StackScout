@@ -96,9 +96,9 @@ export default function PasswordResetPage() {
             }`}
           >
             {message.type === 'success' ? (
-              <CheckCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+              <CheckCircle className="w-5 h-5 mt-0.5" />
             ) : (
-              <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+              <AlertCircle className="w-5 h-5 mt-0.5" />
             )}
             <p className="text-sm">{message.text}</p>
           </div>
@@ -190,7 +190,7 @@ export default function PasswordResetPage() {
         {/* Help Text */}
         <div className="mt-6 text-center">
           <p className="text-sm text-slate-500">
-            Если письмо не пришло, проверьте папку "Спам" или попробуйте еще раз
+            Если письмо не пришло, проверьте папку &quot;Спам&quot; или попробуйте еще раз
           </p>
         </div>
       </div>

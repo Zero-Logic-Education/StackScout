@@ -171,8 +171,11 @@ export default function ScrapersMonitorPage() {
                 </div>
                 <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-[#6DB33F] to-emerald-400 transition-all duration-500"
-                    style={{ width: `${scraper.progress}%` }}
+                    className={['h-full', 'transition-all', 'duration-500'].join(' ')}
+                    style={{
+                      width: `${scraper.progress}%`,
+                      background: 'linear-gradient(to right, #6DB33F, rgb(52 211 153))',
+                    }}
                   />
                 </div>
               </div>

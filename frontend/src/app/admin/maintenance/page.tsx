@@ -107,9 +107,9 @@ export default function AdminMaintenancePage() {
             : 'bg-red-950/30 border-red-800 text-red-400'
         }`}>
           {message.type === 'success' ? (
-            <CheckCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+            <CheckCircle className="w-5 h-5 mt-0.5 shrink-0" />
           ) : (
-            <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+            <AlertTriangle className="w-5 h-5 mt-0.5 shrink-0" />
           )}
           <p>{message.text}</p>
         </div>
@@ -221,7 +221,7 @@ export default function AdminMaintenancePage() {
       {/* Warning */}
       <div className="mt-8 bg-yellow-950/30 border border-yellow-800/50 rounded-lg p-6">
         <div className="flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+          <AlertTriangle className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
           <div>
             <h4 className="text-yellow-400 font-semibold mb-2">
               Внимание!
