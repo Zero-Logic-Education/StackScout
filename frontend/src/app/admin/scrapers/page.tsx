@@ -91,12 +91,21 @@ export default function ScrapersMonitorPage() {
     }
   };
 
-  const handleRestart = async (scraperName: string) => {
+  const handleResume = async (scraperName: string) => {
     try {
-      await adminApi.restartScraper(scraperName);
+      await adminApi.resumeScraper(scraperName);
       loadScrapers();
     } catch (error) {
-      console.error('Failed to restart scraper:', error);
+      console.error('Failed to resume scraper:', error);
+    }
+  };
+
+  const handleStop = async (scraperName: string) => {
+    try {
+      await adminApi.stopScraper(scraperName);
+      loadScrapers();
+    } catch (error) {
+      console.error('Failed to stop scraper:', error);
     }
   };
 
@@ -306,19 +315,21 @@ export default function ScrapersMonitorPage() {
                   <Button
                     size="small"
                     variant="outlined"
-                    startIcon={<Refresh />}
-                    onClick={() => handleRestart(scraper.scraperName)}
+                    startIcon={<PlayArrow />}
+                    onClick={() => handleResume(scraper.scraperName)}
+                    disabled={scraper.status !== 'PAUSED'}
                     fullWidth
                   >
-                    Перезапуск
+                    Продолжить
                   </Button>
                   <Button
                     size="small"
                     variant="outlined"
-                    startIcon={<Settings />}
+                    onClick={() => handleStop(scraper.scraperName)}
+                    disabled={scraper.status === 'IDLE' || scraper.status === 'COMPLETED'}
                     fullWidth
                   >
-                    Настройки
+                    Остановить
                   </Button>
                 </CardActions>
               </Card>

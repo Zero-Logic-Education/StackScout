@@ -287,6 +287,29 @@ export const libraryUpdateApi = {
     apiClient.get<UpdateStats>(`/library-updates/stats`),
 };
 
+export interface AdminUserDto {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  lastLogin?: string;
+}
+
+export interface AdminUsersResponse {
+  content: AdminUserDto[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+}
+
+export interface UpdateScraperRequest {
+  scraperId: number;
+  settings: Record<string, unknown>;
+}
+
 export const adminApi = {
   getDashboardStats: () =>
     apiClient.get<AdminDashboardStats>(`/admin/statistics/dashboard`),
@@ -297,6 +320,23 @@ export const adminApi = {
   clearCache: () =>
     apiClient.post(`/admin/statistics/clear-cache`),
 
+  // Users
+  getUsers: (page = 0, size = 20) =>
+    adminApiClient.get<AdminUsersResponse>(`/api/v1/admin/users?page=${page}&size=${size}`),
+
+  getUserById: (id: number) =>
+    adminApiClient.get<AdminUserDto>(`/api/v1/admin/users/${id}`),
+
+  updateUserStatus: (id: number, isActive: boolean) =>
+    adminApiClient.patch(`/api/v1/admin/users/${id}/status`, { isActive }),
+
+  deleteUser: (id: number) =>
+    adminApiClient.delete(`/api/v1/admin/users/${id}`),
+
+  resetUserPassword: (id: number, newPassword: string) =>
+    adminApiClient.patch(`/api/v1/admin/users/${id}/password`, { password: newPassword }),
+
+  // Scrapers
   getScrapers: () =>
     adminApiClient.get(`/api/admin/scrapers`),
 
@@ -306,11 +346,24 @@ export const adminApi = {
   pauseScraper: (scraperName: string) =>
     adminApiClient.post(`/api/admin/scrapers/${scraperName}/pause`),
 
+  resumeScraper: (scraperName: string) =>
+    adminApiClient.post(`/api/admin/scrapers/${scraperName}/resume`),
+
   restartScraper: (scraperName: string) =>
     adminApiClient.post(`/api/admin/scrapers/${scraperName}/restart`),
 
+  stopScraper: (scraperName: string) =>
+    adminApiClient.post(`/api/admin/scrapers/${scraperName}/stop`),
+
+  // Libraries
   getLibraries: (size = 50) =>
     adminApiClient.get(`/api/admin/libraries?size=${size}`),
+
+  updateLibraryModeration: (id: number, status: string, notes?: string) =>
+    adminApiClient.patch(`/api/admin/libraries/${id}/moderation`, { 
+      moderationStatus: status,
+      moderationNotes: notes
+    }),
 
   recalculateLibraryHealth: (id: number) =>
     adminApiClient.post(`/api/admin/libraries/${id}/recalculate-health`),

@@ -18,6 +18,14 @@ import {
   TableHead,
   TableRow,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
   alpha,
   useTheme,
 } from '@mui/material';
@@ -27,6 +35,7 @@ import {
   Delete,
   Refresh,
   Archive as ArchiveIcon,
+  Edit,
 } from '@mui/icons-material';
 import { useAdminProtection } from '@/lib/useAdminProtection';
 import { adminApi } from '@/lib/api';
@@ -52,6 +61,10 @@ export default function AdminLibrariesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [selectedLibrary, setSelectedLibrary] = useState<Library | null>(null);
+  const [moderationDialogOpen, setModerationDialogOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState('VERIFIED');
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
     loadLibraries();
@@ -76,6 +89,30 @@ export default function AdminLibrariesPage() {
       loadLibraries();
     } catch (error) {
       console.error('Failed to delete:', error);
+    }
+  };
+
+  const handleUpdateModeration = async () => {
+    if (!selectedLibrary) return;
+    
+    try {
+      await adminApi.updateLibraryModeration(selectedLibrary.id, newStatus, notes);
+      setModerationDialogOpen(false);
+      setSelectedLibrary(null);
+      setNewStatus('VERIFIED');
+      setNotes('');
+      loadLibraries();
+    } catch (error) {
+      console.error('Failed to update moderation status:', error);
+    }
+  };
+
+  const handleRecalculateHealth = async (id: number) => {
+    try {
+      await adminApi.recalculateLibraryHealth(id);
+      loadLibraries();
+    } catch (error) {
+      console.error('Failed to recalculate health:', error);
     }
   };
 
@@ -255,7 +292,26 @@ export default function AdminLibrariesPage() {
                     />
                   </TableCell>
                   <TableCell align="right">
-                    <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ flexWrap: 'wrap' }}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<Edit />}
+                        onClick={() => {
+                          setSelectedLibrary(library);
+                          setNewStatus(library.moderationStatus);
+                          setModerationDialogOpen(true);
+                        }}
+                      >
+                        Статус
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleRecalculateHealth(library.id)}
+                      >
+                        Пересчёт
+                      </Button>
                       <Button
                         size="small"
                         variant="outlined"
@@ -280,6 +336,57 @@ export default function AdminLibrariesPage() {
             <Typography color="text.secondary">Нет библиотек по заданным критериям</Typography>
           </Box>
         )}
+
+        {/* Moderation Status Dialog */}
+        <Dialog open={moderationDialogOpen} onClose={() => {
+          setModerationDialogOpen(false);
+          setSelectedLibrary(null);
+          setNewStatus('VERIFIED');
+          setNotes('');
+        }} maxWidth="sm" fullWidth>
+          <DialogTitle>Изменить статус модерации</DialogTitle>
+          <DialogContent sx={{ pt: 3 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Библиотека: <strong>{selectedLibrary?.name}</strong>
+            </Typography>
+            <FormControl fullWidth sx={{ mb: 3 }}>
+              <InputLabel>Статус</InputLabel>
+              <Select
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}
+                label="Статус"
+              >
+                <MenuItem value="PENDING">Ожидает проверки</MenuItem>
+                <MenuItem value="VERIFIED">Проверено</MenuItem>
+                <MenuItem value="NEEDS_REVIEW">Требует уточнения</MenuItem>
+                <MenuItem value="ARCHIVED">Архив</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Примечание (опционально)"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              variant="outlined"
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => {
+              setModerationDialogOpen(false);
+              setSelectedLibrary(null);
+              setNewStatus('VERIFIED');
+              setNotes('');
+            }}>Отмена</Button>
+            <Button 
+              onClick={handleUpdateModeration} 
+              variant="contained"
+            >
+              Сохранить
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </Box>
   );
