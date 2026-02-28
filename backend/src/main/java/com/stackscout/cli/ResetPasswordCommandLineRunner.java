@@ -45,7 +45,7 @@ public class ResetPasswordCommandLineRunner implements CommandLineRunner {
                 System.exit(1);
             }
 
-            if (newPassword.length() < 8) {
+            if (newPassword != null && newPassword.length() < 8) {
                 log.error("Пароль должен содержать минимум 8 символов");
                 System.exit(1);
             }

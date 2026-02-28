@@ -32,6 +32,7 @@ public class ScraperTaskServiceImpl implements ScraperTaskService {
     private final ScraperTaskMapper scraperTaskMapper;
 
     @Override
+    @SuppressWarnings("null")
     public List<ScraperTaskDto> getAllScrapers() {
         log.debug("Получение всех скрейперов");
         return scraperTaskRepository.findAll().stream()
@@ -40,6 +41,7 @@ public class ScraperTaskServiceImpl implements ScraperTaskService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public Page<ScraperTaskDto> getScrapers(Pageable pageable) {
         log.debug("Получение скрейперов с пагинацией: {}", pageable);
         return scraperTaskRepository.findAll(pageable)
@@ -47,6 +49,7 @@ public class ScraperTaskServiceImpl implements ScraperTaskService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public ScraperTaskDto getScraperById(Long id) {
         log.debug("Получение скрейпера по ID: {}", id);
         ScraperTask scraper = scraperTaskRepository.findById(id)
@@ -111,6 +114,7 @@ public class ScraperTaskServiceImpl implements ScraperTaskService {
 
     @Override
     @Transactional
+    @SuppressWarnings("null")
     public void deleteScraper(Long id) {
         log.info("Удаление скрейпера: {}", id);
         if (!scraperTaskRepository.existsById(id)) {

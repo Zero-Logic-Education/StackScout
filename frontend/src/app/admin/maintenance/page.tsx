@@ -30,7 +30,7 @@ export default function AdminMaintenancePage() {
       } else {
         setMessage({ type: 'error', text: 'Не удалось очистить кэш' });
       }
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'Ошибка при очистке кэша' });
     } finally {
       setLoading(false);
@@ -55,7 +55,7 @@ export default function AdminMaintenancePage() {
       } else {
         setMessage({ type: 'error', text: 'Не удалось запустить нормализацию' });
       }
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'Ошибка при нормализации лицензий' });
     } finally {
       setLoading(false);
@@ -80,7 +80,7 @@ export default function AdminMaintenancePage() {
       } else {
         setMessage({ type: 'error', text: 'Не удалось удалить дубликаты' });
       }
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'Ошибка при удалении дубликатов' });
     } finally {
       setLoading(false);

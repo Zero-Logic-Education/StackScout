@@ -32,7 +32,7 @@ export default function PasswordResetPage() {
       } else {
         setMessage({ type: 'error', text: 'Не удалось отправить запрос' });
       }
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'Ошибка при отправке запроса' });
     } finally {
       setLoading(false);
@@ -61,7 +61,7 @@ export default function PasswordResetPage() {
       } else {
         setMessage({ type: 'error', text: 'Недействительный или истекший токен' });
       }
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'Ошибка при смене пароля' });
     } finally {
       setLoading(false);

@@ -32,6 +32,7 @@ public class AdminMaintenanceController {
         
         int clearedCaches = 0;
         for (String cacheName : cacheManager.getCacheNames()) {
+            @SuppressWarnings("null")
             var cache = cacheManager.getCache(cacheName);
             if (cache != null) {
                 cache.clear();
