@@ -7,8 +7,6 @@ import {
   Container,
   Typography,
   Card,
-  CardContent,
-  CardActions,
   Button,
   TextField,
   Stack,
@@ -26,8 +24,6 @@ import {
   Search as SearchIcon,
   Delete,
   Refresh,
-  VerifiedUser,
-  Warning,
   Archive as ArchiveIcon,
 } from '@mui/icons-material';
 import { useAdminProtection } from '@/lib/useAdminProtection';
@@ -66,15 +62,6 @@ export default function AdminLibrariesPage() {
       console.error('Failed to load libraries:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleRecalculateHealth = async (id: number) => {
-    try {
-      await adminApi.recalculateLibraryHealth(id);
-      loadLibraries();
-    } catch (error) {
-      console.error('Failed to recalculate:', error);
     }
   };
 
