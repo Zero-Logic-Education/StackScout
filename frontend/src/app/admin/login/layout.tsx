@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Outfit } from 'next/font/google';
-import '../globals.css';
+import '../../globals.css';
 import ThemeRegistry from '@/components/ThemeRegistry';
-import Navbar from '@/components/layout/Navbar';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -15,11 +14,11 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: 'Admin Panel | StackScout',
-  description: 'Административная панель StackScout',
+  title: 'Admin Login | StackScout',
+  description: 'Вход в административную панель StackScout',
 };
 
-export default function AdminLayout({
+export default function AdminLoginLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -28,7 +27,6 @@ export default function AdminLayout({
     <html lang="ru">
       <body className={`${inter.variable} ${outfit.variable} antialiased`}>
         <ThemeRegistry>
-          <Navbar />
           <main>{children}</main>
         </ThemeRegistry>
       </body>

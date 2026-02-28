@@ -10,8 +10,6 @@ import {
   CardContent,
   CardActions,
   Button,
-  Alert,
-  Grid,
   Stack,
   alpha,
   useTheme,
@@ -20,10 +18,7 @@ import {
   DeleteOutline,
   Refresh,
   Storage,
-  WarningAmber,
-  CheckCircle,
   CachedRounded,
-  GetApp,
 } from '@mui/icons-material';
 import { useAdminProtection } from '@/lib/useAdminProtection';
 
@@ -31,27 +26,18 @@ export default function AdminMaintenancePage() {
   const theme = useTheme();
   const { isAdminAuthenticated } = useAdminProtection();
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleClearCache = async () => {
     setLoading(true);
-    setMessage(null);
     try {
-      const response = await fetch('/api/admin/maintenance/clear-cache', {
+      await fetch('/api/admin/maintenance/clear-cache', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setMessage({ type: 'success', text: `Кэш успешно очищен. Очищено кэшей: ${data.clearedCaches}` });
-      } else {
-        setMessage({ type: 'error', text: 'Не удалось очистить кэш' });
-      }
     } catch {
-      setMessage({ type: 'error', text: 'Ошибка при очистке кэша' });
+      // Handle error silently
     } finally {
       setLoading(false);
     }
@@ -61,22 +47,15 @@ export default function AdminMaintenancePage() {
     if (!confirm('Запустить нормализацию всех лицензий?')) return;
     
     setLoading(true);
-    setMessage(null);
     try {
-      const response = await fetch('/api/admin/libraries/bulk-normalize-licenses', {
+      await fetch('/api/admin/libraries/bulk-normalize-licenses', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      
-      if (response.ok) {
-        setMessage({ type: 'success', text: 'Нормализация лицензий запущена' });
-      } else {
-        setMessage({ type: 'error', text: 'Не удалось запустить нормализацию' });
-      }
     } catch {
-      setMessage({ type: 'error', text: 'Ошибка при нормализации лицензий' });
+      // Handle error silently
     } finally {
       setLoading(false);
     }
@@ -86,22 +65,15 @@ export default function AdminMaintenancePage() {
     if (!confirm('Удалить дубликаты библиотек? Это действие нельзя отменить!')) return;
     
     setLoading(true);
-    setMessage(null);
     try {
-      const response = await fetch('/api/admin/libraries/remove-duplicates', {
+      await fetch('/api/admin/libraries/remove-duplicates', {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      
-      if (response.ok) {
-        setMessage({ type: 'success', text: 'Дубликаты успешно удалены' });
-      } else {
-        setMessage({ type: 'error', text: 'Не удалось удалить дубликаты' });
-      }
     } catch {
-      setMessage({ type: 'error', text: 'Ошибка при удалении дубликатов' });
+      // Handle error silently
     } finally {
       setLoading(false);
     }
@@ -124,7 +96,7 @@ export default function AdminMaintenancePage() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: { xs: 10, md: 12 } }}>
-      <Container maxWidth="xxl">
+      <Container maxWidth="lg">
         {/* Header */}
         <Stack spacing={4} sx={{ mb: 6 }}>
           <Box>
@@ -143,21 +115,10 @@ export default function AdminMaintenancePage() {
           </Box>
         </Stack>
 
-        {/* Message */}
-        {message && (
-          <Alert
-            severity={message.type === 'success' ? 'success' : 'error'}
-            sx={{ mb: 4, borderRadius: 2 }}
-            onClose={() => setMessage(null)}
-          >
-            {message.text}
-          </Alert>
-        )}
-
         {/* Actions Grid */}
-        <Grid container spacing={3} sx={{ mb: 6 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mb: 6 }}>
           {/* Clear Cache */}
-          <Grid item xs={12} md={6}>
+          <Box>
             <Card
               elevation={0}
               sx={{
@@ -203,10 +164,10 @@ export default function AdminMaintenancePage() {
                 </Button>
               </CardActions>
             </Card>
-          </Grid>
+          </Box>
 
           {/* Normalize Licenses */}
-          <Grid item xs={12} md={6}>
+          <Box>
             <Card
               elevation={0}
               sx={{
@@ -252,10 +213,10 @@ export default function AdminMaintenancePage() {
                 </Button>
               </CardActions>
             </Card>
-          </Grid>
+          </Box>
 
           {/* Remove Duplicates */}
-          <Grid item xs={12} md={6}>
+          <Box>
             <Card
               elevation={0}
               sx={{
@@ -301,10 +262,10 @@ export default function AdminMaintenancePage() {
                 </Button>
               </CardActions>
             </Card>
-          </Grid>
+          </Box>
 
           {/* Database Stats */}
-          <Grid item xs={12} md={6}>
+          <Box>
             <Card
               elevation={0}
               sx={{
@@ -361,15 +322,8 @@ export default function AdminMaintenancePage() {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
-
-        {/* Warning */}
-        <Alert severity="warning" sx={{ borderRadius: 2 }}>
-          <WarningAmber sx={{ mr: 1, display: 'inline' }} />
-          Регламентные работы могут повлиять на производительность системы. 
-          Рекомендуется выполнять их в периоды низкой нагрузки.
-        </Alert>
+          </Box>
+        </Box>
       </Container>
     </Box>
   );

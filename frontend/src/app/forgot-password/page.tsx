@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { KeyRound, Mail, CheckCircle, AlertCircle } from 'lucide-react';
+import { KeyRound, Mail } from 'lucide-react';
 
 export default function PasswordResetPage() {
   const [email, setEmail] = useState('');
@@ -9,31 +9,20 @@ export default function PasswordResetPage() {
   const [newPassword, setNewPassword] = useState('');
   const [step, setStep] = useState<'request' | 'confirm'>('request');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage(null);
 
     try {
-      const response = await fetch('/api/auth/password-reset/request', {
+      await fetch('/api/auth/password-reset/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-
-      if (response.ok) {
-        setMessage({
-          type: 'success',
-          text: 'Письмо с инструкциями отправлено на указанный email',
-        });
-        setStep('confirm');
-      } else {
-        setMessage({ type: 'error', text: 'Не удалось отправить запрос' });
-      }
+      setStep('confirm');
     } catch {
-      setMessage({ type: 'error', text: 'Ошибка при отправке запроса' });
+      // Handle error silently
     } finally {
       setLoading(false);
     }
@@ -42,27 +31,17 @@ export default function PasswordResetPage() {
   const handleConfirmReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage(null);
 
     try {
-      const response = await fetch('/api/auth/password-reset/confirm', {
+      await fetch('/api/auth/password-reset/confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, newPassword }),
       });
-
-      if (response.ok) {
-        setMessage({
-          type: 'success',
-          text: 'Пароль успешно изменен! Теперь вы можете войти с новым паролем.',
-        });
-        setToken('');
-        setNewPassword('');
-      } else {
-        setMessage({ type: 'error', text: 'Недействительный или истекший токен' });
-      }
+      setToken('');
+      setNewPassword('');
     } catch {
-      setMessage({ type: 'error', text: 'Ошибка при смене пароля' });
+      // Handle error silently
     } finally {
       setLoading(false);
     }
@@ -85,24 +64,6 @@ export default function PasswordResetPage() {
               : 'Введите токен и новый пароль'}
           </p>
         </div>
-
-        {/* Message */}
-        {message && (
-          <div
-            className={`mb-6 p-4 rounded-lg border flex items-start gap-3 ${
-              message.type === 'success'
-                ? 'bg-green-950/30 border-green-800 text-green-400'
-                : 'bg-red-950/30 border-red-800 text-red-400'
-            }`}
-          >
-            {message.type === 'success' ? (
-              <CheckCircle className="w-5 h-5 mt-0.5" />
-            ) : (
-              <AlertCircle className="w-5 h-5 mt-0.5" />
-            )}
-            <p className="text-sm">{message.text}</p>
-          </div>
-        )}
 
         {/* Form */}
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
@@ -176,10 +137,7 @@ export default function PasswordResetPage() {
 
           <div className="mt-4 pt-4 border-t border-slate-800">
             <button
-              onClick={() => {
-                setStep(step === 'request' ? 'confirm' : 'request');
-                setMessage(null);
-              }}
+              onClick={() => setStep(step === 'request' ? 'confirm' : 'request')}
               className="text-sm text-[#6DB33F] hover:text-[#5da335] transition-colors"
             >
               {step === 'request' ? 'У меня уже есть токен' : 'Запросить новый токен'}

@@ -57,6 +57,11 @@ export const useAuthStore = create<AuthState>()(
           const token = response.data.token;
           const decoded = parseJWT(token);
 
+          // Сохраняем токен в cookie для middleware проверки
+          if (typeof document !== 'undefined') {
+            document.cookie = `auth-token=${token}; path=/; max-age=86400`;
+          }
+
           set({
             user: {
               id: "current-user",
@@ -84,6 +89,11 @@ export const useAuthStore = create<AuthState>()(
           const token = response.data.token;
           const decoded = parseJWT(token);
 
+          // Сохраняем токен в cookie для middleware проверки
+          if (typeof document !== 'undefined') {
+            document.cookie = `auth-token=${token}; path=/; max-age=86400`;
+          }
+
           set({
             user: {
               id: "current-user",
@@ -101,7 +111,13 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      logout: () => set({ user: null, isAuthenticated: false, token: null }),
+      logout: () => {
+        // Удаляем токен из cookie при выходе
+        if (typeof document !== 'undefined') {
+          document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+        }
+        set({ user: null, isAuthenticated: false, token: null, previousPage: null });
+      },
 
       isAdmin: () => {
         const state = get();

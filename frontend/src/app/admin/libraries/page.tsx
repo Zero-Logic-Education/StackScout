@@ -24,7 +24,6 @@ import {
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  Edit,
   Delete,
   Refresh,
   VerifiedUser,
@@ -150,7 +149,7 @@ export default function AdminLibrariesPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: { xs: 10, md: 12 } }}>
-      <Container maxWidth="xxl">
+      <Container maxWidth="lg">
         {/* Header */}
         <Stack spacing={4} sx={{ mb: 6 }}>
           <Box>
@@ -277,14 +276,6 @@ export default function AdminLibrariesPage() {
                   </TableCell>
                   <TableCell align="right">
                     <Stack direction="row" spacing={1} justifyContent="flex-end">
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<Edit />}
-                        onClick={() => handleEdit(library.id)}
-                      >
-                        Изменить
-                      </Button>
                       <Button
                         size="small"
                         variant="outlined"

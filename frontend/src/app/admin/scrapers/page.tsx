@@ -155,7 +155,7 @@ export default function ScrapersMonitorPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: { xs: 10, md: 12 } }}>
-      <Container maxWidth="xxl">
+      <Container maxWidth="lg">
         {/* Header */}
         <Stack spacing={4} sx={{ mb: 6 }}>
           <Box>

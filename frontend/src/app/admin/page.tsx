@@ -100,7 +100,7 @@ export default function AdminDashboardPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: { xs: 10, md: 12 } }}>
-      <Container maxWidth="xxl">
+      <Container maxWidth="lg">
         {/* Header */}
         <Stack spacing={4} sx={{ mb: 6 }}>
           <Box>
@@ -124,7 +124,7 @@ export default function AdminDashboardPage() {
         </Stack>
 
         {/* Admin Sections Grid */}
-        <Grid container spacing={3} sx={{ mb: 6 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 3, mb: 6 }}>
           {adminSections.slice(0, 4).map((section, index) => {
             const IconComponent = section.icon;
             const colorMap: Record<string, string> = {
@@ -136,7 +136,7 @@ export default function AdminDashboardPage() {
             };
 
             return (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+              <Box key={index}>
                 <Link href={section.href} style={{ textDecoration: 'none' }}>
                   <Card
                     elevation={0}
@@ -187,7 +187,7 @@ export default function AdminDashboardPage() {
                     </CardContent>
                   </Card>
                 </Link>
-              </Grid>
+              </Box>
             );
           })}
         </Grid>
