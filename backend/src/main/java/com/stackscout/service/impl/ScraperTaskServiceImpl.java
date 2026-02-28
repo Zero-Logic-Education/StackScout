@@ -32,7 +32,6 @@ public class ScraperTaskServiceImpl implements ScraperTaskService {
     private final ScraperTaskMapper scraperTaskMapper;
 
     @Override
-    @SuppressWarnings("null")
     public List<ScraperTaskDto> getAllScrapers() {
         log.debug("Получение всех скрейперов");
         return scraperTaskRepository.findAll().stream()

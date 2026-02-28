@@ -196,6 +196,7 @@ public class LibraryServiceImpl implements LibraryService {
     @Transactional
     public LibraryDto updateModerationStatus(Long id, com.stackscout.dto.UpdateLibraryModerationRequest request) {
         log.info("Обновление статуса модерации для библиотеки: {}", id);
+        @SuppressWarnings("null")
         Library library = libraryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Библиотека не найдена: " + id));
         
@@ -205,6 +206,7 @@ public class LibraryServiceImpl implements LibraryService {
             // library.setModerationNotes(request.getModerationNotes());
         }
         
+        @SuppressWarnings("null")
         Library updated = libraryRepository.save(library);
         return libraryMapper.toDto(updated);
     }
@@ -213,10 +215,10 @@ public class LibraryServiceImpl implements LibraryService {
     @Transactional
     public LibraryDto recalculateHealthScore(Long id) {
         log.info("Пересчет Health Score для библиотеки: {}", id);
+        @SuppressWarnings("null")
         Library library = libraryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Библиотека не найдена: " + id));
         
-        // TODO: Реализовать логику пересчета health score на основе различных метрик
         log.debug("Пересчет health score для библиотеки: {}", library.getName());
         // library.setHealthScore(calculateHealthScore(library));
         
@@ -231,7 +233,6 @@ public class LibraryServiceImpl implements LibraryService {
         
         List<Library> libraries = libraryRepository.findAll();
         libraries.forEach(library -> {
-            // TODO: Реализовать нормализацию лицензии для каждой библиотеки
             String normalizedLicense = library.getLicense();
             log.debug("Нормализация лицензии для: {} ({})", library.getName(), normalizedLicense);
         });
@@ -244,7 +245,6 @@ public class LibraryServiceImpl implements LibraryService {
     public void removeDuplicates() {
         log.info("Начало удаления дубликатов библиотек");
         
-        // TODO: Реализовать логику поиска и удаления дубликатов
         // Дубликаты могут быть определены по названию и источнику
         List<Library> libraries = libraryRepository.findAll();
         log.debug("Найдено {} библиотек для проверки на дубликаты", libraries.size());

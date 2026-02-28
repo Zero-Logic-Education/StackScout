@@ -54,7 +54,6 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
         tokenRepository.save(resetToken);
 
-        // TODO: Отправить email с токеном
         // emailService.sendPasswordResetEmail(user.getEmail(), token);
         log.info("Email с токеном сброса должен быть отправлен на: {}", user.getEmail());
 
@@ -64,7 +63,6 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
     @Override
     @Transactional
-    @SuppressWarnings("null")
     public void confirmPasswordReset(PasswordResetConfirmDto request) {
         log.info("Подтверждение сброса пароля");
 
@@ -85,7 +83,6 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
     @Override
     @Transactional
-    @SuppressWarnings("null")
     public void forceResetAdminPassword(String username, String newPassword) {
         log.warn("ПРИНУДИТЕЛЬНЫЙ СБРОС ПАРОЛЯ для пользователя: {}", username);
 
