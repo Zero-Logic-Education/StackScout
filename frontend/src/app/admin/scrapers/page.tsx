@@ -155,7 +155,7 @@ export default function ScrapersMonitorPage() {
         {/* Scrapers Grid */}
         <Box sx={{display: 'grid', gridTemplateColumns: {xs: '1fr', md: '1fr 1fr', lg: '1fr 1fr'}, gap: 3}}>
           {scrapers.map((scraper) => (
-            <Box>
+            <Box key={scraper.id}>
               <Card
                 elevation={0}
                 sx={{

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { apiClient } from "@/lib/api";
+import { apiClient, libraryApi, libraryUpdateApi, type UpdateStats } from "@/lib/api";
 import {
   Container,
   Box,
@@ -122,6 +122,12 @@ function StatCard({
 
 export default function OverviewDashboard() {
   const [stats, setStats] = useState<StatsData | null>(null);
+  const [updatesStats, setUpdatesStats] = useState<UpdateStats | null>(null);
+  const [healthDistribution, setHealthDistribution] = useState({
+    healthy: 0,
+    warning: 0,
+    critical: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -130,9 +136,32 @@ export default function OverviewDashboard() {
 
     const fetchStats = async () => {
       try {
-        const { data } = await apiClient.get("/libraries/stats");
+        const [{ data }, updatesResponse] = await Promise.all([
+          apiClient.get("/libraries/stats"),
+          libraryUpdateApi.getUpdateStats(),
+        ]);
+
+        const totalLibraries = Number(data.totalLibraries) || 0;
+        if (totalLibraries > 0) {
+          try {
+            const librariesResponse = await libraryApi.getAll(0, totalLibraries);
+            const libraries = librariesResponse.data.libraries || [];
+
+            const healthy = libraries.filter((library) => library.healthScore >= 80).length;
+            const warning = libraries.filter((library) => library.healthScore >= 60 && library.healthScore < 80).length;
+            const critical = libraries.filter((library) => library.healthScore < 60).length;
+
+            if (isMounted) {
+              setHealthDistribution({ healthy, warning, critical });
+            }
+          } catch (distributionError) {
+            console.error("Ошибка загрузки распределения здоровья:", distributionError);
+          }
+        }
+
         if (isMounted) {
           setStats(data);
+          setUpdatesStats(updatesResponse.data);
         }
       } catch (err: unknown) {
         console.error("Ошибка загрузки статистики:", err);
@@ -235,9 +264,21 @@ export default function OverviewDashboard() {
     );
   }
 
-  const healthyLibs = Math.round(stats.totalLibraries * 0.75);
-  const warningLibs = Math.round(stats.totalLibraries * 0.2);
-  const criticalLibs = stats.totalLibraries - healthyLibs - warningLibs;
+  const totalForHealth =
+    healthDistribution.healthy + healthDistribution.warning + healthDistribution.critical;
+
+  const healthyLibs = healthDistribution.healthy;
+  const warningLibs = healthDistribution.warning;
+  const criticalLibs = healthDistribution.critical;
+
+  const toPercent = (value: number) => {
+    if (!totalForHealth) return 0;
+    return Math.round((value / totalForHealth) * 100);
+  };
+
+  const healthyPercent = toPercent(healthyLibs);
+  const warningPercent = toPercent(warningLibs);
+  const criticalPercent = toPercent(criticalLibs);
 
   return (
     <Box sx={{ minHeight: "100vh", pb: 8 }}>
@@ -306,14 +347,14 @@ export default function OverviewDashboard() {
               label="Всего библиотек"
               value={stats.totalLibraries.toLocaleString()}
               color="primary"
-              trend="+12%"
+              trend={`${updatesStats?.last30Days ?? 0} обновл./30д`}
             />
             <StatCard
               icon={<Speed sx={{ fontSize: 40 }} />}
               label="Средний рейтинг"
               value={`${Math.round(Number(stats.averageHealthScore) || 0)}%`}
               color="success"
-              trend="+5%"
+              trend={`${updatesStats?.last7Days ?? 0} обновл./7д`}
             />
             <StatCard
               icon={<Code sx={{ fontSize: 40 }} />}
@@ -389,7 +430,7 @@ export default function OverviewDashboard() {
                 </Box>
                 <LinearProgress
                   variant="determinate"
-                  value={75}
+                  value={healthyPercent}
                   sx={{
                     height: 8,
                     borderRadius: 4,
@@ -404,7 +445,7 @@ export default function OverviewDashboard() {
                   color="text.secondary"
                   sx={{ mt: 1, display: "block" }}
                 >
-                  75% от общего числа
+                  {healthyPercent}% от общего числа
                 </Typography>
               </CardContent>
             </Card>
@@ -449,7 +490,7 @@ export default function OverviewDashboard() {
                 </Box>
                 <LinearProgress
                   variant="determinate"
-                  value={20}
+                  value={warningPercent}
                   sx={{
                     height: 8,
                     borderRadius: 4,
@@ -464,7 +505,7 @@ export default function OverviewDashboard() {
                   color="text.secondary"
                   sx={{ mt: 1, display: "block" }}
                 >
-                  20% от общего числа
+                  {warningPercent}% от общего числа
                 </Typography>
               </CardContent>
             </Card>
@@ -509,7 +550,7 @@ export default function OverviewDashboard() {
                 </Box>
                 <LinearProgress
                   variant="determinate"
-                  value={5}
+                  value={criticalPercent}
                   sx={{
                     height: 8,
                     borderRadius: 4,
@@ -524,7 +565,7 @@ export default function OverviewDashboard() {
                   color="text.secondary"
                   sx={{ mt: 1, display: "block" }}
                 >
-                  5% от общего числа
+                  {criticalPercent}% от общего числа
                 </Typography>
               </CardContent>
             </Card>
@@ -591,7 +632,7 @@ export default function OverviewDashboard() {
                       fontWeight={700}
                       color="primary.main"
                     >
-                      +248
+                      +{updatesStats?.last7Days ?? 0}
                     </Typography>
                   </Box>
                   <Box>
@@ -603,7 +644,7 @@ export default function OverviewDashboard() {
                       fontWeight={700}
                       color="success.main"
                     >
-                      +1,423
+                      +{updatesStats?.last30Days ?? 0}
                     </Typography>
                   </Box>
                   <Box>
@@ -615,7 +656,7 @@ export default function OverviewDashboard() {
                       fontWeight={700}
                       color="warning.main"
                     >
-                      -32
+                      {criticalLibs}
                     </Typography>
                   </Box>
                 </Stack>
@@ -670,12 +711,12 @@ export default function OverviewDashboard() {
                       fontWeight={700}
                       color="success.main"
                     >
-                      92%
+                      {healthyPercent}%
                     </Typography>
                   </Box>
                   <LinearProgress
                     variant="determinate"
-                    value={92}
+                    value={healthyPercent}
                     sx={{
                       height: 6,
                       borderRadius: 3,
@@ -710,12 +751,12 @@ export default function OverviewDashboard() {
                       fontWeight={700}
                       color="warning.main"
                     >
-                      6%
+                      {warningPercent}%
                     </Typography>
                   </Box>
                   <LinearProgress
                     variant="determinate"
-                    value={6}
+                    value={warningPercent}
                     sx={{
                       height: 6,
                       borderRadius: 3,
@@ -750,12 +791,12 @@ export default function OverviewDashboard() {
                       fontWeight={700}
                       color="error.main"
                     >
-                      2%
+                      {criticalPercent}%
                     </Typography>
                   </Box>
                   <LinearProgress
                     variant="determinate"
-                    value={2}
+                    value={criticalPercent}
                     sx={{
                       height: 6,
                       borderRadius: 3,
