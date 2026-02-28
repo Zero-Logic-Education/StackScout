@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -70,12 +71,13 @@ public class LibraryUpdateServiceImpl implements LibraryUpdateService {
 
     @Override
     @Transactional
+    @SuppressWarnings("null")
     public LibraryUpdateDto createUpdate(Long libraryId, String oldVersion, String newVersion,
                                          UpdateType updateType, String changeLog,
                                          Integer oldHealthScore, Integer newHealthScore) {
         log.info("Creating update for library {}: {} -> {}", libraryId, oldVersion, newVersion);
         
-        Library library = libraryRepository.findById(libraryId)
+        Library library = libraryRepository.findById(Objects.requireNonNull(libraryId))
                 .orElseThrow(() -> new EntityNotFoundException("Library not found with id: " + libraryId));
         
         LibraryUpdate update = LibraryUpdate.builder()
@@ -88,7 +90,7 @@ public class LibraryUpdateServiceImpl implements LibraryUpdateService {
                 .newHealthScore(newHealthScore)
                 .build();
         
-        LibraryUpdate saved = updateRepository.save(update);
+        LibraryUpdate saved = Objects.requireNonNull(updateRepository.save(update));
         log.info("Update created for library {}", libraryId);
         
         return subscriptionMapper.toDto(saved);

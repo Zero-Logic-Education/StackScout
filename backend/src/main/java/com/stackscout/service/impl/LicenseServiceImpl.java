@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -73,6 +74,7 @@ public class LicenseServiceImpl implements LicenseService {
 
     @Override
     @Transactional
+    @SuppressWarnings("null")
     public LicenseDto updateLicense(Long id, CreateLicenseRequest request) {
         log.info("Обновление лицензии с ID: {}", id);
         if (id == null) {
@@ -83,7 +85,7 @@ public class LicenseServiceImpl implements LicenseService {
                 .orElseThrow(() -> new ResourceNotFoundException("Лицензия не найдена с ID: " + id));
 
         updateEntityFromDto(license, request);
-        License updatedLicense = licenseRepository.save(license);
+        License updatedLicense = Objects.requireNonNull(licenseRepository.save(license));
 
         log.info("Лицензия успешно обновлена: {}", id);
         return toDto(updatedLicense);

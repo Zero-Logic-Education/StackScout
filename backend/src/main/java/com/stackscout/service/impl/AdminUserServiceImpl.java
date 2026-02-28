@@ -16,6 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -39,6 +41,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public AdminUserDto updateUser(@NonNull Long id, AdminUpdateUserRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
@@ -62,10 +65,11 @@ public class AdminUserServiceImpl implements AdminUserService {
             user.setLocked(request.getLocked());
         }
 
-        return toDto(userRepository.save(user));
+        return toDto(Objects.requireNonNull(userRepository.save(user)));
     }
 
     @Override
+    @SuppressWarnings("null")
     public AdminUserDto updateStatus(@NonNull Long id, AdminUpdateUserStatusRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
@@ -77,7 +81,7 @@ public class AdminUserServiceImpl implements AdminUserService {
             user.setLocked(request.getLocked());
         }
 
-        return toDto(userRepository.save(user));
+        return toDto(Objects.requireNonNull(userRepository.save(user)));
     }
 
     @Override

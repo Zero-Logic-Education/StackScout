@@ -20,6 +20,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 /**
  * Реализация сервиса подписок
  */
@@ -35,6 +37,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     @Transactional
+    @SuppressWarnings("null")
     public LibrarySubscriptionDto subscribe(Long userId, CreateSubscriptionRequest request) {
         log.info("User {} subscribing to library {}", userId, request.getLibraryId());
         
@@ -44,10 +47,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
         
         // Проверяем существование пользователя и библиотеки
-        User user = userRepository.findById(userId)
+        User user = userRepository.findById(Objects.requireNonNull(userId))
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
         
-        Library library = libraryRepository.findById(request.getLibraryId())
+        Library library = libraryRepository.findById(Objects.requireNonNull(request.getLibraryId()))
                 .orElseThrow(() -> new EntityNotFoundException("Library not found with id: " + request.getLibraryId()));
         
         // Создаем подписку
@@ -57,7 +60,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .notificationsEnabled(request.getNotificationsEnabled())
                 .build();
         
-        LibrarySubscription saved = subscriptionRepository.save(subscription);
+        LibrarySubscription saved = Objects.requireNonNull(subscriptionRepository.save(subscription));
         log.info("User {} successfully subscribed to library {}", userId, request.getLibraryId());
         
         return subscriptionMapper.toDto(saved);
