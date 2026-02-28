@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   CircularProgress,
   Box,
@@ -21,21 +21,43 @@ import {
   CachedRounded,
 } from '@mui/icons-material';
 import { useAdminProtection } from '@/lib/useAdminProtection';
+import { adminApi, type AdminDashboardStats, type CacheStats } from '@/lib/api';
 
 export default function AdminMaintenancePage() {
   const theme = useTheme();
   const { isAdminAuthenticated } = useAdminProtection();
   const [loading, setLoading] = useState(false);
+  const [dashboardStats, setDashboardStats] = useState<AdminDashboardStats | null>(null);
+  const [cacheStats, setCacheStats] = useState<CacheStats | null>(null);
+
+  useEffect(() => {
+    if (!isAdminAuthenticated) {
+      return;
+    }
+
+    const loadStats = async () => {
+      try {
+        const [dashboardResponse, cacheResponse] = await Promise.all([
+          adminApi.getDashboardStats(),
+          adminApi.getCacheStats(),
+        ]);
+
+        setDashboardStats(dashboardResponse.data);
+        setCacheStats(cacheResponse.data);
+      } catch (error) {
+        console.error('Failed to load maintenance stats:', error);
+      }
+    };
+
+    loadStats();
+  }, [isAdminAuthenticated]);
 
   const handleClearCache = async () => {
     setLoading(true);
     try {
-      await fetch('/api/admin/maintenance/clear-cache', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      await adminApi.clearCache();
+      const cacheResponse = await adminApi.getCacheStats();
+      setCacheStats(cacheResponse.data);
     } catch {
       // Handle error silently
     } finally {
@@ -48,12 +70,7 @@ export default function AdminMaintenancePage() {
     
     setLoading(true);
     try {
-      await fetch('/api/admin/libraries/bulk-normalize-licenses', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      await adminApi.normalizeLicenses();
     } catch {
       // Handle error silently
     } finally {
@@ -66,12 +83,9 @@ export default function AdminMaintenancePage() {
     
     setLoading(true);
     try {
-      await fetch('/api/admin/libraries/remove-duplicates', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      await adminApi.removeDuplicates();
+      const dashboardResponse = await adminApi.getDashboardStats();
+      setDashboardStats(dashboardResponse.data);
     } catch {
       // Handle error silently
     } finally {
@@ -298,7 +312,7 @@ export default function AdminMaintenancePage() {
                           Библиотек:
                         </Typography>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          1,234
+                          {(dashboardStats?.totalLibraries ?? 0).toLocaleString('ru-RU')}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -306,15 +320,15 @@ export default function AdminMaintenancePage() {
                           Пользователей:
                         </Typography>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          56
+                          {(dashboardStats?.totalUsers ?? 0).toLocaleString('ru-RU')}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Typography variant="body2" color="text.secondary">
-                          Размер БД:
+                          Кэшей в Redis:
                         </Typography>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          245 МБ
+                          {(cacheStats?.cacheNames?.length ?? 0).toLocaleString('ru-RU')}
                         </Typography>
                       </Box>
                     </Stack>

@@ -31,6 +31,7 @@ import {
   Archive as ArchiveIcon,
 } from '@mui/icons-material';
 import { useAdminProtection } from '@/lib/useAdminProtection';
+import { adminApi } from '@/lib/api';
 
 interface Library {
   id: number;
@@ -59,15 +60,8 @@ export default function AdminLibrariesPage() {
 
   const loadLibraries = async () => {
     try {
-      const response = await fetch('/api/admin/libraries?size=50', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setLibraries(data.content || []);
-      }
+      const response = await adminApi.getLibraries(50);
+      setLibraries(response.data.content || []);
     } catch (error) {
       console.error('Failed to load libraries:', error);
     } finally {
@@ -77,12 +71,7 @@ export default function AdminLibrariesPage() {
 
   const handleRecalculateHealth = async (id: number) => {
     try {
-      await fetch(`/api/admin/libraries/${id}/recalculate-health`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      await adminApi.recalculateLibraryHealth(id);
       loadLibraries();
     } catch (error) {
       console.error('Failed to recalculate:', error);
@@ -93,12 +82,7 @@ export default function AdminLibrariesPage() {
     if (!confirm('Удалить эту библиотеку?')) return;
     
     try {
-      await fetch(`/api/admin/libraries/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      await adminApi.deleteLibrary(id);
       loadLibraries();
     } catch (error) {
       console.error('Failed to delete:', error);
@@ -207,6 +191,7 @@ export default function AdminLibrariesPage() {
           <Button
             variant="outlined"
             startIcon={<Refresh />}
+            onClick={loadLibraries}
             sx={{ borderRadius: 2 }}
           >
             Обновить

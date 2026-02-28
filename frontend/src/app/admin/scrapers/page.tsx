@@ -28,6 +28,7 @@ import {
   GetApp,
 } from '@mui/icons-material';
 import { useAdminProtection } from '@/lib/useAdminProtection';
+import { adminApi } from '@/lib/api';
 
 interface ScraperTask {
   id: number;
@@ -60,15 +61,8 @@ export default function ScrapersMonitorPage() {
 
   const loadScrapers = async () => {
     try {
-      const response = await fetch('/api/admin/scrapers', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setScrapers(data);
-      }
+      const response = await adminApi.getScrapers();
+      setScrapers(response.data);
     } catch (error) {
       console.error('Failed to load scrapers:', error);
     } finally {
@@ -78,12 +72,7 @@ export default function ScrapersMonitorPage() {
 
   const handleStart = async (scraperName: string) => {
     try {
-      await fetch(`/api/admin/scrapers/${scraperName}/start`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      await adminApi.startScraper(scraperName);
       loadScrapers();
     } catch (error) {
       console.error('Failed to start scraper:', error);
@@ -92,12 +81,7 @@ export default function ScrapersMonitorPage() {
 
   const handlePause = async (scraperName: string) => {
     try {
-      await fetch(`/api/admin/scrapers/${scraperName}/pause`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      await adminApi.pauseScraper(scraperName);
       loadScrapers();
     } catch (error) {
       console.error('Failed to pause scraper:', error);
@@ -106,12 +90,7 @@ export default function ScrapersMonitorPage() {
 
   const handleRestart = async (scraperName: string) => {
     try {
-      await fetch(`/api/admin/scrapers/${scraperName}/restart`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      await adminApi.restartScraper(scraperName);
       loadScrapers();
     } catch (error) {
       console.error('Failed to restart scraper:', error);

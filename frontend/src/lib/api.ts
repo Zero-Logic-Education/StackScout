@@ -2,6 +2,7 @@ import axios from "axios";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v1";
+const ADMIN_API_BASE_URL = API_URL.replace(/\/api\/v1\/?$/, "");
 
 // Типы для Auth
 export interface AuthResponse {
@@ -26,25 +27,32 @@ export const apiClient = axios.create({
   },
 });
 
-// Добавляем интерцептор для JWT токена
-apiClient.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const storage = localStorage.getItem("auth-storage");
-    if (storage) {
-      try {
-        const { state } = JSON.parse(storage);
-        if (state?.token) {
-          config.headers.Authorization = `Bearer ${state.token}`;
-        }
-      } catch (e) {
-        // Ошибка парсинга, игнорируем
-      }
-    }
-  }
-  return config;
+export const adminApiClient = axios.create({
+  baseURL: ADMIN_API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-apiClient.interceptors.response.use(
+const attachAuthInterceptors = (client: typeof apiClient) => {
+  client.interceptors.request.use((config) => {
+    if (typeof window !== "undefined") {
+      const storage = localStorage.getItem("auth-storage");
+      if (storage) {
+        try {
+          const { state } = JSON.parse(storage);
+          if (state?.token) {
+            config.headers.Authorization = `Bearer ${state.token}`;
+          }
+        } catch {
+          // Ошибка парсинга, игнорируем
+        }
+      }
+    }
+    return config;
+  });
+
+  client.interceptors.response.use(
   (response) => response,
   (error) => {
     if (typeof window !== "undefined") {
@@ -61,8 +69,11 @@ apiClient.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  }
-);
+  });
+};
+
+attachAuthInterceptors(apiClient);
+attachAuthInterceptors(adminApiClient);
 
 export interface Library {
   id: number;
@@ -200,6 +211,17 @@ export interface UpdateStats {
   recentUpdates: LibraryUpdate[];
 }
 
+export interface AdminDashboardStats {
+  activeScraper: number;
+  totalLibraries: number;
+  totalUsers: number;
+  systemStatus: string;
+}
+
+export interface CacheStats {
+  cacheNames: string[];
+}
+
 // API методы для аутентификации
 export const authApi = {
   login: (data: LoginRequest) =>
@@ -263,4 +285,42 @@ export const libraryUpdateApi = {
 
   getUpdateStats: () =>
     apiClient.get<UpdateStats>(`/library-updates/stats`),
+};
+
+export const adminApi = {
+  getDashboardStats: () =>
+    apiClient.get<AdminDashboardStats>(`/admin/statistics/dashboard`),
+
+  getCacheStats: () =>
+    apiClient.get<CacheStats>(`/admin/statistics/cache-stats`),
+
+  clearCache: () =>
+    apiClient.post(`/admin/statistics/clear-cache`),
+
+  getScrapers: () =>
+    adminApiClient.get(`/api/admin/scrapers`),
+
+  startScraper: (scraperName: string) =>
+    adminApiClient.post(`/api/admin/scrapers/${scraperName}/start`),
+
+  pauseScraper: (scraperName: string) =>
+    adminApiClient.post(`/api/admin/scrapers/${scraperName}/pause`),
+
+  restartScraper: (scraperName: string) =>
+    adminApiClient.post(`/api/admin/scrapers/${scraperName}/restart`),
+
+  getLibraries: (size = 50) =>
+    adminApiClient.get(`/api/admin/libraries?size=${size}`),
+
+  recalculateLibraryHealth: (id: number) =>
+    adminApiClient.post(`/api/admin/libraries/${id}/recalculate-health`),
+
+  deleteLibrary: (id: number) =>
+    adminApiClient.delete(`/api/admin/libraries/${id}`),
+
+  normalizeLicenses: () =>
+    adminApiClient.post(`/api/admin/libraries/bulk-normalize-licenses`),
+
+  removeDuplicates: () =>
+    adminApiClient.delete(`/api/admin/libraries/remove-duplicates`),
 };

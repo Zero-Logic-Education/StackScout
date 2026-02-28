@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth';
+import { adminApi, type AdminDashboardStats } from '@/lib/api';
 import {
   CircularProgress,
   Box,
@@ -33,6 +34,24 @@ export default function AdminDashboardPage() {
   const theme = useTheme();
   const { isAuthenticated } = useAuthStore();
   const isAdmin = useAuthStore((state) => state.isAdmin);
+  const [dashboardStats, setDashboardStats] = useState<AdminDashboardStats | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated || !isAdmin()) {
+      return;
+    }
+
+    const loadDashboardStats = async () => {
+      try {
+        const response = await adminApi.getDashboardStats();
+        setDashboardStats(response.data);
+      } catch (error) {
+        console.error('Failed to load dashboard stats:', error);
+      }
+    };
+
+    loadDashboardStats();
+  }, [isAuthenticated, isAdmin]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -219,7 +238,7 @@ export default function AdminDashboardPage() {
                   >
                     <Autorenew sx={{ color: 'success.main', fontSize: '1.5rem' }} />
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                      2
+                      {dashboardStats?.activeScraper ?? 0}
                     </Typography>
                   </Box>
                   <Typography variant="caption" color="text.secondary">
@@ -231,7 +250,7 @@ export default function AdminDashboardPage() {
                 <Box sx={{ textAlign: 'center' }}>
                   <Box sx={{ mb: 1 }}>
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                      1,234
+                      {(dashboardStats?.totalLibraries ?? 0).toLocaleString('ru-RU')}
                     </Typography>
                   </Box>
                   <Typography variant="caption" color="text.secondary">
@@ -243,7 +262,7 @@ export default function AdminDashboardPage() {
                 <Box sx={{ textAlign: 'center' }}>
                   <Box sx={{ mb: 1 }}>
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                      56
+                      {(dashboardStats?.totalUsers ?? 0).toLocaleString('ru-RU')}
                     </Typography>
                   </Box>
                   <Typography variant="caption" color="text.secondary">
@@ -264,7 +283,7 @@ export default function AdminDashboardPage() {
                   >
                     <TrendingUp sx={{ color: 'success.main', fontSize: '1.5rem' }} />
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                      ОК
+                      {dashboardStats?.systemStatus || '—'}
                     </Typography>
                   </Box>
                   <Typography variant="caption" color="text.secondary">

@@ -79,6 +79,7 @@ public class AdminMaintenanceController {
         return ResponseEntity.ok(health);
     }
 
+    @SuppressWarnings("unchecked")
     @GetMapping("/dashboard")
     @Operation(summary = "Получить статистику для админ дашборда")
     public ResponseEntity<Map<String, Object>> getDashboardStats() {
@@ -93,7 +94,7 @@ public class AdminMaintenanceController {
             
             // Получить общую статистику по библиотекам
             var libraryStats = libraryService.getLibrariesStats();
-            long totalLibraries = (long) libraryStats.get("totalLibraries");
+            long totalLibraries = (long) ((Map<String,Object>) libraryStats).get("totalLibraries");
             stats.put("totalLibraries", totalLibraries);
             
             // Получить количество пользователей

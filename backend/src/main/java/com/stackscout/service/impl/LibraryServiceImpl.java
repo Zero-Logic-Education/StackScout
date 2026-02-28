@@ -254,7 +254,6 @@ public class LibraryServiceImpl implements LibraryService {
 
     @Override
     public Object getLibrariesStats() {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getLibrariesStats'");
     }
 }
