@@ -19,10 +19,20 @@ interface DistributionChartProps {
   title: string;
 }
 
+interface TooltipPayloadItem {
+  name: string;
+  value: number;
+}
+
+interface TooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+}
+
 /**
  * Кастомный tooltip для круговой диаграммы
  */
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload }: TooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <Paper
@@ -55,7 +65,7 @@ export default function DistributionChart({
   title,
 }: DistributionChartProps) {
   // Кастомный label
-  const renderLabel = (entry: any) => {
+  const renderLabel = (entry: DistributionData) => {
     const total = data.reduce((acc, curr) => acc + curr.value, 0);
     const percent = ((entry.value / total) * 100).toFixed(0);
     return `${entry.name}: ${percent}%`;

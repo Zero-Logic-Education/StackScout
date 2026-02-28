@@ -21,10 +21,21 @@ interface TrendChartProps {
   color?: string;
 }
 
+interface TooltipPayloadItem {
+  value: number;
+  payload: TrendData;
+}
+
+interface TooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  color: string;
+}
+
 /**
  * Кастомный tooltip для графика трендов
  */
-const CustomTooltip = ({ active, payload, color }: any) => {
+const CustomTooltip = ({ active, payload, color }: TooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <Paper

@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Button, CircularProgress, Tooltip } from "@mui/material";
 import {
-  NotificationsActive as NotificationsActiveIcon,
-  NotificationsOff as NotificationsOffIcon,
   Add as AddIcon,
   Check as CheckIcon,
 } from "@mui/icons-material";
@@ -44,22 +42,16 @@ export default function SubscribeButton({
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
 
-  const [isSubscribed, setIsSubscribed] = useState(false);
-
   // Загрузить статус подписки при монтировании
   useEffect(() => {
     let isMounted = true;
 
     const loadStatus = async () => {
       if (!isAuthenticated) {
-        if (isMounted) {
-          setIsSubscribed(false);
-        }
         return;
       }
-      const statusData = await fetchSubscriptionStatus();
-      if (isMounted && statusData) {
-        setIsSubscribed(statusData.isSubscribed);
+      if (isMounted) {
+        await fetchSubscriptionStatus();
       }
     };
 
@@ -70,12 +62,7 @@ export default function SubscribeButton({
     };
   }, [fetchSubscriptionStatus, isAuthenticated]);
 
-  // Обновить локальное состояние при изменении статуса
-  useEffect(() => {
-    if (status) {
-      setIsSubscribed(status.isSubscribed);
-    }
-  }, [status]);
+  const isSubscribed = status?.isSubscribed ?? false;
 
   // Обработать нажатие на кнопку
   const handleClick = async () => {
@@ -86,14 +73,13 @@ export default function SubscribeButton({
       }
       if (isSubscribed) {
         await unsubscribe();
-        setIsSubscribed(false);
         onSubscriptionChange?.(false);
       } else {
         await subscribe();
-        setIsSubscribed(true);
         onSubscriptionChange?.(true);
       }
-    } catch (err) {
+      await fetchSubscriptionStatus();
+    } catch {
     }
   };
 
@@ -104,7 +90,7 @@ export default function SubscribeButton({
     <Tooltip
       title={
         isSubscribed
-          ? "Вы подписаны. Нажмите, чтобы отписаться"
+          ? `Вы подписаны на ${libraryName}. Нажмите, чтобы отписаться`
           : "Подпишитесь для отслеживания обновлений"
       }
     >

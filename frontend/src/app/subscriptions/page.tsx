@@ -31,6 +31,18 @@ export default function SubscriptionsPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 20;
 
+  const {
+    subscriptions,
+    isLoading,
+    error,
+    pagination,
+    fetchSubscriptions,
+  } = useUserSubscriptions({
+    autoFetch: isAuthenticated,
+    page: currentPage,
+    size: pageSize,
+  });
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/");
@@ -52,19 +64,7 @@ export default function SubscriptionsPage() {
     );
   }
 
-  const {
-    subscriptions,
-    isLoading,
-    error,
-    pagination,
-    fetchSubscriptions,
-  } = useUserSubscriptions({
-    autoFetch: isAuthenticated,
-    page: currentPage,
-    size: pageSize,
-  });
-
-  const handleUnsubscribe = async (libraryId: number, libraryName: string) => {
+  const handleUnsubscribe = async (libraryId: number) => {
     try {
       await subscriptionApi.unsubscribe(libraryId);
       fetchSubscriptions(currentPage, pageSize);
@@ -75,7 +75,6 @@ export default function SubscriptionsPage() {
 
   const handleToggleNotifications = async (
     libraryId: number,
-    libraryName: string,
     enabled: boolean
   ) => {
     try {
@@ -198,7 +197,6 @@ export default function SubscriptionsPage() {
                             onChange={(e) =>
                               handleToggleNotifications(
                                 subscription.libraryId,
-                                subscription.libraryName,
                                 e.target.checked
                               )
                             }
@@ -210,8 +208,7 @@ export default function SubscriptionsPage() {
                         color="error"
                         onClick={() =>
                           handleUnsubscribe(
-                            subscription.libraryId,
-                            subscription.libraryName
+                            subscription.libraryId
                           )
                         }
                       >

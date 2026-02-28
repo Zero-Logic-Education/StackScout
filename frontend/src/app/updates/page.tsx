@@ -59,21 +59,6 @@ export default function UpdatesPage() {
     }
   }, [isAuthenticated, router]);
 
-  if (!isAuthenticated) {
-    return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   const {
     updates,
     isLoading,
@@ -101,6 +86,21 @@ export default function UpdatesPage() {
       // ignore storage errors
     }
   }, [isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);

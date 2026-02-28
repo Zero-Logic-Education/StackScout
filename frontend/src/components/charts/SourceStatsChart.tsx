@@ -21,10 +21,20 @@ interface SourceStatsChartProps {
   color?: string;
 }
 
+interface TooltipPayloadItem {
+  value: number;
+  payload: SourceData;
+}
+
+interface TooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+}
+
 /**
  * Кастомный tooltip для столбчатой диаграммы
  */
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload }: TooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <Paper

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -31,7 +31,6 @@ export default function AuthSection() {
   const theme = useTheme();
   const { user, isAuthenticated, logout } = useAuthStore();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [hasNewUpdates, setHasNewUpdates] = useState(false);
   const { stats, fetchStats } = useUpdateStats();
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -50,7 +49,6 @@ export default function AuthSection() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      setHasNewUpdates(false);
       return;
     }
 
@@ -64,21 +62,19 @@ export default function AuthSection() {
     };
   }, [fetchStats, isAuthenticated]);
 
-  useEffect(() => {
+  const hasNewUpdates = useMemo(() => {
     if (!isAuthenticated) {
-      return;
+      return false;
     }
 
     const recentUpdates = stats?.recentUpdates || [];
     if (recentUpdates.length === 0) {
-      setHasNewUpdates(false);
-      return;
+      return false;
     }
 
     const latestUpdate = new Date(recentUpdates[0].updateDate).getTime();
     if (!Number.isFinite(latestUpdate)) {
-      setHasNewUpdates(false);
-      return;
+      return false;
     }
 
     let lastSeen = 0;
@@ -87,11 +83,11 @@ export default function AuthSection() {
       if (stored) {
         lastSeen = new Date(stored).getTime();
       }
-    } catch (err) {
+    } catch {
       lastSeen = 0;
     }
 
-    setHasNewUpdates(latestUpdate > lastSeen);
+    return latestUpdate > lastSeen;
   }, [stats, isAuthenticated]);
 
   if (isAuthenticated) {
