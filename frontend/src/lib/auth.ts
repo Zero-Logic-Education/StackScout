@@ -4,9 +4,10 @@ import { authApi } from "./api";
 
 interface User {
   id: string;
-  email: string; // Может быть пустым при логине по username, если сервер не вернул профиль
+  email: string;
   name: string;
   avatar?: string;
+  role?: "USER" | "ADMIN";
 }
 
 interface AuthState {
@@ -20,28 +21,43 @@ interface AuthState {
     password: string,
   ) => Promise<void>;
   logout: () => void;
+  isAdmin: () => boolean;
 }
+
+// Функция для парсинга JWT и извлечения роли
+const parseJWT = (token: string): { role?: string } => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error("Failed to parse JWT", error);
+    return {};
+  }
+};
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       isAuthenticated: false,
       token: null,
 
       login: async (username, password) => {
-        // Выполняем реальный запрос к API
         try {
           const response = await authApi.login({ username, password });
           const token = response.data.token;
+          const decoded = parseJWT(token);
 
-          // Так как /login возвращает только токен, мы пока используем введенный username как имя
-          // В будущем можно добавить запрос /me для получения профиля
           set({
             user: {
               id: "current-user",
-              email: "", // Мы не знаем email после логина по username без доп запроса
+              email: "",
               name: username,
+              role: (decoded.role as "USER" | "ADMIN") || "USER",
               avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=random`,
             },
             isAuthenticated: true,
@@ -49,7 +65,7 @@ export const useAuthStore = create<AuthState>()(
           });
         } catch (error) {
           console.error("Login failed", error);
-          throw error; // Пробрасываем ошибку чтобы UI мог показать alert
+          throw error;
         }
       },
 
@@ -61,12 +77,14 @@ export const useAuthStore = create<AuthState>()(
             password,
           });
           const token = response.data.token;
+          const decoded = parseJWT(token);
 
           set({
             user: {
               id: "current-user",
               email: email,
               name: username,
+              role: (decoded.role as "USER" | "ADMIN") || "USER",
               avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=random`,
             },
             isAuthenticated: true,
@@ -79,6 +97,11 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => set({ user: null, isAuthenticated: false, token: null }),
+
+      isAdmin: () => {
+        const state = get();
+        return state.user?.role === "ADMIN";
+      },
     }),
     {
       name: "auth-storage",

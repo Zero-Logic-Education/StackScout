@@ -2,15 +2,36 @@
 
 import { useState, useEffect } from 'react';
 import {
-  Search,
-  Filter,
+  CircularProgress,
+  Box,
+  Container,
+  Typography,
+  Card,
+  CardContent,
+  CardActions,
+  Button,
+  TextField,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  alpha,
+  useTheme,
+} from '@mui/material';
+import {
+  Search as SearchIcon,
   Edit,
-  Trash2,
-  RefreshCw,
-  CheckCircle,
-  AlertTriangle,
-  Archive
-} from 'lucide-react';
+  Delete,
+  Refresh,
+  VerifiedUser,
+  Warning,
+  Archive as ArchiveIcon,
+} from '@mui/icons-material';
+import { useAdminProtection } from '@/lib/useAdminProtection';
 
 interface Library {
   id: number;
@@ -26,6 +47,8 @@ interface Library {
 }
 
 export default function AdminLibrariesPage() {
+  const theme = useTheme();
+  const { isAdminAuthenticated } = useAdminProtection();
   const [libraries, setLibraries] = useState<Library[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,32 +106,25 @@ export default function AdminLibrariesPage() {
     }
   };
 
-  const getModerationBadge = (status: string) => {
-    const styles = {
-      VERIFIED: 'bg-green-950/50 text-green-400 border-green-800',
-      PENDING: 'bg-yellow-950/50 text-yellow-400 border-yellow-800',
-      NEEDS_REVIEW: 'bg-orange-950/50 text-orange-400 border-orange-800',
-      ARCHIVED: 'bg-slate-800/50 text-slate-400 border-slate-700',
-    }[status] || 'bg-slate-800/50 text-slate-400 border-slate-700';
-
-    const icons = {
-      VERIFIED: <CheckCircle className="w-3 h-3" />,
-      NEEDS_REVIEW: <AlertTriangle className="w-3 h-3" />,
-      ARCHIVED: <Archive className="w-3 h-3" />,
-    };
-
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full border text-xs font-medium ${styles}`}>
-        {icons[status as keyof typeof icons]}
-        {status}
-      </span>
-    );
+  const getModerationBadge = (status: string): 'success' | 'warning' | 'error' | 'info' | 'default' => {
+    switch (status) {
+      case 'VERIFIED':
+        return 'success';
+      case 'PENDING':
+        return 'warning';
+      case 'NEEDS_REVIEW':
+        return 'error';
+      case 'ARCHIVED':
+        return 'info';
+      default:
+        return 'default';
+    }
   };
 
   const getHealthScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-400';
-    if (score >= 60) return 'text-yellow-400';
-    return 'text-red-400';
+    if (score >= 80) return 'success.main';
+    if (score >= 60) return 'warning.main';
+    return 'error.main';
   };
 
   const filteredLibraries = libraries.filter(lib => {
@@ -117,161 +133,183 @@ export default function AdminLibrariesPage() {
     return matchesSearch && matchesFilter;
   });
 
-  if (loading) {
+  if (loading || !isAdminAuthenticated) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-slate-400">Загрузка...</div>
-      </div>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <CircularProgress />
+      </Box>
     );
   }
 
   return (
-    <div className="p-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">
-          Управление библиотеками
-        </h1>
-        <p className="text-slate-400">
-          Модерация и редактирование библиотек
-        </p>
-      </div>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: { xs: 10, md: 12 } }}>
+      <Container maxWidth="xxl">
+        {/* Header */}
+        <Stack spacing={4} sx={{ mb: 6 }}>
+          <Box>
+            <Typography variant="h3" component="h1" sx={{
+              fontWeight: 800,
+              mb: 1,
+              background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>
+              Управление библиотеками
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
+              Модерация и редактирование библиотек
+            </Typography>
+          </Box>
+        </Stack>
 
-      {/* Filters */}
-      <div className="mb-6 flex flex-col md:flex-row gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-          <input
-            type="text"
+        {/* Filters */}
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 6 }}>
+          <TextField
+            fullWidth
             placeholder="Поиск библиотек..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-800 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-[#6DB33F]"
+            InputProps={{
+              startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+              },
+            }}
           />
-        </div>
-
-        <div className="flex gap-2">
-          <select
+          <TextField
+            select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-3 bg-slate-900 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-[#6DB33F]"
+            SelectProps={{
+              native: true,
+            }}
+            sx={{
+              minWidth: 200,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+              },
+            }}
           >
             <option value="all">Все статусы</option>
             <option value="PENDING">Ожидает проверки</option>
             <option value="VERIFIED">Проверено</option>
             <option value="NEEDS_REVIEW">Требует уточнения</option>
             <option value="ARCHIVED">Архив</option>
-          </select>
+          </TextField>
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
+            sx={{ borderRadius: 2 }}
+          >
+            Обновить
+          </Button>
+        </Stack>
 
-          <button className="flex items-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors">
-            <Filter className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-slate-950/50 border-b border-slate-800">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
-                  Библиотека
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
-                  Версия
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
-                  Источник
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
-                  Health Score
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
-                  Лицензия
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
-                  Статус
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">
-                  Действия
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
+        {/* Table */}
+        <TableContainer
+          component={Card}
+          elevation={0}
+          sx={{
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 2,
+            overflow: 'auto',
+          }}
+        >
+          <Table>
+            <TableHead>
+              <TableRow sx={{ bgcolor: alpha(theme.palette.background.default, 0.5) }}>
+                <TableCell sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Библиотека</TableCell>
+                <TableCell sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Версия</TableCell>
+                <TableCell sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Источник</TableCell>
+                <TableCell sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Health Score</TableCell>
+                <TableCell sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Лицензия</TableCell>
+                <TableCell sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Статус</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Действия</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {filteredLibraries.map((library) => (
-                <tr key={library.id} className="hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-white">
-                      {library.name}
-                    </div>
-                    <div className="text-xs text-slate-400 truncate max-w-xs">
-                      {library.description}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
-                    {library.version}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 py-1 bg-slate-800 rounded text-xs font-medium text-slate-300 uppercase">
-                      {library.source}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className={`text-sm font-bold ${getHealthScoreColor(library.healthScore)}`}>
+                <TableRow key={library.id} sx={{
+                  '&:hover': {
+                    bgcolor: alpha(theme.palette.action.hover, 0.5),
+                  },
+                }}>
+                  <TableCell>
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {library.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                        {library.description?.substring(0, 50)}...
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{library.version}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip label={library.source} size="small" variant="outlined" />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: getHealthScoreColor(library.healthScore) }}>
                       {library.healthScore}/100
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
-                    {library.license || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getModerationBadge(library.moderationStatus)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleRecalculateHealth(library.id)}
-                        className="p-2 text-[#6DB33F] hover:bg-slate-800 rounded transition-colors"
-                        title="Пересчитать Health Score"
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{library.license || 'N/A'}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={library.moderationStatus}
+                      color={getModerationBadge(library.moderationStatus)}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <Stack direction="row" spacing={1} justifyContent="flex-end">
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<Edit />}
+                        onClick={() => handleEdit(library.id)}
                       >
-                        <RefreshCw className="w-4 h-4" />
-                      </button>
-                      <button
-                        className="p-2 text-blue-400 hover:bg-slate-800 rounded transition-colors"
-                        title="Редактировать"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
+                        Изменить
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="error"
+                        startIcon={<Delete />}
                         onClick={() => handleDelete(library.id)}
-                        className="p-2 text-red-400 hover:bg-slate-800 rounded transition-colors"
-                        title="Удалить"
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                        Удалить
+                      </Button>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
 
         {/* Empty State */}
         {filteredLibraries.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-slate-400">Библиотеки не найдены</p>
-          </div>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <ArchiveIcon sx={{ fontSize: '4rem', color: 'text.secondary', mb: 2, mx: 'auto' }} />
+            <Typography color="text.secondary">Нет библиотек по заданным критериям</Typography>
+          </Box>
         )}
-      </div>
-
-      {/* Stats */}
-      <div className="mt-6 flex items-center justify-between text-sm text-slate-400">
-        <div>
-          Показано {filteredLibraries.length} из {libraries.length} библиотек
-        </div>
-      </div>
-    </div>
+      </Container>
+    </Box>
   );
 }

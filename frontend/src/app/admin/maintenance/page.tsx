@@ -2,14 +2,34 @@
 
 import { useState } from 'react';
 import {
-  Trash2,
-  RefreshCw,
-  Database,
-  AlertTriangle,
-  CheckCircle
-} from 'lucide-react';
+  CircularProgress,
+  Box,
+  Container,
+  Typography,
+  Card,
+  CardContent,
+  CardActions,
+  Button,
+  Alert,
+  Grid,
+  Stack,
+  alpha,
+  useTheme,
+} from '@mui/material';
+import {
+  DeleteOutline,
+  Refresh,
+  Storage,
+  WarningAmber,
+  CheckCircle,
+  CachedRounded,
+  GetApp,
+} from '@mui/icons-material';
+import { useAdminProtection } from '@/lib/useAdminProtection';
 
 export default function AdminMaintenancePage() {
+  const theme = useTheme();
+  const { isAdminAuthenticated } = useAdminProtection();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -87,152 +107,270 @@ export default function AdminMaintenancePage() {
     }
   };
 
+  if (!isAdminAuthenticated) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <div className="p-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">
-          Регламентные работы
-        </h1>
-        <p className="text-slate-400">
-          Обслуживание и оптимизация системы
-        </p>
-      </div>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: { xs: 10, md: 12 } }}>
+      <Container maxWidth="xxl">
+        {/* Header */}
+        <Stack spacing={4} sx={{ mb: 6 }}>
+          <Box>
+            <Typography variant="h3" component="h1" sx={{
+              fontWeight: 800,
+              mb: 1,
+              background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>
+              Регламентные работы
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
+              Обслуживание и оптимизация системы
+            </Typography>
+          </Box>
+        </Stack>
 
-      {/* Message */}
-      {message && (
-        <div className={`mb-6 p-4 rounded-lg border flex items-start gap-3 ${
-          message.type === 'success' 
-            ? 'bg-green-950/30 border-green-800 text-green-400'
-            : 'bg-red-950/30 border-red-800 text-red-400'
-        }`}>
-          {message.type === 'success' ? (
-            <CheckCircle className="w-5 h-5 mt-0.5 shrink-0" />
-          ) : (
-            <AlertTriangle className="w-5 h-5 mt-0.5 shrink-0" />
-          )}
-          <p>{message.text}</p>
-        </div>
-      )}
+        {/* Message */}
+        {message && (
+          <Alert
+            severity={message.type === 'success' ? 'success' : 'error'}
+            sx={{ mb: 4, borderRadius: 2 }}
+            onClose={() => setMessage(null)}
+          >
+            {message.text}
+          </Alert>
+        )}
 
-      {/* Actions Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Clear Cache */}
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-red-950/50 rounded-lg">
-              <Trash2 className="w-6 h-6 text-red-400" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">
-                Очистка кэша Redis
-              </h3>
-              <p className="text-sm text-slate-400 mb-4">
-                Очищает все кэши в Redis. Используйте, если возникли проблемы с устаревшими данными.
-              </p>
-              <button
-                onClick={handleClearCache}
-                disabled={loading}
-                className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg font-medium transition-colors"
-              >
-                {loading ? 'Очистка...' : 'Очистить кэш'}
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* Actions Grid */}
+        <Grid container spacing={3} sx={{ mb: 6 }}>
+          {/* Clear Cache */}
+          <Grid item xs={12} md={6}>
+            <Card
+              elevation={0}
+              sx={{
+                height: '100%',
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: alpha(theme.palette.background.paper, 0.6),
+              }}
+            >
+              <CardContent sx={{ pb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      bgcolor: alpha(theme.palette.error.main, 0.12),
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <DeleteOutline sx={{ color: 'error.main', fontSize: '1.75rem' }} />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                      Очистка кэша Redis
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Очищает все кэши в Redis. Используйте, если возникли проблемы с устаревшими данными.
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+              <CardActions>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="error"
+                  onClick={handleClearCache}
+                  disabled={loading}
+                >
+                  {loading ? 'Очистка...' : 'Очистить кэш'}
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
 
-        {/* Normalize Licenses */}
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-blue-950/50 rounded-lg">
-              <RefreshCw className="w-6 h-6 text-blue-400" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">
-                Нормализация лицензий
-              </h3>
-              <p className="text-sm text-slate-400 mb-4">
-                Массовое обновление и нормализация названий лицензий во всех библиотеках.
-              </p>
-              <button
-                onClick={handleNormalizeLicenses}
-                disabled={loading}
-                className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg font-medium transition-colors"
-              >
-                {loading ? 'Обработка...' : 'Нормализовать лицензии'}
-              </button>
-            </div>
-          </div>
-        </div>
+          {/* Normalize Licenses */}
+          <Grid item xs={12} md={6}>
+            <Card
+              elevation={0}
+              sx={{
+                height: '100%',
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: alpha(theme.palette.background.paper, 0.6),
+              }}
+            >
+              <CardContent sx={{ pb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      bgcolor: alpha(theme.palette.info.main, 0.12),
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Refresh sx={{ color: 'info.main', fontSize: '1.75rem' }} />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                      Нормализация лицензий
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Массовое обновление и нормализация названий лицензий во всех библиотеках.
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+              <CardActions>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="info"
+                  onClick={handleNormalizeLicenses}
+                  disabled={loading}
+                >
+                  {loading ? 'Обработка...' : 'Нормализовать лицензии'}
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
 
-        {/* Remove Duplicates */}
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-orange-950/50 rounded-lg">
-              <Database className="w-6 h-6 text-orange-400" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">
-                Удаление дубликатов
-              </h3>
-              <p className="text-sm text-slate-400 mb-4">
-                Удаляет дублирующиеся записи библиотек из базы данных.
-              </p>
-              <button
-                onClick={handleRemoveDuplicates}
-                disabled={loading}
-                className="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg font-medium transition-colors"
-              >
-                {loading ? 'Удаление...' : 'Удалить дубликаты'}
-              </button>
-            </div>
-          </div>
-        </div>
+          {/* Remove Duplicates */}
+          <Grid item xs={12} md={6}>
+            <Card
+              elevation={0}
+              sx={{
+                height: '100%',
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: alpha(theme.palette.background.paper, 0.6),
+              }}
+            >
+              <CardContent sx={{ pb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      bgcolor: alpha(theme.palette.warning.main, 0.12),
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Storage sx={{ color: 'warning.main', fontSize: '1.75rem' }} />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                      Удаление дубликатов
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Удаляет дублирующиеся записи библиотек из базы данных.
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+              <CardActions>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="warning"
+                  onClick={handleRemoveDuplicates}
+                  disabled={loading}
+                >
+                  {loading ? 'Удаление...' : 'Удалить дубликаты'}
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
 
-        {/* Database Stats */}
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-green-950/50 rounded-lg">
-              <Database className="w-6 h-6 text-[#6DB33F]" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">
-                Статистика базы данных
-              </h3>
-              <div className="space-y-2 mt-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Библиотек:</span>
-                  <span className="text-white font-medium">1,234</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Пользователей:</span>
-                  <span className="text-white font-medium">56</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Размер БД:</span>
-                  <span className="text-white font-medium">245 МБ</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+          {/* Database Stats */}
+          <Grid item xs={12} md={6}>
+            <Card
+              elevation={0}
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: alpha(theme.palette.background.paper, 0.6),
+              }}
+            >
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      bgcolor: alpha(theme.palette.success.main, 0.12),
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <CachedRounded sx={{ color: 'success.main', fontSize: '1.75rem' }} />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                      Статистика базы данных
+                    </Typography>
+                    <Stack spacing={1.5}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2" color="text.secondary">
+                          Библиотек:
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          1,234
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2" color="text.secondary">
+                          Пользователей:
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          56
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2" color="text.secondary">
+                          Размер БД:
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          245 МБ
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
 
-      {/* Warning */}
-      <div className="mt-8 bg-yellow-950/30 border border-yellow-800/50 rounded-lg p-6">
-        <div className="flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
-          <div>
-            <h4 className="text-yellow-400 font-semibold mb-2">
-              Внимание!
-            </h4>
-            <p className="text-sm text-yellow-400/80">
-              Регламентные работы могут повлиять на производительность системы. 
-              Рекомендуется выполнять их в периоды низкой нагрузки.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
+        {/* Warning */}
+        <Alert severity="warning" sx={{ borderRadius: 2 }}>
+          <WarningAmber sx={{ mr: 1, display: 'inline' }} />
+          Регламентные работы могут повлиять на производительность системы. 
+          Рекомендуется выполнять их в периоды низкой нагрузки.
+        </Alert>
+      </Container>
+    </Box>
   );
 }

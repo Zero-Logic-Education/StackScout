@@ -33,7 +33,13 @@ public class JwtService {
     }
 
     public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+        Map<String, Object> extraClaims = new HashMap<>();
+        // Добавляем роль в токен для клиента
+        if (userDetails instanceof com.stackscout.model.User) {
+            com.stackscout.model.User user = (com.stackscout.model.User) userDetails;
+            extraClaims.put("role", user.getRole().name());
+        }
+        return generateToken(extraClaims, userDetails);
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
