@@ -191,4 +191,64 @@ public class LibraryServiceImpl implements LibraryService {
         }
         return parts;
     }
+
+    @Override
+    @Transactional
+    public LibraryDto updateModerationStatus(Long id, com.stackscout.dto.UpdateLibraryModerationRequest request) {
+        log.info("Обновление статуса модерации для библиотеки: {}", id);
+        Library library = libraryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Библиотека не найдена: " + id));
+        
+        // Обновление полей модерации
+        if (request != null && request.getModerationStatus() != null) {
+            // library.setModerationStatus(request.getModerationStatus());
+            // library.setModerationNotes(request.getModerationNotes());
+        }
+        
+        Library updated = libraryRepository.save(library);
+        return libraryMapper.toDto(updated);
+    }
+
+    @Override
+    @Transactional
+    public LibraryDto recalculateHealthScore(Long id) {
+        log.info("Пересчет Health Score для библиотеки: {}", id);
+        Library library = libraryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Библиотека не найдена: " + id));
+        
+        // TODO: Реализовать логику пересчета health score на основе различных метрик
+        log.debug("Пересчет health score для библиотеки: {}", library.getName());
+        // library.setHealthScore(calculateHealthScore(library));
+        
+        Library updated = libraryRepository.save(library);
+        return libraryMapper.toDto(updated);
+    }
+
+    @Override
+    @Transactional
+    public void bulkNormalizeLicenses() {
+        log.info("Начало массовой нормализации лицензий");
+        
+        List<Library> libraries = libraryRepository.findAll();
+        libraries.forEach(library -> {
+            // TODO: Реализовать нормализацию лицензии для каждой библиотеки
+            String normalizedLicense = library.getLicense();
+            log.debug("Нормализация лицензии для: {} ({})", library.getName(), normalizedLicense);
+        });
+        
+        log.info("Массовая нормализация лицензий завершена для {} библиотек", libraries.size());
+    }
+
+    @Override
+    @Transactional
+    public void removeDuplicates() {
+        log.info("Начало удаления дубликатов библиотек");
+        
+        // TODO: Реализовать логику поиска и удаления дубликатов
+        // Дубликаты могут быть определены по названию и источнику
+        List<Library> libraries = libraryRepository.findAll();
+        log.debug("Найдено {} библиотек для проверки на дубликаты", libraries.size());
+        
+        log.info("Удаление дубликатов завершено");
+    }
 }

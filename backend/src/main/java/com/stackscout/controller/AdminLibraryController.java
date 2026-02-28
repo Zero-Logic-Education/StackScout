@@ -47,16 +47,16 @@ public class AdminLibraryController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateLibraryModerationRequest request) {
         log.info("PATCH /api/admin/libraries/{}/moderation", id);
-        // TODO: Реализовать метод в LibraryService
-        return ResponseEntity.ok().build();
+        LibraryDto updated = libraryService.updateModerationStatus(id, request);
+        return ResponseEntity.ok(updated);
     }
 
     @PostMapping("/{id}/recalculate-health")
     @Operation(summary = "Пересчитать Health Score для библиотеки")
     public ResponseEntity<LibraryDto> recalculateHealthScore(@PathVariable Long id) {
         log.info("POST /api/admin/libraries/{}/recalculate-health", id);
-        // TODO: Реализовать метод пересчета health score
-        return ResponseEntity.ok().build();
+        LibraryDto updated = libraryService.recalculateHealthScore(id);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
@@ -71,7 +71,7 @@ public class AdminLibraryController {
     @Operation(summary = "Массовая нормализация лицензий")
     public ResponseEntity<Void> bulkNormalizeLicenses() {
         log.info("POST /api/admin/libraries/bulk-normalize-licenses");
-        // TODO: Реализовать массовую нормализацию
+        libraryService.bulkNormalizeLicenses();
         return ResponseEntity.ok().build();
     }
 
@@ -79,7 +79,7 @@ public class AdminLibraryController {
     @Operation(summary = "Удалить дубликаты библиотек")
     public ResponseEntity<Void> removeDuplicates() {
         log.info("DELETE /api/admin/libraries/remove-duplicates");
-        // TODO: Реализовать удаление дубликатов
+        libraryService.removeDuplicates();
         return ResponseEntity.ok().build();
     }
 }

@@ -56,6 +56,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
         // TODO: Отправить email с токеном
         // emailService.sendPasswordResetEmail(user.getEmail(), token);
+        log.info("Email с токеном сброса должен быть отправлен на: {}", user.getEmail());
 
         log.info("Токен сброса пароля создан для пользователя: {}", user.getUsername());
         log.debug("Токен (для разработки): {}", token);

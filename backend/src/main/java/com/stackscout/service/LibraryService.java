@@ -58,4 +58,24 @@ public interface LibraryService {
      * Получить библиотеки с минимальной оценкой здоровья
      */
     List<LibraryDto> getHealthyLibraries(Integer minScore);
+    
+    /**
+     * Обновить статус модерации библиотеки
+     */
+    LibraryDto updateModerationStatus(Long id, com.stackscout.dto.UpdateLibraryModerationRequest request);
+    
+    /**
+     * Пересчитать Health Score для библиотеки
+     */
+    LibraryDto recalculateHealthScore(Long id);
+    
+    /**
+     * Массовая нормализация лицензий
+     */
+    void bulkNormalizeLicenses();
+    
+    /**
+     * Удалить дубликаты библиотек
+     */
+    void removeDuplicates();
 }

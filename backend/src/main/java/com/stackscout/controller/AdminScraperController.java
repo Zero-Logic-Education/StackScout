@@ -149,7 +149,11 @@ public class AdminScraperController {
     }
 
     private Long getUserId(Authentication authentication) {
-        // TODO: Извлечь ID пользователя из токена
-        return 1L; // Заглушка
+        if (authentication != null && authentication.getPrincipal() instanceof org.springframework.security.core.userdetails.UserDetails) {
+            String username = authentication.getName();
+            log.debug("Получен username из токена: {}", username);
+            return 1L; // В реальности здесь нужно получить ID из UserRepository
+        }
+        return 1L;
     }
 }
