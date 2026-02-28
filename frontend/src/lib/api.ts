@@ -355,6 +355,9 @@ export const adminApi = {
   stopScraper: (scraperName: string) =>
     adminApiClient.post(`/api/admin/scrapers/${scraperName}/stop`),
 
+  scanPackages: (scraperName: string, source: string, packages: string[]) =>
+    adminApiClient.post(`/api/admin/scrapers/${scraperName}/scan-packages`, { source, packages }),
+
   // Libraries
   getLibraries: (size = 50) =>
     adminApiClient.get(`/api/admin/libraries?size=${size}`),

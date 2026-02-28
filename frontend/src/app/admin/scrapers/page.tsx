@@ -17,6 +17,13 @@ import {
   Alert,
   alpha,
   useTheme,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Snackbar,
+  IconButton,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -28,6 +35,9 @@ import {
   CheckCircle,
   Schedule,
   GetApp,
+  Add as AddIcon,
+  Close as CloseIcon,
+  Stop as StopIcon,
 } from '@mui/icons-material';
 import { useAdminProtection } from '@/lib/useAdminProtection';
 import { adminApi } from '@/lib/api';
@@ -55,6 +65,19 @@ export default function ScrapersMonitorPage() {
   const [scrapers, setScrapers] = useState<ScraperTask[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Диалог ручного сканирования
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogScraper, setDialogScraper] = useState<ScraperTask | null>(null);
+  const [packageInput, setPackageInput] = useState('');
+  const [dialogLoading, setDialogLoading] = useState(false);
+
+  // Snackbar уведомления
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({
+    open: false, message: '', severity: 'info',
+  });
+  const showSnack = (message: string, severity: 'success' | 'error' | 'info' = 'info') =>
+    setSnackbar({ open: true, message, severity });
+
   useEffect(() => {
     loadScrapers();
     // Обновление каждые 5 секунд
@@ -76,36 +99,85 @@ export default function ScrapersMonitorPage() {
   const handleStart = async (scraperName: string) => {
     try {
       await adminApi.startScraper(scraperName);
+      showSnack(`Скрейпер ${scraperName} запущен. Данные начнут появляться через несколько секунд.`, 'success');
       loadScrapers();
     } catch (error) {
       console.error('Failed to start scraper:', error);
+      showSnack('Не удалось запустить скрейпер', 'error');
     }
   };
 
   const handlePause = async (scraperName: string) => {
     try {
       await adminApi.pauseScraper(scraperName);
+      showSnack(`Скрейпер ${scraperName} приостановлен`, 'info');
       loadScrapers();
     } catch (error) {
       console.error('Failed to pause scraper:', error);
+      showSnack('Не удалось приостановить скрейпер', 'error');
     }
   };
 
   const handleResume = async (scraperName: string) => {
     try {
       await adminApi.resumeScraper(scraperName);
+      showSnack(`Скрейпер ${scraperName} возобновлён`, 'success');
       loadScrapers();
     } catch (error) {
       console.error('Failed to resume scraper:', error);
+      showSnack('Не удалось возобновить скрейпер', 'error');
     }
   };
 
   const handleStop = async (scraperName: string) => {
     try {
       await adminApi.stopScraper(scraperName);
+      showSnack(`Скрейпер ${scraperName} остановлен`, 'info');
       loadScrapers();
     } catch (error) {
       console.error('Failed to stop scraper:', error);
+      showSnack('Не удалось остановить скрейпер', 'error');
+    }
+  };
+
+  // -- Диалог ручного сканирования --
+
+  const openScanDialog = (scraper: ScraperTask) => {
+    setDialogScraper(scraper);
+    setPackageInput('');
+    setDialogOpen(true);
+  };
+
+  const closeScanDialog = () => {
+    setDialogOpen(false);
+    setDialogScraper(null);
+    setPackageInput('');
+  };
+
+  const handleScanPackages = async () => {
+    if (!dialogScraper || !packageInput.trim()) return;
+
+    const packages = packageInput
+      .split(/[\n,]+/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    if (packages.length === 0) {
+      showSnack('Введите хотя бы один пакет', 'error');
+      return;
+    }
+
+    setDialogLoading(true);
+    try {
+      await adminApi.scanPackages(dialogScraper.scraperName, dialogScraper.source, packages);
+      showSnack(`${packages.length} пакетов поставлено в очередь на сканирование`, 'success');
+      closeScanDialog();
+      setTimeout(loadScrapers, 2000);
+    } catch (error) {
+      console.error('Failed to scan packages:', error);
+      showSnack('Ошибка при запуске сканирования', 'error');
+    } finally {
+      setDialogLoading(false);
     }
   };
 
@@ -299,8 +371,18 @@ export default function ScrapersMonitorPage() {
                     onClick={() => handleStart(scraper.scraperName)}
                     disabled={scraper.status === 'RUNNING'}
                     fullWidth
+                    color="success"
                   >
                     Запустить
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<AddIcon />}
+                    onClick={() => openScanDialog(scraper)}
+                    fullWidth
+                  >
+                    Пакеты
                   </Button>
                   <Button
                     size="small"
@@ -315,21 +397,13 @@ export default function ScrapersMonitorPage() {
                   <Button
                     size="small"
                     variant="outlined"
-                    startIcon={<PlayArrow />}
-                    onClick={() => handleResume(scraper.scraperName)}
-                    disabled={scraper.status !== 'PAUSED'}
-                    fullWidth
-                  >
-                    Продолжить
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
+                    startIcon={<StopIcon />}
                     onClick={() => handleStop(scraper.scraperName)}
                     disabled={scraper.status === 'IDLE' || scraper.status === 'COMPLETED'}
                     fullWidth
+                    color="error"
                   >
-                    Остановить
+                    Стоп
                   </Button>
                 </CardActions>
               </Card>
@@ -345,6 +419,76 @@ export default function ScrapersMonitorPage() {
           </Box>
         )}
       </Container>
+
+      {/* Диалог ручного сканирования пакетов */}
+      <Dialog open={dialogOpen} onClose={closeScanDialog} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6" fontWeight={700}>
+              Сканировать пакеты
+            </Typography>
+            <IconButton size="small" onClick={closeScanDialog}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          {dialogScraper && (
+            <Typography variant="body2" color="text.secondary">
+              Скрейпер: <strong>{dialogScraper.displayName}</strong> ({dialogScraper.source.toUpperCase()})
+            </Typography>
+          )}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Введите названия пакетов через запятую или с новой строки. Пакеты будут поставлены в очередь
+            и появятся в библиотеках после завершения сбора данных.
+          </Typography>
+          <TextField
+            autoFocus
+            fullWidth
+            multiline
+            rows={5}
+            label={dialogScraper?.source === 'dockerhub' ? 'Docker образы' : 'PyPI пакеты'}
+            placeholder={
+              dialogScraper?.source === 'dockerhub'
+                ? 'nginx\nmysql\nredis, postgres'
+                : 'requests\ndjango\nnumpy, pandas'
+            }
+            value={packageInput}
+            onChange={(e) => setPackageInput(e.target.value)}
+            variant="outlined"
+            helperText="Например: requests, numpy, pandas"
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={closeScanDialog} disabled={dialogLoading}>
+            Отмена
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleScanPackages}
+            disabled={!packageInput.trim() || dialogLoading}
+            startIcon={dialogLoading ? <CircularProgress size={16} /> : <PlayArrow />}
+          >
+            {dialogLoading ? 'Запуск...' : 'Начать сканирование'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar уведомления */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

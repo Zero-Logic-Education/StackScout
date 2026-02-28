@@ -2,6 +2,9 @@ package com.stackscout.controller;
 
 import com.stackscout.dto.CreateScraperTaskRequest;
 import com.stackscout.dto.ScraperTaskDto;
+import com.stackscout.dto.ScanRequest;
+import com.stackscout.repository.UserRepository;
+import com.stackscout.service.CollectorService;
 import com.stackscout.service.ScraperCommandService;
 import com.stackscout.service.ScraperTaskService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,12 +14,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST контроллер для управления скрейперами (только для ADMIN)
@@ -31,6 +38,8 @@ public class AdminScraperController {
 
     private final ScraperTaskService scraperTaskService;
     private final ScraperCommandService scraperCommandService;
+    private final CollectorService collectorService;
+    private final UserRepository userRepository;
 
     @GetMapping
     @Operation(summary = "Получить все скрейперы", description = "Возвращает список всех скрейперов")
@@ -148,11 +157,51 @@ public class AdminScraperController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * Запуск сбора конкретных пакетов для данного скрейпера.
+     * Пакеты ставятся в очередь через CollectorService.
+     */
+    @PostMapping("/{scraperName}/scan-packages")
+    @Operation(summary = "Сканировать конкретные пакеты")
+    public ResponseEntity<Map<String, Object>> scanPackages(
+            @PathVariable String scraperName,
+            @RequestBody ScanRequest request) {
+        log.info("POST /api/admin/scrapers/{}/scan-packages - сканирование {} пакетов",
+                scraperName, request.getPackages() != null ? request.getPackages().size() : 0);
+
+        if (request.getPackages() == null || request.getPackages().isEmpty()) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("error", "Список пакетов не может быть пустым");
+            return ResponseEntity.badRequest().body(err);
+        }
+
+        String source = request.getSource();
+        if (source == null || source.isBlank()) {
+            // Определяем источник по имени скрейпера если не указан явно
+            source = scraperName.contains("docker") ? "dockerhub" : "pypi";
+        }
+
+        collectorService.collectBulk(source, request.getPackages());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Пакеты поставлены в очередь на сканирование");
+        response.put("scraperName", scraperName);
+        response.put("source", source);
+        response.put("count", request.getPackages().size());
+        response.put("packages", request.getPackages());
+        response.put("timestamp", LocalDateTime.now().toString());
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+    }
+
     private Long getUserId(Authentication authentication) {
-        if (authentication != null && authentication.getPrincipal() instanceof org.springframework.security.core.userdetails.UserDetails) {
-            String username = authentication.getName();
-            log.debug("Получен username из токена: {}", username);
-            return 1L; // В реальности здесь нужно получить ID из UserRepository
+        if (authentication != null && authentication.getName() != null) {
+            try {
+                return userRepository.findByUsername(authentication.getName())
+                        .map(user -> user.getId())
+                        .orElse(1L);
+            } catch (Exception e) {
+                log.warn("Не удалось получить ID пользователя по username {}: {}", authentication.getName(), e.getMessage());
+            }
         }
         return 1L;
     }
