@@ -190,7 +190,7 @@ export default function AdminDashboardPage() {
               </Box>
             );
           })}
-        </Grid>
+        </Box>
 
         {/* System Status */}
         <Card
@@ -205,8 +205,8 @@ export default function AdminDashboardPage() {
             <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>
               Статус системы
             </Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={6} sm={3}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' }, gap: 3 }}>
+              <Box>
                 <Box sx={{ textAlign: 'center' }}>
                   <Box
                     sx={{
@@ -226,8 +226,8 @@ export default function AdminDashboardPage() {
                     Активные скрейперы
                   </Typography>
                 </Box>
-              </Grid>
-              <Grid item xs={6} sm={3}>
+              </Box>
+              <Box>
                 <Box sx={{ textAlign: 'center' }}>
                   <Box sx={{ mb: 1 }}>
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>
@@ -238,8 +238,8 @@ export default function AdminDashboardPage() {
                     Всего библиотек
                   </Typography>
                 </Box>
-              </Grid>
-              <Grid item xs={6} sm={3}>
+              </Box>
+              <Box>
                 <Box sx={{ textAlign: 'center' }}>
                   <Box sx={{ mb: 1 }}>
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>
@@ -250,8 +250,8 @@ export default function AdminDashboardPage() {
                     Пользователей
                   </Typography>
                 </Box>
-              </Grid>
-              <Grid item xs={6} sm={3}>
+              </Box>
+              <Box>
                 <Box sx={{ textAlign: 'center' }}>
                   <Box
                     sx={{
@@ -271,8 +271,8 @@ export default function AdminDashboardPage() {
                     Статус системы
                   </Typography>
                 </Box>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </CardContent>
         </Card>
       </Container>

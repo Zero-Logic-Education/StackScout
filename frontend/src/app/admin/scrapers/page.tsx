@@ -10,7 +10,6 @@ import {
   CardContent,
   CardActions,
   Button,
-  Grid,
   Stack,
   LinearProgress,
   Chip,
@@ -175,9 +174,9 @@ export default function ScrapersMonitorPage() {
         </Stack>
 
         {/* Scrapers Grid */}
-        <Grid container spacing={3}>
+        <Box sx={{display: 'grid', gridTemplateColumns: {xs: '1fr', md: '1fr 1fr', lg: '1fr 1fr'}, gap: 3}}>
           {scrapers.map((scraper) => (
-            <Grid item xs={12} md={6} lg={6} key={scraper.id}>
+            <Box>
               <Card
                 elevation={0}
                 sx={{
@@ -236,8 +235,8 @@ export default function ScrapersMonitorPage() {
                   )}
 
                   {/* Stats */}
-                  <Grid container spacing={2} sx={{ mb: 2 }}>
-                    <Grid item xs={4}>
+                  <Box sx={{display: 'grid', gridTemplateColumns: {xs: '1fr', md: '1fr 1fr', lg: '1fr 1fr'}, gap: 3}}>
+                    <Box>
                       <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: alpha(theme.palette.background.default, 0.5), borderRadius: 1 }}>
                         <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
                           Обработано
@@ -246,8 +245,8 @@ export default function ScrapersMonitorPage() {
                           {scraper.processedCount?.toLocaleString() || 0}
                         </Typography>
                       </Box>
-                    </Grid>
-                    <Grid item xs={4}>
+                    </Box>
+                    <Box>
                       <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: alpha(theme.palette.background.default, 0.5), borderRadius: 1 }}>
                         <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
                           Всего
@@ -256,8 +255,8 @@ export default function ScrapersMonitorPage() {
                           {scraper.totalCount?.toLocaleString() || 0}
                         </Typography>
                       </Box>
-                    </Grid>
-                    <Grid item xs={4}>
+                    </Box>
+                    <Box>
                       <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: alpha(theme.palette.background.default, 0.5), borderRadius: 1 }}>
                         <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
                           Ошибки
@@ -266,8 +265,8 @@ export default function ScrapersMonitorPage() {
                           {scraper.errorCount || 0}
                         </Typography>
                       </Box>
-                    </Grid>
-                  </Grid>
+                    </Box>
+                  </Box>
 
                   {/* Error Message */}
                   {scraper.lastError && (
@@ -325,9 +324,9 @@ export default function ScrapersMonitorPage() {
                   </Button>
                 </CardActions>
               </Card>
-            </Grid>
+            </Box>
           ))}
-        </Grid>
+        </Box>
 
         {/* Empty State */}
         {scrapers.length === 0 && (
