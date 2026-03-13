@@ -30,18 +30,6 @@
 - оценку health score и лицензий;
 - интеграцию с PostgreSQL, Redis и RabbitMQ.
 
-Общая информация о проекте, полном запуске и инфраструктуре находится в корневом [README](../README.md).
-
----
-
-## Границы backend
-
-В модуль backend **не входят**:
-
-- UI и клиентские страницы (см. `frontend/`);
-- docker orchestration проекта в целом (см. `infrastructure/`);
-- общий onboarding (см. [CONTRIBUTING](../docs/CONTRIBUTING.md)).
-
 ---
 
 ## Структура модулей
