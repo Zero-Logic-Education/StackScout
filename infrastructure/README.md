@@ -2,7 +2,7 @@
 
 # StackScout Infrastructure
 
-Инфраструктурные конфигурации проекта.
+**Инфраструктурные конфигурации проекта StackScout**
 
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://www.docker.com/)
 [![Prometheus](https://img.shields.io/badge/Prometheus-Metrics-E6522C?logo=prometheus)](https://prometheus.io/)
@@ -16,9 +16,7 @@
 
 - [Назначение](#назначение)
 - [Структура каталогов](#структура-каталогов)
-- [Что настраивается здесь](#что-настраивается-здесь)
-- [Правила изменения инфраструктуры](#правила-изменения-инфраструктуры)
-- [Ссылки](#ссылки)
+- [Конфигурация](#конфигурация)
 
 ---
 
@@ -30,37 +28,33 @@
 - мониторинг и визуализацию метрик;
 - вспомогательные конфиги контейнеров.
 
-Общие команды запуска и остановки описаны в корневом README.
-
 ---
 
 ## Структура каталогов
 
-```text
-infrastructure/
-  docker/
-    postgres/init.sql
-    redis/redis.conf
-  monitoring/
-    prometheus/prometheus.yml
-    grafana/
-      dashboards/
-      provisioning/
-```
+<div align="center">
+
+| **Путь** | **Назначение** |
+|:---|:---|
+| `docker/postgres/init.sql` | Инициализация схем и данных PostgreSQL |
+| `docker/redis/redis.conf` | Конфигурация Redis (память, persistence) |
+| `monitoring/prometheus/prometheus.yml` | Источники сбора метрик Prometheus |
+| `monitoring/grafana/provisioning/` | Автоматический provisioning Grafana |
+| `monitoring/grafana/dashboards/` | Дашборды Grafana |
+
+</div>
 
 ---
 
-## Что настраивается здесь
+## Конфигурация
 
-- PostgreSQL: инициализация схем и базовые данные.
-- Redis: лимиты памяти и поведение persistence.
-- Prometheus: источники сбора метрик.
-- Grafana: provisioning источников и дашбордов.
+<div align="center">
 
----
+| **Сервис** | **Конфиг** | **Что настраивается** |
+|:---|:---|:---|
+| PostgreSQL | `docker/postgres/init.sql` | Инициализация схем и базовые данные |
+| Redis | `docker/redis/redis.conf` | Лимиты памяти и режим persistence |
+| Prometheus | `monitoring/prometheus/prometheus.yml` | Источники сбора метрик (scrape targets) |
+| Grafana | `monitoring/grafana/provisioning/` | Источники данных и дашборды |
 
-## Правила изменения инфраструктуры
-
-- любые изменения конфигов сопровождаются пояснением в PR;
-- чувствительные данные не хранятся в репозитории;
-- параметры по умолчанию должны работать локально без ручных правок.
+</div>
