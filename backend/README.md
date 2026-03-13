@@ -2,7 +2,7 @@
 
 # StackScout Backend
 
-Backend-сервис платформы StackScout на Spring Boot.
+**Backend-сервис платформы StackScout на Spring Boot**
 
 [![Java](https://img.shields.io/badge/Java-21-007396?logo=openjdk)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-6DB33F?logo=springboot)](https://spring.io/projects/spring-boot)
@@ -18,7 +18,6 @@ Backend-сервис платформы StackScout на Spring Boot.
 - [Структура модулей](#структура-модулей)
 - [Команды backend](#команды-backend)
 - [Конфигурация](#конфигурация)
-- [Ссылки](#ссылки)
 
 ---
 
@@ -31,40 +30,61 @@ Backend-сервис платформы StackScout на Spring Boot.
 - оценку health score и лицензий;
 - интеграцию с PostgreSQL, Redis и RabbitMQ.
 
-Общая информация о проекте, полном запуске и инфраструктуре находится в корневом README.
+Общая информация о проекте, полном запуске и инфраструктуре находится в корневом [README](../README.md).
 
 ---
 
 ## Границы backend
 
-В модуль backend не входят:
+В модуль backend **не входят**:
 
-- UI и клиентские страницы (см. frontend);
-- docker orchestration проекта в целом (см. infrastructure);
-- общий onboarding (см. CONTRIBUTING).
+- UI и клиентские страницы (см. `frontend/`);
+- docker orchestration проекта в целом (см. `infrastructure/`);
+- общий onboarding (см. [CONTRIBUTING](../docs/CONTRIBUTING.md)).
 
 ---
 
 ## Структура модулей
 
-```text
-backend/src/main/java/com/stackscout/
-  api/           REST-контроллеры, DTO, обработка ошибок
-  domain/        сущности и доменные модели
-  service/       бизнес-логика и анализ
-  repository/    доступ к данным
-  config/        конфигурация Spring
-```
+<div align="center">
+
+| **Пакет** | **Назначение** |
+|:---|:---|
+| `controller/` | REST-контроллеры и маппинг маршрутов |
+| `dto/` | Объекты передачи данных (Request / Response) |
+| `exception/` | Глобальная обработка ошибок |
+| `mapper/` | Конвертация между сущностями и DTO |
+| `messaging/` | Продюсеры и консьюмеры RabbitMQ |
+| `model/` | JPA-сущности и доменные модели |
+| `repository/` | Доступ к данным (Spring Data JPA) |
+| `scheduler/` | Планировщики фоновых задач |
+| `service/` | Бизнес-логика и анализ |
+| `config/` | Конфигурация Spring-компонентов |
+| `util/` | Вспомогательные утилиты |
+
+</div>
 
 ---
 
 ## Команды backend
 
 ```bash
+# Перейти в директорию backend
 cd backend
+
+# Сборка проекта
 ./gradlew build
+
+# Запуск в режиме разработки
 ./gradlew bootRun
+
+# Запуск тестов
 ./gradlew test
+
+# Сборка без тестов
+./gradlew build -x test
+
+# Очистка артефактов сборки
 ./gradlew clean
 ```
 
@@ -72,8 +92,13 @@ cd backend
 
 ## Конфигурация
 
-Ключевые файлы:
+<div align="center">
 
-- `backend/src/main/resources/application.yml`
-- `backend/src/main/resources/application-dev.yml`
-- `backend/src/main/resources/db/migration/*`
+| **Файл** | **Назначение** |
+|:---|:---|
+| `src/main/resources/application.yml` | Основная конфигурация приложения |
+| `src/main/resources/application-dev.yml` | Конфигурация для профиля `dev` |
+| `src/main/resources/application.yml.example` | Пример конфигурации с описанием переменных |
+| `src/main/resources/db/migration/` | Flyway-миграции базы данных |
+
+</div>
