@@ -2,11 +2,11 @@
 
 # StackScout Frontend
 
-Клиентская часть платформы StackScout на Next.js.
+**Клиентская часть платформы StackScout на Next.js**
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs)](https://nextjs.org/)
 
 </div>
 
@@ -15,11 +15,10 @@
 ## Содержание
 
 - [Назначение](#назначение)
-- [Что находится во frontend](#что-находится-во-frontend)
-- [Структура](#структура)
+- [Границы frontend](#границы-frontend)
+- [Структура модулей](#структура-модулей)
 - [Команды frontend](#команды-frontend)
 - [Конфигурация](#конфигурация)
-- [Ссылки](#ссылки)
 
 ---
 
@@ -28,42 +27,52 @@
 Frontend отвечает за пользовательский интерфейс платформы:
 
 - отображение библиотек, метрик и аналитики;
-- взаимодействие с API backend;
+- взаимодействие с REST API backend;
 - маршрутизацию и клиентские сценарии.
 
-Общие инструкции запуска всего проекта находятся в корневом README.
-
 ---
 
-## Что находится во frontend
+## Структура модулей
 
-- страницы App Router;
-- UI-компоненты;
-- клиент API и хуки;
-- тема и глобальные стили.
+<div align="center">
 
----
+| **Директория** | **Назначение** |
+|:---|:---|
+| `src/app/` | Страницы и layout (Next.js App Router) |
+| `src/app/dashboard/` | Дашборд пользователя |
+| `src/app/library/` | Просмотр и поиск библиотек |
+| `src/app/explore/` | Каталог и фильтрация |
+| `src/app/admin/` | Административная панель |
+| `src/components/` | Переиспользуемые UI-компоненты |
+| `src/components/charts/` | Графики и диаграммы |
+| `src/components/layout/` | Шапка, сайдбар, обёртки |
+| `src/components/skeletons/` | Скелетоны загрузки |
+| `src/lib/` | API-клиент, auth, хуки |
+| `src/theme/` | Тема приложения (MUI) |
 
-## Структура
-
-```text
-frontend/src/
-  app/         страницы и layout
-  components/  переиспользуемые UI-компоненты
-  lib/         api-клиент, auth, hooks
-  theme/       тема приложения
-```
+</div>
 
 ---
 
 ## Команды frontend
 
 ```bash
+# Перейти в директорию frontend
 cd frontend
+
+# Установка зависимостей
 pnpm install
+
+# Запуск dev-сервера (http://localhost:3000)
 pnpm dev
+
+# Сборка для production
 pnpm build
+
+# Запуск production-сборки
 pnpm start
+
+# Линтинг
 pnpm lint
 ```
 
@@ -71,14 +80,13 @@ pnpm lint
 
 ## Конфигурация
 
-Основная переменная окружения:
+<div align="center">
 
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8081/api/v1
-```
+| **Файл** | **Назначение** |
+|:---|:---|
+| `next.config.ts` | Конфигурация Next.js |
+| `tsconfig.json` | Настройки TypeScript |
+| `eslint.config.mjs` | Правила линтинга |
+| `postcss.config.mjs` | Конфигурация PostCSS / Tailwind |
 
-Ключевые конфиги:
-
-- `frontend/next.config.ts`
-- `frontend/tsconfig.json`
-- `frontend/eslint.config.mjs`
+</div>
