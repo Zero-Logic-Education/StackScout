@@ -4,8 +4,8 @@
 
 Архитектурное описание системы и границ компонентов.
 
-[![Backend](https://img.shields.io/badge/Backend-Spring%20Boot-6DB33F?logo=springboot)](../backend/README.md)
 [![Frontend](https://img.shields.io/badge/Frontend-Next.js-black?logo=nextdotjs)](../frontend/README.md)
+[![Backend](https://img.shields.io/badge/Backend-Spring%20Boot-6DB33F?logo=springboot)](../backend/README.md)
 
 </div>
 
@@ -94,12 +94,3 @@ flowchart LR
 - Масштабируемость: разделение по сервисным ролям и очередям.
 - Надежность: идемпотентные операции и ретраи.
 - Безопасность: валидация входных данных и политика доступа.
-
----
-
-## Ссылки
-
-- [Root README](../README.md)
-- [API](./API.md)
-- [Database](./DATABASE.md)
-- [Infrastructure](../infrastructure/README.md)
