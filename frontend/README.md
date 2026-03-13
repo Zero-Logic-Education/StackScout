@@ -1,59 +1,84 @@
 <div align="center">
- 
-# StackScout - Frontend
- 
-**Пользовательский интерфейс платформы анализа Open Source библиотек**
- 
+
+# StackScout Frontend
+
+Клиентская часть платформы StackScout на Next.js.
+
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.0-38B2AC?logo=tailwindcss)](https://tailwindcss.com/)
- 
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+
 </div>
- 
+
 ---
- 
-## Описание
- 
-Frontend часть StackScout предоставляет интуитивно понятный и современный интерфейс для визуализации данных об Open Source библиотеках, мониторинга их "здоровья" и управления рисками лицензирования.
- 
-## Возможности (в разработке)
- 
-- **Интерактивные дашборды**: Визуализация аналитики и метрик здоровья.
-- **Поиск и фильтрация**: Удобный поиск библиотек по репозиториям PyPI и Docker Hub.
-- **Управление проектами**: Возможность отслеживать зависимости своих проектов.
-- **Адаптивный дизайн**: Корректное отображение на всех типах устройств.
- 
-## Технологический стек
- 
-- **Фреймворк**: Next.js 15 (App Router)
-- **Библиотека**: React 19
-- **Стилизация**: Tailwind CSS 4
-- **Язык**: TypeScript
-- **Состояние**: TanStack Query (React Query)
- 
+
+## Содержание
+
+- [Назначение](#назначение)
+- [Что находится во frontend](#что-находится-во-frontend)
+- [Структура](#структура)
+- [Команды frontend](#команды-frontend)
+- [Конфигурация](#конфигурация)
+- [Ссылки](#ссылки)
+
 ---
- 
-## Быстрый старт
- 
-### Требования
-- Node.js 18.x или выше
-- npm или yarn
- 
-### Установка зависимостей
- 
-```bash
-npm install
+
+## Назначение
+
+Frontend отвечает за пользовательский интерфейс платформы:
+
+- отображение библиотек, метрик и аналитики;
+- взаимодействие с API backend;
+- маршрутизацию и клиентские сценарии.
+
+Общие инструкции запуска всего проекта находятся в корневом README.
+
+---
+
+## Что находится во frontend
+
+- страницы App Router;
+- UI-компоненты;
+- клиент API и хуки;
+- тема и глобальные стили.
+
+---
+
+## Структура
+
+```text
+frontend/src/
+  app/         страницы и layout
+  components/  переиспользуемые UI-компоненты
+  lib/         api-клиент, auth, hooks
+  theme/       тема приложения
 ```
- 
-### Запуск в режиме разработки
- 
+
+---
+
+## Команды frontend
+
 ```bash
-npm run dev
+cd frontend
+pnpm install
+pnpm dev
+pnpm build
+pnpm start
+pnpm lint
 ```
-Фронтенд будет доступен по адресу: **http://localhost:3000**
- 
-### Связь с API
-Для настройки подключения к бэкенду используйте файл `.env.local`:
+
+---
+
+## Конфигурация
+
+Основная переменная окружения:
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8081/api/v1
 ```
+
+Ключевые конфиги:
+
+- `frontend/next.config.ts`
+- `frontend/tsconfig.json`
+- `frontend/eslint.config.mjs`

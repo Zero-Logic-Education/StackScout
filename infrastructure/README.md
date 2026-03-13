@@ -1,73 +1,74 @@
-# StackScout Infrastructure Documentation
+<div align="center">
 
-Папка содержит конфигурации для инфраструктурных компонентов.
+# StackScout Infrastructure
 
-## Структура
+Инфраструктурные конфигурации проекта.
 
-### docker/
-Конфигурации для Docker контейнеров:
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://www.docker.com/)
+[![Prometheus](https://img.shields.io/badge/Prometheus-Metrics-E6522C?logo=prometheus)](https://prometheus.io/)
+[![Grafana](https://img.shields.io/badge/Grafana-Dashboards-F46800?logo=grafana)](https://grafana.com/)
 
-- **postgres/init.sql** - Инициализация PostgreSQL
-  - Создание таблиц (Packages, Licenses, Projects, Dependencies, Vulnerabilities)
-  - Создание индексов
-  - Вставка стандартных лицензий
-  - Установка триггеров для обновления временных меток
+</div>
 
-- **redis/redis.conf** - Конфигурация Redis кэша
-  - Параметры памяти (maxmemory: 256mb)
-  - RDB persistence
-  - Keyspace notifications для сессий
+---
 
-### monitoring/
+## Содержание
 
-#### prometheus/prometheus.yml
-- Конфигурация Prometheus для сбора метрик
-- Job'ы для:
-  - Самого Prometheus
-  - Spring Boot приложения (StackScout Backend)
-  - PostgreSQL (через экспортер)
-  - Redis (через экспортер)
-  - RabbitMQ
+- [Назначение](#назначение)
+- [Структура каталогов](#структура-каталогов)
+- [Что настраивается здесь](#что-настраивается-здесь)
+- [Правила изменения инфраструктуры](#правила-изменения-инфраструктуры)
+- [Ссылки](#ссылки)
 
-#### grafana/
-- **provisioning/datasources.yml** - Конфигурация источников данных
-  - Prometheus как основной источник
-  - Backend API как отдельный источник
+---
 
-- **provisioning/dashboards.yml** - Конфигурация дашбордов
-  - Подключение файлов дашбордов
+## Назначение
 
-- **provisioning/grafana.ini** - Конфигурация Grafana
-  - Параметры сервера
-  - Интеграция с PostgreSQL
-  - Учетные данные администратора
+Папка содержит инфраструктурные артефакты проекта:
 
-- **dashboards/backend-metrics.json** - Дашборд метрик Backend
-  - HTTP Request Rate
-  - Total Requests
-  - JVM Memory Usage
-  - JVM Thread Count
+- bootstrap для сервисов хранения и кэша;
+- мониторинг и визуализацию метрик;
+- вспомогательные конфиги контейнеров.
 
-## Использование
+Общие команды запуска и остановки описаны в корневом README.
 
-### Для локальной разработки
+---
 
-Все конфиги уже интегрированы в docker-compose:
+## Структура каталогов
 
-```bash
-docker-compose up -d
+```text
+infrastructure/
+  docker/
+    postgres/init.sql
+    redis/redis.conf
+  monitoring/
+    prometheus/prometheus.yml
+    grafana/
+      dashboards/
+      provisioning/
 ```
 
-### Доступ
+---
 
-- Prometheus: http://localhost:9090
-- Grafana: http://localhost:3000 (admin/admin)
-- Redis: localhost:6379
-- PostgreSQL: localhost:5432 (postgres/postgres)
+## Что настраивается здесь
 
-## Развитие
+- PostgreSQL: инициализация схем и базовые данные.
+- Redis: лимиты памяти и поведение persistence.
+- Prometheus: источники сбора метрик.
+- Grafana: provisioning источников и дашбордов.
 
-- [ ] Добавить экспортеры для Postgres и Redis
-- [ ] Создать кастомные метрики для бизнес-логики
-- [ ] Настроить alerting правила
-- [ ] Добавить темплейты для дашбордов
+---
+
+## Правила изменения инфраструктуры
+
+- любые изменения конфигов сопровождаются пояснением в PR;
+- чувствительные данные не хранятся в репозитории;
+- параметры по умолчанию должны работать локально без ручных правок.
+
+---
+
+## Ссылки
+
+- [Root README](../README.md)
+- [Architecture](../docs/ARCHITECTURE.md)
+- [Database](../docs/DATABASE.md)
