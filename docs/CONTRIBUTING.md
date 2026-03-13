@@ -2,7 +2,7 @@
 
 # Contributing to StackScout
 
-Руководство по вкладу в проект без дублирования основной документации.
+**Руководство по вкладу в проект без дублирования основной документации**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#pull-requests)
@@ -20,26 +20,29 @@
 - [Pull Requests](#pull-requests)
 - [Commit сообщения](#commit-сообщения)
 - [Коммуникация](#коммуникация)
-- [Полезные ссылки](#полезные-ссылки)
 
 ---
 
 ## Что вносить
 
-StackScout приветствует вклад в следующих направлениях:
+<div align="center">
 
-- Backend: API, производительность, исправления ошибок
-- Frontend: UX/UI, новые сценарии, устойчивость интерфейса
-- DevOps: контейнеризация, CI/CD, наблюдаемость
-- Testing: unit, integration, e2e
-- Documentation: улучшение и актуализация документации
-- Translation: локализация материалов
+| **Направление** | **Примеры вклада** |
+|:---|:---|
+| Backend | API, производительность, исправления ошибок |
+| Frontend | UX/UI, новые сценарии, устойчивость интерфейса |
+| DevOps | Контейнеризация, CI/CD, наблюдаемость |
+| Testing | Unit, integration, e2e |
+| Documentation | Улучшение и актуализация документации |
+| Translation | Локализация материалов |
+
+</div>
 
 Для старта выбирайте задачи с метками:
 
-- good first issue
-- help wanted
-- documentation
+- `good first issue`
+- `help wanted`
+- `documentation`
 
 ---
 
@@ -48,30 +51,47 @@ StackScout приветствует вклад в следующих напра�
 ### 1. Подготовьте форк и upstream
 
 ```bash
+# Клонировать свой форк
 git clone https://github.com/YOUR_USERNAME/StackScout.git
+
+# Перейти в директорию проекта
 cd StackScout
+
+# Добавить оригинальный репозиторий как upstream
 git remote add upstream https://github.com/Zero-Logic-Education/StackScout.git
 ```
 
 ### 2. Создайте отдельную ветку
 
 ```bash
+# Получить актуальные изменения из upstream
 git fetch upstream
+
+# Создать ветку от upstream/main
 git checkout -b feature/short-description upstream/main
 ```
 
 Допустимые префиксы веток:
 
-- feature/*
-- fix/*
-- docs/*
-- refactor/*
-- test/*
+<div align="center">
+
+| **Префикс** | **Назначение** |
+|:---|:---|
+| `feature/*` | Новая функциональность |
+| `fix/*` | Исправление ошибок |
+| `docs/*` | Изменения в документации |
+| `refactor/*` | Рефакторинг без изменения поведения |
+| `test/*` | Тесты и тестовая инфраструктура |
+
+</div>
 
 ### 3. Держите ветку актуальной
 
 ```bash
+# Обновить ссылки на ветки upstream
 git fetch upstream
+
+# Перебазировать текущую ветку на upstream/main
 git rebase upstream/main
 ```
 
@@ -87,9 +107,15 @@ git rebase upstream/main
 
 ### Код-стиль (кратко)
 
-- Java: понятные имена, единый стиль аннотаций, публичные API с документацией.
-- TypeScript/React: строгая типизация, без неявных any, предсказуемые пропсы и контракты.
-- Комментарии объясняют причину решения, а не пересказывают код.
+<div align="center">
+
+| **Стек** | **Ожидание** |
+|:---|:---|
+| Java | Понятные имена, единый стиль аннотаций, публичные API с документацией |
+| TypeScript/React | Строгая типизация, без неявных `any`, предсказуемые пропсы и контракты |
+| Комментарии | Объясняют причину решения, а не пересказывают код |
+
+</div>
 
 ---
 
@@ -100,8 +126,6 @@ git rebase upstream/main
 - тесты проходят локально;
 - линтеры и проверки стиля проходят;
 - изменение покрыто тестами на уровне, достаточном для регрессий.
-
-Подробные команды запуска окружения, сборки, тестов и линтинга находятся в корневом README.
 
 ---
 
@@ -158,20 +182,32 @@ Closes #123
 
 Рекомендуемые type:
 
-- feat
-- fix
-- docs
-- refactor
-- test
-- chore
-- perf
-- style
+<div align="center">
+
+| **Type** | **Назначение** |
+|:---|:---|
+| `feat` | Новая функциональность |
+| `fix` | Исправление ошибки |
+| `docs` | Изменения в документации |
+| `refactor` | Рефакторинг без изменения поведения |
+| `test` | Добавление или обновление тестов |
+| `chore` | Служебные изменения и обслуживание |
+| `perf` | Оптимизация производительности |
+| `style` | Форматирование и stylistic-правки |
+
+</div>
 
 Рекомендуемые scope:
 
-- backend: api, service, controller, repository
-- frontend: component, page, lib, hook
-- devops: docker, pipeline, config
+<div align="center">
+
+| **Scope** | **Примеры** |
+|:---|:---|
+| `backend` | `api`, `service`, `controller`, `repository` |
+| `frontend` | `component`, `page`, `lib`, `hook` |
+| `devops` | `docker`, `pipeline`, `config` |
+
+</div>
 
 ---
 
