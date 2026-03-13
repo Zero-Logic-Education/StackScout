@@ -2,7 +2,7 @@
 
 # StackScout Database
 
-Документ по модели данных и миграциям backend.
+**Документ по модели данных и миграциям backend**
 
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql)](https://www.postgresql.org/)
 [![Flyway](https://img.shields.io/badge/Flyway-Migrations-CC0200?logo=flyway)](https://flywaydb.org/)
@@ -15,10 +15,8 @@
 
 - [Назначение](#назначение)
 - [Ключевые сущности](#ключевые-сущности)
-- [Связи](#связи)
 - [Миграции](#миграции)
 - [Правила изменений схемы](#правила-изменений-схемы)
-- [Ссылки](#ссылки)
 
 ---
 
@@ -32,44 +30,35 @@
 
 ## Ключевые сущности
 
-- `packages`: каталог библиотек и health-метрики.
-- `licenses`: нормализованные лицензии.
-- `license_compatibility`: матрица совместимости лицензий.
-- `projects`: проекты пользователей.
-- `project_dependencies`: зависимости проектов.
-- `package_dependencies`: граф зависимостей библиотек.
-- `vulnerabilities`: данные по уязвимостям.
-- `health_check_logs`: история расчетов health score.
+<div align="center">
 
----
+| **Сущность** | **Назначение** |
+|:---|:---|
+| `packages` | Каталог библиотек и health-метрики |
+| `licenses` | Нормализованные лицензии |
+| `license_compatibility` | Матрица совместимости лицензий |
+| `projects` | Проекты пользователей |
+| `project_dependencies` | Зависимости проектов |
+| `package_dependencies` | Граф зависимостей библиотек |
+| `vulnerabilities` | Данные по уязвимостям |
+| `health_check_logs` | История расчётов health score |
 
-## Связи
-
-```mermaid
-erDiagram
-  PACKAGES ||--o{ PACKAGE_DEPENDENCIES : has
-  PACKAGES ||--o{ PROJECT_DEPENDENCIES : used_in
-  PACKAGES ||--o{ VULNERABILITIES : has
-  PACKAGES ||--o{ HEALTH_CHECK_LOGS : logged_in
-
-  PROJECTS ||--o{ PROJECT_DEPENDENCIES : contains
-
-  LICENSES ||--o{ LICENSE_COMPATIBILITY : compares
-```
+</div>
 
 ---
 
 ## Миграции
 
-Путь к миграциям:
+<div align="center">
 
-- `backend/src/main/resources/db/migration/`
+| **Параметр** | **Значение / правило** |
+|:---|:---|
+| Путь к миграциям | `backend/src/main/resources/db/migration/` |
+| Единица изменения | Одна миграция = одно изменение схемы |
+| Формат имени файла | `V<номер>__<описание>.sql` |
+| Изменяемость | Миграции не редактируются после применения в shared-окружениях |
 
-Правила:
-
-- одна миграция = одно изменение схемы;
-- имя файла с префиксом версии `V<номер>__<описание>.sql`;
-- миграции не редактируются после применения в shared-окружениях.
+</div>
 
 ---
 
