@@ -2,7 +2,7 @@
 
 # StackScout Architecture
 
-Архитектурное описание системы и границ компонентов.
+**Архитектурное описание системы и границ компонентов**
 
 [![Frontend](https://img.shields.io/badge/Frontend-Next.js-black?logo=nextdotjs)](../frontend/README.md)
 [![Backend](https://img.shields.io/badge/Backend-Spring%20Boot-6DB33F?logo=springboot)](../backend/README.md)
@@ -14,38 +14,26 @@
 ## Содержание
 
 - [Системный обзор](#системный-обзор)
-- [Контейнерная схема](#контейнерная-схема)
 - [Ключевые потоки](#ключевые-потоки)
 - [Backend слои](#backend-слои)
 - [Frontend границы](#frontend-границы)
 - [Нефункциональные требования](#нефункциональные-требования)
-- [Ссылки](#ссылки)
 
 ---
 
 ## Системный обзор
 
-StackScout состоит из трех доменов:
+<div align="center">
 
-- frontend (Next.js): UI и пользовательские сценарии;
-- backend (Spring Boot): API, бизнес-логика, обработка данных;
-- infrastructure: БД, кэш, очередь и мониторинг.
+| **Домен** | **Технология** | **Назначение** |
+|:---|:---|:---|
+| Frontend | Next.js | UI и пользовательские сценарии |
+| Backend | Spring Boot | API, бизнес-логика, обработка данных |
+| Infrastructure | PostgreSQL, Redis, RabbitMQ | БД, кэш, очередь и мониторинг |
+
+</div>
 
 ---
-
-## Контейнерная схема
-
-```mermaid
-flowchart LR
-  U[User] --> FE[Frontend: Next.js]
-  FE --> BE[Backend: Spring Boot API]
-  BE --> DB[(PostgreSQL)]
-  BE --> RD[(Redis)]
-  BE --> MQ[(RabbitMQ)]
-  BE --> EX[External Sources]
-  PR[Prometheus] --> BE
-  GF[Grafana] --> PR
-```
 
 ---
 
@@ -69,28 +57,42 @@ flowchart LR
 
 ## Backend слои
 
-- API слой: контроллеры, DTO, ошибки.
-- Service слой: бизнес-правила и оркестрация.
-- Repository слой: доступ к данным.
-- Integration слой: внешние API, очередь, кэш.
+<div align="center">
 
-Подробности: [Backend README](../backend/README.md).
+| **Слой** | **Назначение** |
+|:---|:---|
+| API | Контроллеры, DTO, обработка ошибок |
+| Service | Бизнес-правила и оркестрация |
+| Repository | Доступ к данным |
+| Integration | Внешние API, очередь, кэш |
+
+</div>
 
 ---
 
 ## Frontend границы
 
-- страницы и layout в `app/`;
-- UI-компоненты в `components/`;
-- сервисы и хуки в `lib/`.
+<div align="center">
 
-Подробности: [Frontend README](../frontend/README.md).
+| **Директория** | **Назначение** |
+|:---|:---|
+| `app/` | Страницы и layout |
+| `components/` | UI-компоненты |
+| `lib/` | Сервисы и хуки |
+
+</div>
 
 ---
 
 ## Нефункциональные требования
 
-- Наблюдаемость: метрики и дашборды.
-- Масштабируемость: разделение по сервисным ролям и очередям.
-- Надежность: идемпотентные операции и ретраи.
-- Безопасность: валидация входных данных и политика доступа.
+<div align="center">
+
+| **Требование** | **Подход** |
+|:---|:---|
+| Наблюдаемость | Метрики и дашборды (Prometheus + Grafana) |
+| Масштабируемость | Разделение по сервисным ролям и очередям |
+| Надёжность | Идемпотентные операции и ретраи |
+| Безопасность | Валидация входных данных и политика доступа |
+
+</div>
