@@ -95,13 +95,6 @@ export default function AuthSection() {
       <>
         {/* User Avatar & Menu */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <Typography
-            variant="body2"
-            fontWeight={600}
-            sx={{ display: { xs: "none", md: "block" } }}
-          >
-            {user?.name}
-          </Typography>
           <IconButton
             onClick={handleMenu}
             size="small"
@@ -169,6 +162,8 @@ export default function AuthSection() {
           <Divider sx={{ my: 1 }} />
           <MenuItem
             onClick={handleClose}
+            component={Link}
+            href="/profile"
             sx={{ py: 1.5, px: 2.5, borderRadius: 1, mx: 1 }}
           >
             <PersonIcon
