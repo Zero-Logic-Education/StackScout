@@ -32,6 +32,7 @@ import {
   FilterList,
   TrendingUp,
   Security,
+  OpenInNew,
 } from "@mui/icons-material";
 import LibraryCardSkeleton from "@/components/skeletons/LibraryCardSkeleton";
 import LoginModal from "@/components/LoginModal";
@@ -573,22 +574,39 @@ function ExploreContent() {
                         borderColor: "divider",
                       }}
                     >
-                      <Button
-                        fullWidth
-                        variant="outlined"
-                        size="small"
-                        sx={{ fontWeight: 600 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (isAuthenticated) {
-                            router.push(`/dashboard?libraryId=${lib.id}`);
-                          } else {
-                            setLoginModalOpen(true);
-                          }
-                        }}
-                      >
-                        Подробнее
-                      </Button>
+                      <Stack direction="row" spacing={1.5}>
+                        {lib.repositoryUrl && (
+                          <Button
+                            fullWidth
+                            variant="outlined"
+                            size="small"
+                            startIcon={<OpenInNew />}
+                            sx={{ fontWeight: 600 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(lib.repositoryUrl, "_blank", "noopener,noreferrer");
+                            }}
+                          >
+                            Репозиторий
+                          </Button>
+                        )}
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          size="small"
+                          sx={{ fontWeight: 600 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isAuthenticated) {
+                              router.push(`/dashboard?libraryId=${lib.id}`);
+                            } else {
+                              setLoginModalOpen(true);
+                            }
+                          }}
+                        >
+                          Подробнее
+                        </Button>
+                      </Stack>
                     </Box>
                   </CardContent>
                 </Card>
