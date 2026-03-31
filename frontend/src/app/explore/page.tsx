@@ -234,179 +234,189 @@ function ExploreContent() {
             <Typography
               variant="h6"
               color="text.secondary"
-              sx={{ maxWidth: "700px", mx: "auto", mb: 5 }}
+              sx={{ maxWidth: "700px", mx: "auto", mb: 0 }}
             >
               Находите и анализируйте Open Source библиотеки из различных
               экосистем
             </Typography>
-            <Box
-              component="form"
-              onSubmit={handleSearch}
-              sx={{ maxWidth: 800, mx: "auto" }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: 2,
-                  bgcolor: "background.paper",
-                  p: 1,
-                  borderRadius: 2,
-                  border: "1px solid",
-                  borderColor: "divider",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                }}
-              >
-                <TextField
-                  fullWidth
-                  variant="standard"
-                  placeholder="Поиск по имени, описанию или источнику..."
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  InputProps={{
-                    disableUnderline: true,
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        {" "}
-                        <Search sx={{ color: "primary.main" }} />{" "}
-                      </InputAdornment>
-                    ),
-                    sx: { px: 2 },
-                  }}
-                />
-                <Button
-                  type="submit"
-                  variant="contained"
-                  size="large"
-                  sx={{ px: 4, minWidth: 120, boxShadow: "none" }}
-                >
-                  Найти
-                </Button>
-              </Box>
-              <Stack
-                direction="row"
-                spacing={1}
-                sx={{ mt: 3 }}
-                justifyContent="center"
-                flexWrap="wrap"
-                useFlexGap
-              >
-                <Chip
-                  label="Все"
-                  color={selectedSource === null ? "primary" : "default"}
-                  onClick={() => handleSourceFilter(null)}
-                  sx={{ cursor: "pointer" }}
-                />
-                <Chip
-                  label="PyPI"
-                  color={selectedSource === "pypi" ? "primary" : "default"}
-                  variant={selectedSource === "pypi" ? "filled" : "outlined"}
-                  onClick={() => handleSourceFilter("pypi")}
-                  sx={{ cursor: "pointer" }}
-                />
-                <Chip
-                  label="npm"
-                  color={selectedSource === "npm" ? "primary" : "default"}
-                  variant={selectedSource === "npm" ? "filled" : "outlined"}
-                  onClick={() => handleSourceFilter("npm")}
-                  sx={{ cursor: "pointer" }}
-                />
-                <Chip
-                  label="Maven"
-                  color={selectedSource === "maven" ? "primary" : "default"}
-                  variant={selectedSource === "maven" ? "filled" : "outlined"}
-                  onClick={() => handleSourceFilter("maven")}
-                  sx={{ cursor: "pointer" }}
-                />
-              </Stack>
-
-              <Stack
-                direction="row"
-                spacing={1}
-                sx={{ mt: 1.5 }}
-                justifyContent="center"
-                flexWrap="wrap"
-                useFlexGap
-              >
-                <Chip
-                  label="Любой рейтинг"
-                  color={minHealthScore === 0 ? "primary" : "default"}
-                  variant={minHealthScore === 0 ? "filled" : "outlined"}
-                  onClick={() => handleQuickMinHealthScore(0)}
-                  sx={{ cursor: "pointer" }}
-                />
-                <Chip
-                  label="60+"
-                  color={minHealthScore === 60 ? "primary" : "default"}
-                  variant={minHealthScore === 60 ? "filled" : "outlined"}
-                  onClick={() => handleQuickMinHealthScore(60)}
-                  sx={{ cursor: "pointer" }}
-                />
-                <Chip
-                  label="80+"
-                  color={minHealthScore === 80 ? "primary" : "default"}
-                  variant={minHealthScore === 80 ? "filled" : "outlined"}
-                  onClick={() => handleQuickMinHealthScore(80)}
-                  sx={{ cursor: "pointer" }}
-                />
-                <Chip
-                  label="90+"
-                  color={minHealthScore === 90 ? "primary" : "default"}
-                  variant={minHealthScore === 90 ? "filled" : "outlined"}
-                  onClick={() => handleQuickMinHealthScore(90)}
-                  sx={{ cursor: "pointer" }}
-                />
-                <Button
-                  variant="outlined"
-                  startIcon={<FilterList />}
-                  onClick={() => {
-                    setTempMinHealthScore(minHealthScore);
-                    setShowFiltersDialog(true);
-                  }}
-                  size="small"
-                >
-                  Точный фильтр
-                </Button>
-                <Button
-                  variant="text"
-                  color="inherit"
-                  onClick={handleResetFilters}
-                  size="small"
-                >
-                  Сбросить
-                </Button>
-              </Stack>
-
-              {(selectedSource || minHealthScore > 0) && (
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  sx={{ mt: 2 }}
-                  justifyContent="center"
-                  flexWrap="wrap"
-                  useFlexGap
-                >
-                  {selectedSource && (
-                    <Chip
-                      label={`Источник: ${selectedSource}`}
-                      color="primary"
-                      onDelete={() => handleSourceFilter(null)}
-                    />
-                  )}
-                  {minHealthScore > 0 && (
-                    <Chip
-                      label={`Рейтинг: от ${minHealthScore}%`}
-                      color="primary"
-                      onDelete={() => handleQuickMinHealthScore(0)}
-                    />
-                  )}
-                </Stack>
-              )}
-            </Box>
           </Box>
         </Container>
       </Box>
 
       <Container maxWidth="lg" sx={{ mt: 6 }}>
+        <Box
+          sx={{
+            mb: 4,
+            p: { xs: 2, md: 3 },
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: 3,
+            bgcolor: "background.paper",
+          }}
+        >
+          <Box
+            component="form"
+            onSubmit={handleSearch}
+            sx={{ maxWidth: 900, mx: "auto" }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                gap: 1.5,
+                flexDirection: { xs: "column", sm: "row" },
+              }}
+            >
+              <TextField
+                fullWidth
+                variant="outlined"
+                size="small"
+                placeholder="Поиск по имени, описанию или источнику..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search sx={{ color: "primary.main" }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Button
+                type="submit"
+                variant="contained"
+                sx={{ minWidth: { xs: "100%", sm: 140 }, boxShadow: "none" }}
+              >
+                Найти
+              </Button>
+            </Box>
+
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ mt: 2.5 }}
+              alignItems="center"
+              flexWrap="wrap"
+              useFlexGap
+            >
+              <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
+                Источник:
+              </Typography>
+              <Chip
+                label="Все"
+                color={selectedSource === null ? "primary" : "default"}
+                onClick={() => handleSourceFilter(null)}
+                sx={{ cursor: "pointer" }}
+              />
+              <Chip
+                label="PyPI"
+                color={selectedSource === "pypi" ? "primary" : "default"}
+                variant={selectedSource === "pypi" ? "filled" : "outlined"}
+                onClick={() => handleSourceFilter("pypi")}
+                sx={{ cursor: "pointer" }}
+              />
+              <Chip
+                label="npm"
+                color={selectedSource === "npm" ? "primary" : "default"}
+                variant={selectedSource === "npm" ? "filled" : "outlined"}
+                onClick={() => handleSourceFilter("npm")}
+                sx={{ cursor: "pointer" }}
+              />
+              <Chip
+                label="Maven"
+                color={selectedSource === "maven" ? "primary" : "default"}
+                variant={selectedSource === "maven" ? "filled" : "outlined"}
+                onClick={() => handleSourceFilter("maven")}
+                sx={{ cursor: "pointer" }}
+              />
+            </Stack>
+
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ mt: 1.5 }}
+              alignItems="center"
+              flexWrap="wrap"
+              useFlexGap
+            >
+              <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
+                Рейтинг:
+              </Typography>
+              <Chip
+                label="Любой"
+                color={minHealthScore === 0 ? "primary" : "default"}
+                variant={minHealthScore === 0 ? "filled" : "outlined"}
+                onClick={() => handleQuickMinHealthScore(0)}
+                sx={{ cursor: "pointer" }}
+              />
+              <Chip
+                label="60+"
+                color={minHealthScore === 60 ? "primary" : "default"}
+                variant={minHealthScore === 60 ? "filled" : "outlined"}
+                onClick={() => handleQuickMinHealthScore(60)}
+                sx={{ cursor: "pointer" }}
+              />
+              <Chip
+                label="80+"
+                color={minHealthScore === 80 ? "primary" : "default"}
+                variant={minHealthScore === 80 ? "filled" : "outlined"}
+                onClick={() => handleQuickMinHealthScore(80)}
+                sx={{ cursor: "pointer" }}
+              />
+              <Chip
+                label="90+"
+                color={minHealthScore === 90 ? "primary" : "default"}
+                variant={minHealthScore === 90 ? "filled" : "outlined"}
+                onClick={() => handleQuickMinHealthScore(90)}
+                sx={{ cursor: "pointer" }}
+              />
+              <Button
+                variant="outlined"
+                startIcon={<FilterList />}
+                onClick={() => {
+                  setTempMinHealthScore(minHealthScore);
+                  setShowFiltersDialog(true);
+                }}
+                size="small"
+              >
+                Точный фильтр
+              </Button>
+              <Button
+                variant="text"
+                color="inherit"
+                onClick={handleResetFilters}
+                size="small"
+              >
+                Сбросить
+              </Button>
+            </Stack>
+
+            {(selectedSource || minHealthScore > 0) && (
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{ mt: 2 }}
+                flexWrap="wrap"
+                useFlexGap
+              >
+                {selectedSource && (
+                  <Chip
+                    label={`Источник: ${selectedSource}`}
+                    color="primary"
+                    onDelete={() => handleSourceFilter(null)}
+                  />
+                )}
+                {minHealthScore > 0 && (
+                  <Chip
+                    label={`Рейтинг: от ${minHealthScore}%`}
+                    color="primary"
+                    onDelete={() => handleQuickMinHealthScore(0)}
+                  />
+                )}
+              </Stack>
+            )}
+          </Box>
+        </Box>
+
         {loading ? (
           <>
             <Box
@@ -471,7 +481,6 @@ function ExploreContent() {
             <Box
               sx={{
                 display: "flex",
-                justifyContent: "space-between",
                 alignItems: "center",
                 mb: 4,
               }}
@@ -481,16 +490,6 @@ function ExploreContent() {
                 {currentPage > 0 &&
                   ` (страница ${currentPage + 1} из ${totalPages})`}
               </Typography>
-              <Button
-                startIcon={<FilterList />}
-                variant="outlined"
-                onClick={() => {
-                  setTempMinHealthScore(minHealthScore);
-                  setShowFiltersDialog(true);
-                }}
-              >
-                Фильтры
-              </Button>
             </Box>
             <Box
               sx={{
