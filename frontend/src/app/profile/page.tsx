@@ -25,7 +25,6 @@ import {
   Subscriptions as SubscriptionsIcon,
   Update as UpdateIcon,
   Search as SearchIcon,
-  Dashboard as DashboardIcon,
   AdminPanelSettings as AdminPanelSettingsIcon,
 } from "@mui/icons-material";
 import { useAuthStore } from "@/lib/auth";
@@ -159,41 +158,48 @@ export default function ProfilePage() {
             <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
               Быстрые действия
             </Typography>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+            <Stack
+              direction="row"
+              spacing={1.25}
+              useFlexGap
+              flexWrap="wrap"
+              sx={{ alignItems: "center" }}
+            >
               <Button
                 variant="contained"
                 startIcon={<SearchIcon />}
+                size="small"
                 onClick={() => router.push("/explore")}
+                sx={{ px: 2, py: 0.75, minHeight: 38, fontWeight: 600 }}
               >
-                Исследовать библиотеки
+                Исследовать
               </Button>
               <Button
                 variant="outlined"
                 startIcon={<SubscriptionsIcon />}
+                size="small"
                 onClick={() => router.push("/subscriptions")}
+                sx={{ px: 2, py: 0.75, minHeight: 38, fontWeight: 600 }}
               >
-                Мои подписки
+                Подписки
               </Button>
               <Button
                 variant="outlined"
                 startIcon={<UpdateIcon />}
+                size="small"
                 onClick={() => router.push("/updates")}
+                sx={{ px: 2, py: 0.75, minHeight: 38, fontWeight: 600 }}
               >
-                Лента обновлений
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<DashboardIcon />}
-                onClick={() => router.push("/dashboard")}
-              >
-                Аналитика
+                Обновления
               </Button>
               {isAdmin() && (
                 <Button
                   variant="outlined"
                   color="warning"
                   startIcon={<AdminPanelSettingsIcon />}
+                  size="small"
                   onClick={() => router.push("/admin")}
+                  sx={{ px: 2, py: 0.75, minHeight: 38, fontWeight: 600 }}
                 >
                   Админ-панель
                 </Button>
