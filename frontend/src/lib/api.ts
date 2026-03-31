@@ -141,12 +141,26 @@ export interface MetricDetail {
 }
 
 export const libraryApi = {
-  getAll: (page = 0, size = 10) =>
-    apiClient.get<LibrariesResponse>(`/libraries?page=${page}&size=${size}`),
+  getAll: (page = 0, size = 10, minHealthScore?: number) => {
+    let url = `/libraries/search?page=${page}&size=${size}`;
+    if (minHealthScore && minHealthScore > 0) {
+      url += `&minHealthScore=${minHealthScore}`;
+    }
+    return apiClient.get<LibrariesResponse>(url);
+  },
 
-  search: (query: string, source?: string, page = 0, size = 10) => {
+  search: (
+    query: string,
+    source?: string,
+    page = 0,
+    size = 10,
+    minHealthScore?: number,
+  ) => {
     let url = `/libraries/search?query=${query}&page=${page}&size=${size}`;
     if (source) url += `&source=${source}`;
+    if (minHealthScore && minHealthScore > 0) {
+      url += `&minHealthScore=${minHealthScore}`;
+    }
     return apiClient.get<LibrariesResponse>(url);
   },
 

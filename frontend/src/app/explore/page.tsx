@@ -65,20 +65,19 @@ function ExploreContent() {
             source || undefined,
             page,
             pageSize,
+            minScore > 0 ? minScore : undefined,
           );
           data = response.data;
         } else {
-          const response = await libraryApi.getAll(page, pageSize);
+          const response = await libraryApi.getAll(
+            page,
+            pageSize,
+            minScore > 0 ? minScore : undefined,
+          );
           data = response.data;
         }
 
-        // Фильтруем по минимальному health score на клиенте
-        let filteredLibraries = data.libraries;
-        if (minScore > 0) {
-          filteredLibraries = data.libraries.filter(lib => lib.healthScore >= minScore);
-        }
-
-        setLibraries(filteredLibraries);
+        setLibraries(data.libraries);
         setTotalPages(data.totalPages);
         setTotalElements(data.totalElements);
         setError(null);
@@ -401,7 +400,6 @@ function ExploreContent() {
             >
               <Typography variant="h6" fontWeight={600}>
                 Найдено результатов: {totalElements}
-                {minHealthScore > 0 && ` (показано: ${libraries.length})`}
                 {currentPage > 0 &&
                   ` (страница ${currentPage + 1} из ${totalPages})`}
               </Typography>

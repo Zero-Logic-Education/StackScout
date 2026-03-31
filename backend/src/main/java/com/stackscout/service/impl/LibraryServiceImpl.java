@@ -135,6 +135,13 @@ public class LibraryServiceImpl implements LibraryService {
         return libraryRepository.searchByName(query, pageable)
                 .map(libraryMapper::toDto);
     }
+
+    @Override
+    public Page<LibraryDto> searchLibraries(String query, Integer minScore, Pageable pageable) {
+        log.debug("Поиск библиотек по запросу: {} с минимальной оценкой: {}", query, minScore);
+        return libraryRepository.searchByNameAndMinScore(query, minScore, pageable)
+                .map(libraryMapper::toDto);
+    }
     
     @Override
     public Page<LibraryDto> searchLibrariesBySource(String query, String source, Pageable pageable) {
@@ -142,11 +149,32 @@ public class LibraryServiceImpl implements LibraryService {
         return libraryRepository.searchByNameAndSource(query, source, pageable)
                 .map(libraryMapper::toDto);
     }
+
+    @Override
+    public Page<LibraryDto> searchLibrariesBySource(String query, String source, Integer minScore, Pageable pageable) {
+        log.debug("Поиск библиотек по запросу: {}, источнику: {} и минимальной оценке: {}", query, source, minScore);
+        return libraryRepository.searchByNameAndSourceAndMinScore(query, source, minScore, pageable)
+                .map(libraryMapper::toDto);
+    }
     
     @Override
     public Page<LibraryDto> getLibrariesBySource(String source, Pageable pageable) {
         log.debug("Получение библиотек по источнику: {}", source);
         return libraryRepository.findBySource(source, pageable)
+                .map(libraryMapper::toDto);
+    }
+
+    @Override
+    public Page<LibraryDto> getLibrariesBySource(String source, Integer minScore, Pageable pageable) {
+        log.debug("Получение библиотек по источнику: {} и минимальной оценке: {}", source, minScore);
+        return libraryRepository.findBySourceAndHealthScoreGreaterThanEqual(source, minScore, pageable)
+                .map(libraryMapper::toDto);
+    }
+
+    @Override
+    public Page<LibraryDto> getAllLibraries(Integer minScore, Pageable pageable) {
+        log.debug("Получение всех библиотек с минимальной оценкой: {}", minScore);
+        return libraryRepository.findByHealthScoreGreaterThanEqual(minScore, pageable)
                 .map(libraryMapper::toDto);
     }
     

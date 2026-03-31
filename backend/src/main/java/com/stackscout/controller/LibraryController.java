@@ -94,17 +94,27 @@ public class LibraryController {
     public ResponseEntity<Map<String, Object>> searchLibraries(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String source,
+            @RequestParam(required = false) Integer minHealthScore,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<LibraryDto> result;
+        boolean hasMinHealthScore = minHealthScore != null && minHealthScore > 0;
 
-        if (query != null && !query.trim().isEmpty() && source != null && !source.trim().isEmpty()) {
+        if (query != null && !query.trim().isEmpty() && source != null && !source.trim().isEmpty() && hasMinHealthScore) {
+            result = libraryService.searchLibrariesBySource(query, source, minHealthScore, pageable);
+        } else if (query != null && !query.trim().isEmpty() && source != null && !source.trim().isEmpty()) {
             result = libraryService.searchLibrariesBySource(query, source, pageable);
+        } else if (query != null && !query.trim().isEmpty() && hasMinHealthScore) {
+            result = libraryService.searchLibraries(query, minHealthScore, pageable);
         } else if (query != null && !query.trim().isEmpty()) {
             result = libraryService.searchLibraries(query, pageable);
+        } else if (source != null && !source.trim().isEmpty() && hasMinHealthScore) {
+            result = libraryService.getLibrariesBySource(source, minHealthScore, pageable);
         } else if (source != null && !source.trim().isEmpty()) {
             result = libraryService.getLibrariesBySource(source, pageable);
+        } else if (hasMinHealthScore) {
+            result = libraryService.getAllLibraries(minHealthScore, pageable);
         } else {
             result = libraryService.getAllLibraries(pageable);
         }
