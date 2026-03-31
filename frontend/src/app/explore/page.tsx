@@ -80,7 +80,7 @@ function ExploreContent() {
 
         setLibraries(filteredLibraries);
         setTotalPages(data.totalPages);
-        setTotalElements(minScore > 0 ? filteredLibraries.length : data.totalElements);
+        setTotalElements(data.totalElements);
         setError(null);
       } catch (err: unknown) {
         console.error("Ошибка загрузки библиотек:", err);
@@ -401,6 +401,7 @@ function ExploreContent() {
             >
               <Typography variant="h6" fontWeight={600}>
                 Найдено результатов: {totalElements}
+                {minHealthScore > 0 && ` (показано: ${libraries.length})`}
                 {currentPage > 0 &&
                   ` (страница ${currentPage + 1} из ${totalPages})`}
               </Typography>
