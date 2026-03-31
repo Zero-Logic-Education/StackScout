@@ -193,3 +193,23 @@ docker compose logs -f redis
 # Полная очистка (включая volumes)
 docker compose down -v
 ```
+
+### Docker через pnpm (из корня проекта)
+
+```bash
+# Сборка docker-образов
+pnpm docker:build
+
+# Запуск контейнеров
+pnpm docker:up
+
+# Пересобрать и запустить
+pnpm docker:up:build
+
+# Остановить контейнеры
+pnpm docker:down
+
+# Логи (передайте имя сервиса после --)
+pnpm docker:logs -- frontend
+pnpm docker:logs -- app
+```

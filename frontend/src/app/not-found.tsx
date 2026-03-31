@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Box, Button, Container, Typography } from "@mui/material";
 
 export default function NotFound() {
@@ -24,7 +23,7 @@ export default function NotFound() {
         <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 540 }}>
           Возможно, ссылка устарела или страница была перемещена.
         </Typography>
-        <Button component={Link} href="/" variant="contained" sx={{ mt: 1 }}>
+        <Button href="/" variant="contained" sx={{ mt: 1 }}>
           На главную
         </Button>
       </Box>
