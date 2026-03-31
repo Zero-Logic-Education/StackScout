@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { apiClient, libraryApi, libraryUpdateApi, type UpdateStats } from "@/lib/api";
+import { apiClient, libraryApi, libraryUpdateApi, type UpdateStats, type UpdateType } from "@/lib/api";
 import {
   Container,
   Box,
@@ -14,20 +14,34 @@ import {
   Stack,
   LinearProgress,
   Divider,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 import {
   LibraryBooks,
   Speed,
   AccountTree,
   Code,
-  TrendingUp,
-  Security,
   CheckCircle,
   Warning,
   Error as ErrorIcon,
-  InsertChart,
-  Timeline,
+  Update,
 } from "@mui/icons-material";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
+  Legend,
+} from "recharts";
 
 interface StatsData {
   totalLibraries: number;
@@ -130,6 +144,8 @@ export default function OverviewDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [timelineDays, setTimelineDays] = useState<7 | 14 | 30>(14);
+  const [selectedUpdateType, setSelectedUpdateType] = useState<"ALL" | UpdateType>("ALL");
 
   useEffect(() => {
     let isMounted = true;
@@ -279,6 +295,92 @@ export default function OverviewDashboard() {
   const healthyPercent = toPercent(healthyLibs);
   const warningPercent = toPercent(warningLibs);
   const criticalPercent = toPercent(criticalLibs);
+
+  const sourceEntries = Object.entries(stats.sources || {})
+    .filter(([, value]) => typeof value === "number" && (value as number) > 0)
+    .map(([key, value]) => [key, value as number] as const)
+    .sort((a, b) => b[1] - a[1]);
+
+  const sourceChartData = sourceEntries.map(([source, count]) => {
+    const percent = stats.totalLibraries > 0
+      ? Math.round((count / stats.totalLibraries) * 100)
+      : 0;
+
+    return {
+      source: formatSourceLabel(source),
+      libraries: count,
+      percent,
+    };
+  });
+
+  const updateTypeStats = (updatesStats?.recentUpdates || []).reduce(
+    (acc, update) => {
+      if (update.updateType === "MAJOR") acc.major += 1;
+      if (update.updateType === "MINOR") acc.minor += 1;
+      if (update.updateType === "PATCH") acc.patch += 1;
+      return acc;
+    },
+    { major: 0, minor: 0, patch: 0 },
+  );
+
+  const updateTypeChartData = [
+    { name: "Major", value: updateTypeStats.major, color: "#ef5350", key: "MAJOR" as const },
+    { name: "Minor", value: updateTypeStats.minor, color: "#ffa726", key: "MINOR" as const },
+    { name: "Patch", value: updateTypeStats.patch, color: "#66bb6a", key: "PATCH" as const },
+  ].filter((item) => item.value > 0);
+
+  const timelineData = (() => {
+    const now = new Date();
+    const dates = Array.from({ length: timelineDays }, (_, index) => {
+      const date = new Date(now);
+      date.setDate(now.getDate() - (timelineDays - 1 - index));
+      const key = date.toISOString().slice(0, 10);
+      return {
+        key,
+        label: date.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" }),
+        total: 0,
+        major: 0,
+        minor: 0,
+        patch: 0,
+      };
+    });
+
+    const map = new Map(dates.map((item) => [item.key, item]));
+
+    (updatesStats?.recentUpdates || []).forEach((item) => {
+      const key = new Date(item.updateDate).toISOString().slice(0, 10);
+      const bucket = map.get(key);
+      if (!bucket) return;
+
+      bucket.total += 1;
+      if (item.updateType === "MAJOR") bucket.major += 1;
+      if (item.updateType === "MINOR") bucket.minor += 1;
+      if (item.updateType === "PATCH") bucket.patch += 1;
+    });
+
+    return dates;
+  })();
+
+  const filteredRecentUpdates = (() => {
+    const source = updatesStats?.recentUpdates || [];
+    if (selectedUpdateType === "ALL") return source;
+    return source.filter((item) => item.updateType === selectedUpdateType);
+  })();
+
+  function formatSourceLabel(source: string) {
+    const lower = source.toLowerCase();
+    if (lower === "pypi") return "PyPI";
+    if (lower === "npm") return "NPM";
+    if (lower === "maven") return "Maven";
+    return source;
+  }
+
+  function formatUpdateType(type: string) {
+    if (type === "MAJOR") return "Major";
+    if (type === "MINOR") return "Minor";
+    if (type === "PATCH") return "Patch";
+    return type;
+  }
 
   return (
     <Box sx={{ minHeight: "100vh", pb: 8 }}>
@@ -588,78 +690,49 @@ export default function OverviewDashboard() {
             }}
           >
             <CardContent sx={{ p: 4 }}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <Timeline sx={{ fontSize: 32, color: "primary.main", mr: 2 }} />
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, mb: 2 }}>
                 <Box>
                   <Typography variant="h5" fontWeight={700}>
-                    Анализ трендов
+                    Динамика обновлений
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Динамика за последний месяц
+                    Интерактивный график по последним изменениям версий
                   </Typography>
                 </Box>
+                <ToggleButtonGroup
+                  size="small"
+                  exclusive
+                  value={timelineDays}
+                  onChange={(_, value) => {
+                    if (value) setTimelineDays(value);
+                  }}
+                  color="success"
+                >
+                  <ToggleButton value={7}>7д</ToggleButton>
+                  <ToggleButton value={14}>14д</ToggleButton>
+                  <ToggleButton value={30}>30д</ToggleButton>
+                </ToggleButtonGroup>
               </Box>
-              <Divider sx={{ mb: 3 }} />
-              <Box
-                sx={{
-                  height: 200,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  bgcolor: "background.default",
-                  borderRadius: 2,
-                  border: "1px dashed",
-                  borderColor: "divider",
-                }}
-              >
-                <Box sx={{ textAlign: "center" }}>
-                  <InsertChart
-                    sx={{ fontSize: 64, color: "text.disabled", mb: 1 }}
-                  />
-                  <Typography variant="body2" color="text.secondary">
-                    График будет добавлен
-                  </Typography>
-                </Box>
-              </Box>
-              <Box sx={{ mt: 3 }}>
-                <Stack direction="row" spacing={3}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Новые библиотеки
-                    </Typography>
-                    <Typography
-                      variant="h6"
-                      fontWeight={700}
-                      color="primary.main"
-                    >
-                      +{updatesStats?.last7Days ?? 0}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Обновления
-                    </Typography>
-                    <Typography
-                      variant="h6"
-                      fontWeight={700}
-                      color="success.main"
-                    >
-                      +{updatesStats?.last30Days ?? 0}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Устаревшие
-                    </Typography>
-                    <Typography
-                      variant="h6"
-                      fontWeight={700}
-                      color="warning.main"
-                    >
-                      {criticalLibs}
-                    </Typography>
-                  </Box>
-                </Stack>
+
+              <Box sx={{ height: 280, mt: 2 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={timelineData} margin={{ top: 8, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                    <XAxis dataKey="label" tick={{ fill: "#b0b0b0", fontSize: 12 }} />
+                    <YAxis allowDecimals={false} tick={{ fill: "#b0b0b0", fontSize: 12 }} />
+                    <RechartsTooltip
+                      contentStyle={{
+                        backgroundColor: "#1f1f1f",
+                        border: "1px solid rgba(255,255,255,0.14)",
+                        borderRadius: 8,
+                      }}
+                    />
+                    <Legend />
+                    <Area type="monotone" dataKey="major" name="Major" stackId="1" stroke="#ef5350" fill="#ef5350" fillOpacity={0.35} />
+                    <Area type="monotone" dataKey="minor" name="Minor" stackId="1" stroke="#ffa726" fill="#ffa726" fillOpacity={0.35} />
+                    <Area type="monotone" dataKey="patch" name="Patch" stackId="1" stroke="#66bb6a" fill="#66bb6a" fillOpacity={0.35} />
+                  </AreaChart>
+                </ResponsiveContainer>
               </Box>
             </CardContent>
           </Card>
@@ -673,171 +746,239 @@ export default function OverviewDashboard() {
           >
             <CardContent sx={{ p: 4 }}>
               <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <Security sx={{ fontSize: 32, color: "primary.main", mr: 2 }} />
+                <AccountTree sx={{ fontSize: 32, color: "primary.main", mr: 2 }} />
                 <Box>
                   <Typography variant="h5" fontWeight={700}>
-                    Безопасность
+                    Распределение по источникам
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Обзор уязвимостей
+                    Реальные данные из каталога библиотек
+                  </Typography>
+                </Box>
+              </Box>
+              <Divider sx={{ mb: 3 }} />
+              <Stack spacing={2}>
+                {sourceEntries.map(([source, count]) => {
+                  const percent = stats.totalLibraries > 0
+                    ? Math.round((count / stats.totalLibraries) * 100)
+                    : 0;
+                  return (
+                    <Box key={source}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          mb: 0.75,
+                        }}
+                      >
+                        <Typography variant="body2" fontWeight={600}>
+                          {formatSourceLabel(source)}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {count.toLocaleString()} ({percent}%)
+                        </Typography>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={percent}
+                        sx={{
+                          height: 7,
+                          borderRadius: 3.5,
+                          bgcolor: "rgba(76, 175, 80, 0.12)",
+                          "& .MuiLinearProgress-bar": {
+                            bgcolor: "primary.main",
+                          },
+                        }}
+                      />
+                    </Box>
+                  );
+                })}
+              </Stack>
+
+              <Box sx={{ height: 220, mt: 3 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={sourceChartData} margin={{ top: 0, right: 8, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                    <XAxis dataKey="source" tick={{ fill: "#b0b0b0", fontSize: 12 }} />
+                    <YAxis allowDecimals={false} tick={{ fill: "#b0b0b0", fontSize: 12 }} />
+                    <Bar dataKey="libraries" name="Библиотек" fill="#4caf50" radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Box>
+            </CardContent>
+          </Card>
+
+          <Card
+            elevation={0}
+            sx={{
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <CardContent sx={{ p: 4 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                <Update sx={{ fontSize: 32, color: "primary.main", mr: 2 }} />
+                <Box>
+                  <Typography variant="h5" fontWeight={700}>
+                    Последние обновления
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Недавние изменения версий библиотек
                   </Typography>
                 </Box>
               </Box>
               <Divider sx={{ mb: 3 }} />
 
-              <Stack spacing={2}>
-                <Box
-                  sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    bgcolor: "rgba(76, 175, 80, 0.1)",
-                    border: "1px solid",
-                    borderColor: "success.main",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mb: 1,
-                    }}
-                  >
-                    <Typography variant="body2" fontWeight={600}>
-                      Безопасные библиотеки
-                    </Typography>
-                    <Typography
-                      variant="h6"
-                      fontWeight={700}
-                      color="success.main"
-                    >
-                      {healthyPercent}%
-                    </Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={healthyPercent}
-                    sx={{
-                      height: 6,
-                      borderRadius: 3,
-                      bgcolor: "rgba(76, 175, 80, 0.2)",
-                      "& .MuiLinearProgress-bar": { bgcolor: "success.main" },
-                    }}
-                  />
-                </Box>
+              <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+                <Chip
+                  size="small"
+                  label="Все"
+                  color={selectedUpdateType === "ALL" ? "primary" : "default"}
+                  onClick={() => setSelectedUpdateType("ALL")}
+                />
+                <Chip
+                  size="small"
+                  label="Major"
+                  color={selectedUpdateType === "MAJOR" ? "error" : "default"}
+                  onClick={() => setSelectedUpdateType("MAJOR")}
+                />
+                <Chip
+                  size="small"
+                  label="Minor"
+                  color={selectedUpdateType === "MINOR" ? "warning" : "default"}
+                  onClick={() => setSelectedUpdateType("MINOR")}
+                />
+                <Chip
+                  size="small"
+                  label="Patch"
+                  color={selectedUpdateType === "PATCH" ? "success" : "default"}
+                  onClick={() => setSelectedUpdateType("PATCH")}
+                />
+              </Stack>
 
-                <Box
-                  sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    bgcolor: "rgba(255, 152, 0, 0.1)",
-                    border: "1px solid",
-                    borderColor: "warning.main",
-                  }}
-                >
+              <Stack spacing={1.5}>
+                {filteredRecentUpdates.slice(0, 6).map((updateItem) => (
                   <Box
+                    key={updateItem.id}
                     sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mb: 1,
+                      p: 2,
+                      borderRadius: 2,
+                      border: "1px solid",
+                      borderColor: "divider",
+                      bgcolor: "background.default",
                     }}
                   >
-                    <Typography variant="body2" fontWeight={600}>
-                      Средний риск
-                    </Typography>
-                    <Typography
-                      variant="h6"
-                      fontWeight={700}
-                      color="warning.main"
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 1,
+                        mb: 0.5,
+                      }}
                     >
-                      {warningPercent}%
+                      <Typography variant="body2" fontWeight={600} noWrap>
+                        {updateItem.libraryName}
+                      </Typography>
+                      <Chip
+                        size="small"
+                        label={formatUpdateType(updateItem.updateType)}
+                        color={
+                          updateItem.updateType === "MAJOR"
+                            ? "error"
+                            : updateItem.updateType === "MINOR"
+                              ? "warning"
+                              : "success"
+                        }
+                      />
+                    </Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                      {updateItem.oldVersion} → {updateItem.newVersion}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {new Date(updateItem.updateDate).toLocaleDateString("ru-RU")}
                     </Typography>
                   </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={warningPercent}
-                    sx={{
-                      height: 6,
-                      borderRadius: 3,
-                      bgcolor: "rgba(255, 152, 0, 0.2)",
-                      "& .MuiLinearProgress-bar": { bgcolor: "warning.main" },
-                    }}
-                  />
-                </Box>
+                ))}
 
-                <Box
-                  sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    bgcolor: "rgba(244, 67, 54, 0.1)",
-                    border: "1px solid",
-                    borderColor: "error.main",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mb: 1,
-                    }}
-                  >
-                    <Typography variant="body2" fontWeight={600}>
-                      Высокий риск
-                    </Typography>
-                    <Typography
-                      variant="h6"
-                      fontWeight={700}
-                      color="error.main"
-                    >
-                      {criticalPercent}%
-                    </Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={criticalPercent}
-                    sx={{
-                      height: 6,
-                      borderRadius: 3,
-                      bgcolor: "rgba(244, 67, 54, 0.2)",
-                      "& .MuiLinearProgress-bar": { bgcolor: "error.main" },
-                    }}
-                  />
-                </Box>
+                {filteredRecentUpdates.length === 0 && (
+                  <Alert severity="info" sx={{ borderRadius: 2 }}>
+                    Нет свежих обновлений библиотек.
+                  </Alert>
+                )}
               </Stack>
             </CardContent>
           </Card>
-        </Box>
 
-        <Card
-          elevation={0}
-          sx={{
-            p: { xs: 4, md: 6 },
-            textAlign: "center",
-            backgroundImage: `linear-gradient(135deg, rgba(26, 26, 26, 0.8) 0%, rgba(55, 100, 80, 0.2) 100%)`,
-            border: "1px solid",
-            borderColor: "rgba(76, 175, 80, 0.3)",
-          }}
-        >
-          <TrendingUp sx={{ fontSize: 48, color: "primary.main", mb: 2 }} />
-          <Typography variant="h4" fontWeight={700} gutterBottom>
-            Расширенная аналитика
-          </Typography>
-          <Typography
-            variant="body1"
-            color="text.secondary"
-            sx={{ mb: 3, maxWidth: "600px", mx: "auto" }}
+          <Card
+            elevation={0}
+            sx={{
+              p: { xs: 4, md: 6 },
+              border: "1px solid",
+              borderColor: "divider",
+            }}
           >
-            Получите доступ к детальным отчётам, прогнозам и персонализированным
-            рекомендациям
-          </Typography>
-          <Chip
-            label="Скоро"
-            color="primary"
-            sx={{ fontWeight: 600, px: 2, py: 2.5, fontSize: "1rem" }}
-          />
-        </Card>
+            <Typography variant="h5" fontWeight={700} gutterBottom>
+              Структура обновлений по типам
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Обзор Major / Minor / Patch для последних событий в системе.
+            </Typography>
+
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "1.4fr 1fr" },
+                gap: 3,
+                alignItems: "center",
+              }}
+            >
+              <Box sx={{ height: 260 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={updateTypeChartData}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={65}
+                      outerRadius={95}
+                      paddingAngle={3}
+                      stroke="none"
+                    >
+                      {updateTypeChartData.map((entry) => (
+                        <Cell key={entry.key} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip
+                      contentStyle={{
+                        backgroundColor: "#1f1f1f",
+                        border: "1px solid rgba(255,255,255,0.14)",
+                        borderRadius: 8,
+                      }}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </Box>
+
+              <Stack spacing={1.5}>
+                <Box sx={{ p: 2, borderRadius: 2, bgcolor: "rgba(244, 67, 54, 0.1)", border: "1px solid", borderColor: "error.main" }}>
+                  <Typography variant="caption" color="text.secondary">Major</Typography>
+                  <Typography variant="h5" fontWeight={700} color="error.main">{updateTypeStats.major}</Typography>
+                </Box>
+                <Box sx={{ p: 2, borderRadius: 2, bgcolor: "rgba(255, 152, 0, 0.1)", border: "1px solid", borderColor: "warning.main" }}>
+                  <Typography variant="caption" color="text.secondary">Minor</Typography>
+                  <Typography variant="h5" fontWeight={700} color="warning.main">{updateTypeStats.minor}</Typography>
+                </Box>
+                <Box sx={{ p: 2, borderRadius: 2, bgcolor: "rgba(76, 175, 80, 0.1)", border: "1px solid", borderColor: "success.main" }}>
+                  <Typography variant="caption" color="text.secondary">Patch</Typography>
+                  <Typography variant="h5" fontWeight={700} color="success.main">{updateTypeStats.patch}</Typography>
+                </Box>
+              </Stack>
+            </Box>
+          </Card>
+        </Box>
       </Container>
     </Box>
   );
