@@ -29,8 +29,6 @@ import {
   ArrowBack,
   PlayArrow,
   Pause as PauseIcon,
-  Refresh,
-  Settings,
   Error as ErrorIcon,
   CheckCircle,
   Schedule,
@@ -387,12 +385,18 @@ export default function ScrapersMonitorPage() {
                   <Button
                     size="small"
                     variant="outlined"
-                    startIcon={<PauseIcon />}
-                    onClick={() => handlePause(scraper.scraperName)}
-                    disabled={scraper.status !== 'RUNNING'}
+                    startIcon={scraper.status === 'PAUSED' ? <PlayArrow /> : <PauseIcon />}
+                    onClick={() => {
+                      if (scraper.status === 'PAUSED') {
+                        handleResume(scraper.scraperName);
+                        return;
+                      }
+                      handlePause(scraper.scraperName);
+                    }}
+                    disabled={scraper.status !== 'RUNNING' && scraper.status !== 'PAUSED'}
                     fullWidth
                   >
-                    Пауза
+                    {scraper.status === 'PAUSED' ? 'Продолжить' : 'Пауза'}
                   </Button>
                   <Button
                     size="small"
