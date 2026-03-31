@@ -54,6 +54,25 @@ function ExploreContent() {
   const [tempMinHealthScore, setTempMinHealthScore] = useState<number>(0);
   const pageSize = 12;
 
+  const applyFilters = useCallback(
+    (
+      nextQuery: string,
+      nextSource: string | null,
+      nextMinHealthScore: number,
+      page = 0,
+    ) => {
+      const params = new URLSearchParams();
+      if (nextQuery.trim()) params.set("q", nextQuery.trim());
+      if (nextSource) params.set("source", nextSource);
+      if (nextMinHealthScore > 0) {
+        params.set("minHealthScore", nextMinHealthScore.toString());
+      }
+      params.set("page", page.toString());
+      router.push(`/explore?${params.toString()}`);
+    },
+    [router],
+  );
+
   const fetchLibraries = useCallback(
     async (page: number, searchQuery: string, source: string | null, minScore: number) => {
       try {
@@ -117,40 +136,31 @@ function ExploreContent() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (selectedSource) params.set("source", selectedSource);
-    if (minHealthScore > 0) params.set("minHealthScore", minHealthScore.toString());
-    params.set("page", "0");
-    router.push(`/explore?${params.toString()}`);
+    applyFilters(query, selectedSource, minHealthScore, 0);
   };
 
   const handleSourceFilter = (source: string | null) => {
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (source) params.set("source", source);
-    if (minHealthScore > 0) params.set("minHealthScore", minHealthScore.toString());
-    params.set("page", "0");
-    router.push(`/explore?${params.toString()}`);
+    setSelectedSource(source);
+    applyFilters(query, source, minHealthScore, 0);
+  };
+
+  const handleQuickMinHealthScore = (score: number) => {
+    setMinHealthScore(score);
+    setTempMinHealthScore(score);
+    applyFilters(query, selectedSource, score, 0);
   };
 
   const handleApplyFilters = () => {
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (selectedSource) params.set("source", selectedSource);
-    if (tempMinHealthScore > 0) params.set("minHealthScore", tempMinHealthScore.toString());
-    params.set("page", "0");
-    router.push(`/explore?${params.toString()}`);
+    setMinHealthScore(tempMinHealthScore);
+    applyFilters(query, selectedSource, tempMinHealthScore, 0);
     setShowFiltersDialog(false);
   };
 
   const handleResetFilters = () => {
+    setSelectedSource(null);
+    setMinHealthScore(0);
     setTempMinHealthScore(0);
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (selectedSource) params.set("source", selectedSource);
-    params.set("page", "0");
-    router.push(`/explore?${params.toString()}`);
+    applyFilters(query, null, 0, 0);
     setShowFiltersDialog(false);
   };
 
@@ -307,22 +317,90 @@ function ExploreContent() {
                   onClick={() => handleSourceFilter("maven")}
                   sx={{ cursor: "pointer" }}
                 />
+              </Stack>
+
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{ mt: 1.5 }}
+                justifyContent="center"
+                flexWrap="wrap"
+                useFlexGap
+              >
                 <Chip
-                  label="Высокий рейтинг"
-                  color={minHealthScore >= 80 ? "primary" : "default"}
-                  variant={minHealthScore >= 80 ? "filled" : "outlined"}
-                  onClick={() => {
-                    setTempMinHealthScore(minHealthScore >= 80 ? 0 : 80);
-                    const params = new URLSearchParams();
-                    if (query) params.set("q", query);
-                    if (selectedSource) params.set("source", selectedSource);
-                    params.set("minHealthScore", minHealthScore >= 80 ? "0" : "80");
-                    params.set("page", "0");
-                    router.push(`/explore?${params.toString()}`);
-                  }}
+                  label="Любой рейтинг"
+                  color={minHealthScore === 0 ? "primary" : "default"}
+                  variant={minHealthScore === 0 ? "filled" : "outlined"}
+                  onClick={() => handleQuickMinHealthScore(0)}
                   sx={{ cursor: "pointer" }}
                 />
+                <Chip
+                  label="60+"
+                  color={minHealthScore === 60 ? "primary" : "default"}
+                  variant={minHealthScore === 60 ? "filled" : "outlined"}
+                  onClick={() => handleQuickMinHealthScore(60)}
+                  sx={{ cursor: "pointer" }}
+                />
+                <Chip
+                  label="80+"
+                  color={minHealthScore === 80 ? "primary" : "default"}
+                  variant={minHealthScore === 80 ? "filled" : "outlined"}
+                  onClick={() => handleQuickMinHealthScore(80)}
+                  sx={{ cursor: "pointer" }}
+                />
+                <Chip
+                  label="90+"
+                  color={minHealthScore === 90 ? "primary" : "default"}
+                  variant={minHealthScore === 90 ? "filled" : "outlined"}
+                  onClick={() => handleQuickMinHealthScore(90)}
+                  sx={{ cursor: "pointer" }}
+                />
+                <Button
+                  variant="outlined"
+                  startIcon={<FilterList />}
+                  onClick={() => {
+                    setTempMinHealthScore(minHealthScore);
+                    setShowFiltersDialog(true);
+                  }}
+                  size="small"
+                >
+                  Точный фильтр
+                </Button>
+                <Button
+                  variant="text"
+                  color="inherit"
+                  onClick={handleResetFilters}
+                  size="small"
+                >
+                  Сбросить
+                </Button>
               </Stack>
+
+              {(selectedSource || minHealthScore > 0) && (
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{ mt: 2 }}
+                  justifyContent="center"
+                  flexWrap="wrap"
+                  useFlexGap
+                >
+                  {selectedSource && (
+                    <Chip
+                      label={`Источник: ${selectedSource}`}
+                      color="primary"
+                      onDelete={() => handleSourceFilter(null)}
+                    />
+                  )}
+                  {minHealthScore > 0 && (
+                    <Chip
+                      label={`Рейтинг: от ${minHealthScore}%`}
+                      color="primary"
+                      onDelete={() => handleQuickMinHealthScore(0)}
+                    />
+                  )}
+                </Stack>
+              )}
             </Box>
           </Box>
         </Container>
@@ -406,8 +484,10 @@ function ExploreContent() {
               <Button
                 startIcon={<FilterList />}
                 variant="outlined"
-                onClick={() => setShowFiltersDialog(true)}
-                sx={{ display: { xs: "none", sm: "flex" } }}
+                onClick={() => {
+                  setTempMinHealthScore(minHealthScore);
+                  setShowFiltersDialog(true);
+                }}
               >
                 Фильтры
               </Button>
