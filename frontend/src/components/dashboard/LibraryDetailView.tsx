@@ -143,7 +143,7 @@ export default function LibraryDetailView({ libraryId }: LibraryDetailViewProps)
           bgcolor: "background.paper",
           borderBottom: "1px solid",
           borderColor: "divider",
-          pt: { xs: 4, md: 6 },
+          pt: { xs: 12, md: 14 },
           pb: 4,
           mb: 4,
         }}
