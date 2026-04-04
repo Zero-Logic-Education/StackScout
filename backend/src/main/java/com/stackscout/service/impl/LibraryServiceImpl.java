@@ -20,7 +20,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -282,6 +284,23 @@ public class LibraryServiceImpl implements LibraryService {
 
     @Override
     public Object getLibrariesStats() {
-        throw new UnsupportedOperationException("Unimplemented method 'getLibrariesStats'");
+        List<Library> libraries = libraryRepository.findAll();
+
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalLibraries", (long) libraries.size());
+        stats.put("sources", Map.of(
+            "pypi", libraries.stream().filter(l -> "pypi".equalsIgnoreCase(l.getSource())).count(),
+            "npm", libraries.stream().filter(l -> "npm".equalsIgnoreCase(l.getSource())).count(),
+            "dockerhub", libraries.stream().filter(l -> "dockerhub".equalsIgnoreCase(l.getSource())).count()));
+        stats.put(
+            "averageHealthScore",
+            libraries.stream()
+                .map(Library::getHealthScore)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(0.0));
+
+        return stats;
     }
 }

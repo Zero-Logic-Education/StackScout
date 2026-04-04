@@ -13,6 +13,7 @@ import {
   Card,
   CardContent,
   Stack,
+  Alert,
   alpha,
   useTheme,
 } from '@mui/material';
@@ -32,6 +33,7 @@ export default function AdminDashboardPage() {
   const { isAuthenticated } = useAuthStore();
   const isAdmin = useAuthStore((state) => state.isAdmin);
   const [dashboardStats, setDashboardStats] = useState<AdminDashboardStats | null>(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated || !isAdmin()) {
@@ -42,8 +44,10 @@ export default function AdminDashboardPage() {
       try {
         const response = await adminApi.getDashboardStats();
         setDashboardStats(response.data);
+        setStatsError(null);
       } catch (error) {
         console.error('Failed to load dashboard stats:', error);
+        setStatsError('Не удалось загрузить реальные показатели системы');
       }
     };
 
@@ -141,6 +145,12 @@ export default function AdminDashboardPage() {
           </Box>
         </Stack>
 
+        {statsError && (
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            {statsError}
+          </Alert>
+        )}
+
         {/* Admin Sections Grid */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 3, mb: 6 }}>
           {adminSections.slice(0, 4).map((section, index) => {
@@ -237,7 +247,7 @@ export default function AdminDashboardPage() {
                   >
                     <Autorenew sx={{ color: 'success.main', fontSize: '1.5rem' }} />
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                      {dashboardStats?.activeScraper ?? 0}
+                      {dashboardStats ? dashboardStats.activeScraper : '—'}
                     </Typography>
                   </Box>
                   <Typography variant="caption" color="text.secondary">
@@ -249,7 +259,7 @@ export default function AdminDashboardPage() {
                 <Box sx={{ textAlign: 'center' }}>
                   <Box sx={{ mb: 1 }}>
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                      {(dashboardStats?.totalLibraries ?? 0).toLocaleString('ru-RU')}
+                      {dashboardStats ? dashboardStats.totalLibraries.toLocaleString('ru-RU') : '—'}
                     </Typography>
                   </Box>
                   <Typography variant="caption" color="text.secondary">
@@ -261,7 +271,7 @@ export default function AdminDashboardPage() {
                 <Box sx={{ textAlign: 'center' }}>
                   <Box sx={{ mb: 1 }}>
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                      {(dashboardStats?.totalUsers ?? 0).toLocaleString('ru-RU')}
+                      {dashboardStats ? dashboardStats.totalUsers.toLocaleString('ru-RU') : '—'}
                     </Typography>
                   </Box>
                   <Typography variant="caption" color="text.secondary">
