@@ -173,13 +173,6 @@ export default function AdminDashboardPage() {
                       border: '1px solid',
                       borderColor: 'divider',
                       bgcolor: alpha(theme.palette.background.paper, 0.6),
-                      transition: 'all 0.3s ease',
-                      cursor: 'pointer',
-                      '&:hover': {
-                        transform: 'translateY(-8px)',
-                        borderColor: colorMap[section.color],
-                        boxShadow: `0 12px 32px ${alpha(colorMap[section.color], 0.2)}`,
-                      },
                     }}
                   >
                     <CardContent sx={{ pb: 1 }}>
