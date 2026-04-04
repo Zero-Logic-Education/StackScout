@@ -34,7 +34,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip as RechartsTooltip,
+  Tooltip,
   PieChart,
   Pie,
   Cell,
@@ -315,18 +315,6 @@ export default function OverviewDashboard() {
     .map(([key, value]) => [key, value as number] as const)
     .sort((a, b) => b[1] - a[1]);
 
-  const sourceChartData = sourceEntries.map(([source, count]) => {
-    const percent = stats.totalLibraries > 0
-      ? Math.round((count / stats.totalLibraries) * 100)
-      : 0;
-
-    return {
-      source: formatSourceLabel(source),
-      libraries: count,
-      percent,
-    };
-  });
-
   const updateTypeStats = (updatesStats?.recentUpdates || []).reduce(
     (acc, update) => {
       if (update.updateType === "MAJOR") acc.major += 1;
@@ -387,7 +375,6 @@ export default function OverviewDashboard() {
   })();
 
   const hasTimelineData = timelineData.some((item) => item.total > 0);
-  const hasSourceData = sourceChartData.length > 0;
   const hasUpdateTypeData = updateTypeChartData.length > 0;
 
   const healthSnapshotData = [
@@ -772,7 +759,7 @@ export default function OverviewDashboard() {
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                       <XAxis dataKey="label" tick={{ fill: "#b0b0b0", fontSize: 12 }} />
                       <YAxis allowDecimals={false} tick={{ fill: "#b0b0b0", fontSize: 12 }} />
-                      <RechartsTooltip
+                      <Tooltip
                         contentStyle={{
                           backgroundColor: "#1f1f1f",
                           border: "1px solid rgba(255,255,255,0.14)",
@@ -791,7 +778,7 @@ export default function OverviewDashboard() {
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                       <XAxis dataKey="label" tick={{ fill: "#b0b0b0", fontSize: 12 }} />
                       <YAxis allowDecimals={false} tick={{ fill: "#b0b0b0", fontSize: 12 }} />
-                      <RechartsTooltip
+                      <Tooltip
                         contentStyle={{
                           backgroundColor: "#1f1f1f",
                           border: "1px solid rgba(255,255,255,0.14)",
@@ -864,23 +851,6 @@ export default function OverviewDashboard() {
                   );
                 })}
               </Stack>
-
-              <Box sx={{ height: 220, mt: 3 }}>
-                {hasSourceData ? (
-                  <ResponsiveContainer width="100%" height="100%" minWidth={280} minHeight={180}>
-                    <BarChart data={sourceChartData} margin={{ top: 0, right: 8, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                      <XAxis dataKey="source" tick={{ fill: "#b0b0b0", fontSize: 12 }} />
-                      <YAxis allowDecimals={false} tick={{ fill: "#b0b0b0", fontSize: 12 }} />
-                      <Bar dataKey="libraries" name="Библиотек" fill="#4caf50" radius={[8, 8, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <Alert severity="info" sx={{ borderRadius: 2 }}>
-                    Источники пока не содержат данных для графика.
-                  </Alert>
-                )}
-              </Box>
             </CardContent>
           </Card>
 
@@ -1055,7 +1025,7 @@ export default function OverviewDashboard() {
                           <Cell key={entry.key} fill={entry.color} />
                         ))}
                       </Pie>
-                      <RechartsTooltip
+                      <Tooltip
                         contentStyle={{
                           backgroundColor: "#1f1f1f",
                           border: "1px solid rgba(255,255,255,0.14)",
