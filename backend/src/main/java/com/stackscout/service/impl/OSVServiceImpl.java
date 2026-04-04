@@ -157,6 +157,7 @@ public class OSVServiceImpl implements SourceAdapter {
     private boolean isSeverity(Map<String, Object> vuln, String severity) {
         Object details = vuln.get("affected");
         if (details instanceof List) {
+            @SuppressWarnings("unchecked")
             List<Map<String, Object>> affectedList = (List<Map<String, Object>>) details;
             for (Map<String, Object> affected : affectedList) {
                 if (severity.equals(affected.get("severity"))) {
@@ -184,6 +185,7 @@ public class OSVServiceImpl implements SourceAdapter {
             Object details = vuln.get("affected");
             if (!(details instanceof List)) continue;
             
+            @SuppressWarnings("unchecked")
             List<Map<String, Object>> affectedList = (List<Map<String, Object>>) details;
             for (Map<String, Object> affected : affectedList) {
                 Object severity = affected.get("severity");

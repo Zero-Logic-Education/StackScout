@@ -129,8 +129,8 @@ public class GitHubServiceImpl implements SourceAdapter {
 
     private long getRecentCommitsCount(RestClient client, String owner, String repo) {
         try {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> responseBody = (Map<String, Object>) client.get()
+            // Fetch commits data for activity analysis
+            client.get()
                     .uri("/repos/{owner}/{repo}/commits?per_page=1", owner, repo)
                     .retrieve()
                     .body(Map.class);

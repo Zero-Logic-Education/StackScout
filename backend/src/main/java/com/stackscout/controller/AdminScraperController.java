@@ -177,8 +177,13 @@ public class AdminScraperController {
 
         String source = request.getSource();
         if (source == null || source.isBlank()) {
-            // Определяем источник по имени скрейпера если не указан явно
-            source = scraperName.contains("docker") ? "dockerhub" : "pypi";
+            try {
+                // Берем source из конфигурации скрейпера, если он не передан в запросе.
+                source = scraperTaskService.getScraperByName(scraperName).getSource();
+            } catch (Exception e) {
+                // Fallback по имени скрейпера для обратной совместимости.
+                source = scraperName.contains("docker") ? "dockerhub" : "pypi";
+            }
         }
 
         collectorService.collectBulk(source, request.getPackages());

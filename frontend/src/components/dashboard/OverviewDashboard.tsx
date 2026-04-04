@@ -46,12 +46,7 @@ import {
 interface StatsData {
   totalLibraries: number;
   averageHealthScore: number;
-  sources: {
-    pypi: number;
-    npm: number;
-    maven?: number;
-    [key: string]: number | undefined;
-  };
+  sources: Record<string, number>;
   [key: string]: unknown;
 }
 
@@ -147,6 +142,13 @@ export default function OverviewDashboard() {
   const [timelineDays, setTimelineDays] = useState<7 | 14 | 30>(14);
   const [selectedUpdateType, setSelectedUpdateType] = useState<"ALL" | UpdateType>("ALL");
 
+  const getSourceCount = (sourceKey: string): number => {
+    if (!stats?.sources) {
+      return 0;
+    }
+    return Number(stats.sources[sourceKey]) || 0;
+  };
+
   useEffect(() => {
     let isMounted = true;
 
@@ -176,7 +178,19 @@ export default function OverviewDashboard() {
         }
 
         if (isMounted) {
-          setStats(data);
+          const rawSources =
+            data && typeof data === "object" && data.sources && typeof data.sources === "object"
+              ? (data.sources as Record<string, unknown>)
+              : {};
+
+          const normalizedSources = Object.fromEntries(
+            Object.entries(rawSources).map(([key, value]) => [key, Number(value) || 0]),
+          ) as Record<string, number>;
+
+          setStats({
+            ...(data as StatsData),
+            sources: normalizedSources,
+          });
           setUpdatesStats(updatesResponse.data);
         }
       } catch (err: unknown) {
@@ -348,7 +362,12 @@ export default function OverviewDashboard() {
     const map = new Map(dates.map((item) => [item.key, item]));
 
     (updatesStats?.recentUpdates || []).forEach((item) => {
-      const key = new Date(item.updateDate).toISOString().slice(0, 10);
+      const date = new Date(item.updateDate);
+      if (Number.isNaN(date.getTime())) {
+        return;
+      }
+
+      const key = date.toISOString().slice(0, 10);
       const bucket = map.get(key);
       if (!bucket) return;
 
@@ -367,6 +386,30 @@ export default function OverviewDashboard() {
     return source.filter((item) => item.updateType === selectedUpdateType);
   })();
 
+  const hasTimelineData = timelineData.some((item) => item.total > 0);
+  const hasSourceData = sourceChartData.length > 0;
+  const hasUpdateTypeData = updateTypeChartData.length > 0;
+
+  const healthSnapshotData = [
+    { name: "Здоровые", value: healthyLibs, color: "#66bb6a" },
+    { name: "Требуют внимания", value: warningLibs, color: "#ffa726" },
+    { name: "Критические", value: criticalLibs, color: "#ef5350" },
+  ].filter((item) => item.value > 0);
+
+  const timelineFallbackData = healthSnapshotData.map((item) => ({
+    label: item.name,
+    value: item.value,
+  }));
+
+  const pieData = hasUpdateTypeData
+    ? updateTypeChartData
+    : healthSnapshotData.map((item) => ({
+        name: item.name,
+        value: item.value,
+        color: item.color,
+        key: item.name,
+      }));
+
   function formatSourceLabel(source: string) {
     const lower = source.toLowerCase();
     if (lower === "pypi") return "PyPI";
@@ -380,6 +423,14 @@ export default function OverviewDashboard() {
     if (type === "MINOR") return "Minor";
     if (type === "PATCH") return "Patch";
     return type;
+  }
+
+  function formatDateSafe(value: string) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return "дата неизвестна";
+    }
+    return date.toLocaleDateString("ru-RU");
   }
 
   return (
@@ -461,14 +512,14 @@ export default function OverviewDashboard() {
             <StatCard
               icon={<Code sx={{ fontSize: 40 }} />}
               label="PyPI библиотек"
-              value={stats.sources.pypi.toLocaleString()}
+              value={getSourceCount("pypi").toLocaleString()}
               color="info"
               subtitle="Python"
             />
             <StatCard
               icon={<AccountTree sx={{ fontSize: 40 }} />}
               label="NPM пакетов"
-              value={stats.sources.npm.toLocaleString()}
+              value={getSourceCount("npm").toLocaleString()}
               color="secondary"
               subtitle="JavaScript"
             />
@@ -715,24 +766,42 @@ export default function OverviewDashboard() {
               </Box>
 
               <Box sx={{ height: 280, mt: 2 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={timelineData} margin={{ top: 8, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                    <XAxis dataKey="label" tick={{ fill: "#b0b0b0", fontSize: 12 }} />
-                    <YAxis allowDecimals={false} tick={{ fill: "#b0b0b0", fontSize: 12 }} />
-                    <RechartsTooltip
-                      contentStyle={{
-                        backgroundColor: "#1f1f1f",
-                        border: "1px solid rgba(255,255,255,0.14)",
-                        borderRadius: 8,
-                      }}
-                    />
-                    <Legend />
-                    <Area type="monotone" dataKey="major" name="Major" stackId="1" stroke="#ef5350" fill="#ef5350" fillOpacity={0.35} />
-                    <Area type="monotone" dataKey="minor" name="Minor" stackId="1" stroke="#ffa726" fill="#ffa726" fillOpacity={0.35} />
-                    <Area type="monotone" dataKey="patch" name="Patch" stackId="1" stroke="#66bb6a" fill="#66bb6a" fillOpacity={0.35} />
-                  </AreaChart>
-                </ResponsiveContainer>
+                {hasTimelineData ? (
+                  <ResponsiveContainer width="100%" height="100%" minWidth={280} minHeight={220}>
+                    <AreaChart data={timelineData} margin={{ top: 8, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                      <XAxis dataKey="label" tick={{ fill: "#b0b0b0", fontSize: 12 }} />
+                      <YAxis allowDecimals={false} tick={{ fill: "#b0b0b0", fontSize: 12 }} />
+                      <RechartsTooltip
+                        contentStyle={{
+                          backgroundColor: "#1f1f1f",
+                          border: "1px solid rgba(255,255,255,0.14)",
+                          borderRadius: 8,
+                        }}
+                      />
+                      <Legend />
+                      <Area type="monotone" dataKey="major" name="Major" stackId="1" stroke="#ef5350" fill="#ef5350" fillOpacity={0.35} />
+                      <Area type="monotone" dataKey="minor" name="Minor" stackId="1" stroke="#ffa726" fill="#ffa726" fillOpacity={0.35} />
+                      <Area type="monotone" dataKey="patch" name="Patch" stackId="1" stroke="#66bb6a" fill="#66bb6a" fillOpacity={0.35} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%" minWidth={280} minHeight={220}>
+                    <BarChart data={timelineFallbackData} margin={{ top: 8, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                      <XAxis dataKey="label" tick={{ fill: "#b0b0b0", fontSize: 12 }} />
+                      <YAxis allowDecimals={false} tick={{ fill: "#b0b0b0", fontSize: 12 }} />
+                      <RechartsTooltip
+                        contentStyle={{
+                          backgroundColor: "#1f1f1f",
+                          border: "1px solid rgba(255,255,255,0.14)",
+                          borderRadius: 8,
+                        }}
+                      />
+                      <Bar dataKey="value" name="Библиотек" fill="#4caf50" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </Box>
             </CardContent>
           </Card>
@@ -797,14 +866,20 @@ export default function OverviewDashboard() {
               </Stack>
 
               <Box sx={{ height: 220, mt: 3 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={sourceChartData} margin={{ top: 0, right: 8, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                    <XAxis dataKey="source" tick={{ fill: "#b0b0b0", fontSize: 12 }} />
-                    <YAxis allowDecimals={false} tick={{ fill: "#b0b0b0", fontSize: 12 }} />
-                    <Bar dataKey="libraries" name="Библиотек" fill="#4caf50" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                {hasSourceData ? (
+                  <ResponsiveContainer width="100%" height="100%" minWidth={280} minHeight={180}>
+                    <BarChart data={sourceChartData} margin={{ top: 0, right: 8, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                      <XAxis dataKey="source" tick={{ fill: "#b0b0b0", fontSize: 12 }} />
+                      <YAxis allowDecimals={false} tick={{ fill: "#b0b0b0", fontSize: 12 }} />
+                      <Bar dataKey="libraries" name="Библиотек" fill="#4caf50" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Alert severity="info" sx={{ borderRadius: 2 }}>
+                    Источники пока не содержат данных для графика.
+                  </Alert>
+                )}
               </Box>
             </CardContent>
           </Card>
@@ -897,15 +972,42 @@ export default function OverviewDashboard() {
                       {updateItem.oldVersion} → {updateItem.newVersion}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {new Date(updateItem.updateDate).toLocaleDateString("ru-RU")}
+                      {formatDateSafe(updateItem.updateDate)}
                     </Typography>
                   </Box>
                 ))}
 
                 {filteredRecentUpdates.length === 0 && (
-                  <Alert severity="info" sx={{ borderRadius: 2 }}>
-                    Нет свежих обновлений библиотек.
-                  </Alert>
+                  <Stack spacing={1}>
+                    <Alert severity="info" sx={{ borderRadius: 2 }}>
+                      Свежих обновлений пока нет. Ниже показаны самые наполненные источники каталога.
+                    </Alert>
+                    {sourceEntries.slice(0, 5).map(([source, count]) => {
+                      const percent = stats.totalLibraries > 0
+                        ? Math.round((count / stats.totalLibraries) * 100)
+                        : 0;
+
+                      return (
+                        <Box
+                          key={source}
+                          sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            border: "1px solid",
+                            borderColor: "divider",
+                            bgcolor: "background.default",
+                          }}
+                        >
+                          <Typography variant="body2" fontWeight={600}>
+                            {formatSourceLabel(source)}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {count.toLocaleString()} библиотек ({percent}%)
+                          </Typography>
+                        </Box>
+                      );
+                    })}
+                  </Stack>
                 )}
               </Stack>
             </CardContent>
@@ -920,10 +1022,12 @@ export default function OverviewDashboard() {
             }}
           >
             <Typography variant="h5" fontWeight={700} gutterBottom>
-              Структура обновлений по типам
+              {hasUpdateTypeData ? "Структура обновлений по типам" : "Структура каталога по состоянию"}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Обзор Major / Minor / Patch для последних событий в системе.
+              {hasUpdateTypeData
+                ? "Обзор Major / Minor / Patch для последних событий в системе."
+                : "Обзор текущего распределения библиотек: здоровые, требующие внимания и критические."}
             </Typography>
 
             <Box
@@ -935,31 +1039,37 @@ export default function OverviewDashboard() {
               }}
             >
               <Box sx={{ height: 260 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={updateTypeChartData}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={65}
-                      outerRadius={95}
-                      paddingAngle={3}
-                      stroke="none"
-                    >
-                      {updateTypeChartData.map((entry) => (
-                        <Cell key={entry.key} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip
-                      contentStyle={{
-                        backgroundColor: "#1f1f1f",
-                        border: "1px solid rgba(255,255,255,0.14)",
-                        borderRadius: 8,
-                      }}
-                    />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+                {pieData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%" minWidth={260} minHeight={220}>
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={65}
+                        outerRadius={95}
+                        paddingAngle={3}
+                        stroke="none"
+                      >
+                        {pieData.map((entry) => (
+                          <Cell key={entry.key} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip
+                        contentStyle={{
+                          backgroundColor: "#1f1f1f",
+                          border: "1px solid rgba(255,255,255,0.14)",
+                          borderRadius: 8,
+                        }}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Alert severity="info" sx={{ borderRadius: 2 }}>
+                    Нет данных для круговой диаграммы.
+                  </Alert>
+                )}
               </Box>
 
               <Stack spacing={1.5}>
