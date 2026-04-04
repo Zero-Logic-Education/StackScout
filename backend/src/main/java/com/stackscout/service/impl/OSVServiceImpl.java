@@ -5,6 +5,7 @@ import com.stackscout.source.SourceAdapter;
 import com.stackscout.source.SourceDefinition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -48,13 +49,12 @@ public class OSVServiceImpl implements SourceAdapter {
             // Build query payload for OSV API
             Map<String, Object> queryPayload = buildQueryPayload(ecosystem, packageName, version);
 
-            // Query OSV API
-            @SuppressWarnings("unchecked")
-            Map<String, Object> response = (Map<String, Object>) client.post()
+            // Query OSV API - using ParameterizedTypeReference to avoid unchecked cast warning
+            Map<String, Object> response = client.post()
                     .uri("/query")
                     .body(queryPayload)
                     .retrieve()
-                    .body(Map.class);
+                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
 
             if (response == null) {
                 return null;

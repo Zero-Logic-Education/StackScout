@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Read(//Users/stanislavmamaev/Desktop/**)"
+      "Read(//Users/stanislavmamaev/Desktop/**)",
+      "Bash(cp *)",
+      "Bash(find *)",
+      "Bash(./gradlew *)"
     ]
-  }
+  },
+  "$version": 3
 }

@@ -55,7 +55,7 @@ class DockerHubServiceImplTest {
 		// Assert
 		assertNotNull(result);
 		assertEquals("nginx", result.getName());
-		assertEquals("docker", result.getSource());
+		assertEquals("dockerhub", result.getSource());
 		assertEquals("Official build of Nginx.", result.getDescription());
 		assertEquals("https://hub.docker.com/r/library/nginx", result.getRepository());
 	}
