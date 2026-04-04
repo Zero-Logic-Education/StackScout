@@ -393,7 +393,8 @@ public class LibraryController {
             if (normalized == null) {
                 continue;
             }
-            sourceCounts.merge(normalized, 1L, Long::sum);
+            Long current = sourceCounts.get(normalized);
+            sourceCounts.put(normalized, current == null ? 1L : current + 1L);
         }
         stats.put("sources", sourceCounts);
         stats.put("averageHealthScore",
