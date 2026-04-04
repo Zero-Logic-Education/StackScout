@@ -4,12 +4,14 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { libraryApi, Library } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth";
+import { useSourceDefinitions } from "@/lib/hooks";
 import {
   Container,
   Box,
   Typography,
   TextField,
   Button,
+  CircularProgress,
   Card,
   CardContent,
   Alert,
@@ -41,6 +43,7 @@ function ExploreContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated } = useAuthStore();
+  const { sources, isLoading: sourcesLoading } = useSourceDefinitions();
   const [libraries, setLibraries] = useState<Library[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -75,6 +78,20 @@ function ExploreContent() {
     [router],
   );
 
+  const resolveSourceKey = useCallback(
+    (source: string | null) => {
+      if (!source) return null;
+
+      const normalized = source.trim().toLowerCase();
+      const matchedSource = sources.find(
+        (item) => item.key === normalized || item.aliases.includes(normalized),
+      );
+
+      return matchedSource?.key || normalized;
+    },
+    [sources],
+  );
+
   const fetchLibraries = useCallback(
     async (page: number, searchQuery: string, source: string | null, minScore: number) => {
       try {
@@ -98,10 +115,11 @@ function ExploreContent() {
           data = response.data;
         }
 
+        const normalizedSource = resolveSourceKey(source);
         setLibraries(data.libraries);
         setTotalPages(data.totalPages);
         setTotalElements(data.totalElements);
-        setError(null);
+        setSelectedSource(normalizedSource);
       } catch (err: unknown) {
         console.error("Ошибка загрузки библиотек:", err);
         const error = err as Record<string, unknown>;
@@ -119,7 +137,7 @@ function ExploreContent() {
         setLoading(false);
       }
     },
-    [],
+    [pageSize, resolveSourceKey],
   );
 
   useEffect(() => {
@@ -127,15 +145,16 @@ function ExploreContent() {
     const searchQuery = searchParams.get("q") || "";
     const source = searchParams.get("source") || null;
     const minScore = parseInt(searchParams.get("minHealthScore") || "0");
+    const normalizedSource = resolveSourceKey(source);
 
     setQuery(searchQuery);
     setCurrentPage(page);
-    setSelectedSource(source);
+    setSelectedSource(normalizedSource);
     setMinHealthScore(minScore);
-    setTempSelectedSource(source);
+    setTempSelectedSource(normalizedSource);
     setTempMinHealthScore(minScore);
-    fetchLibraries(page, searchQuery, source, minScore);
-  }, [searchParams, fetchLibraries]);
+    fetchLibraries(page, searchQuery, normalizedSource, minScore);
+  }, [searchParams, fetchLibraries, resolveSourceKey]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -657,36 +676,34 @@ function ExploreContent() {
           <Box sx={{ pt: 2 }}>
             <FormControl fullWidth sx={{ mb: 3 }}>
               <FormLabel sx={{ mb: 1.5 }}>Источник</FormLabel>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                <Chip
-                  label="Все"
-                  color={tempSelectedSource === null ? "primary" : "default"}
-                  variant={tempSelectedSource === null ? "filled" : "outlined"}
-                  onClick={() => setTempSelectedSource(null)}
-                  sx={{ cursor: "pointer" }}
-                />
-                <Chip
-                  label="PyPI"
-                  color={tempSelectedSource === "pypi" ? "primary" : "default"}
-                  variant={tempSelectedSource === "pypi" ? "filled" : "outlined"}
-                  onClick={() => setTempSelectedSource("pypi")}
-                  sx={{ cursor: "pointer" }}
-                />
-                <Chip
-                  label="npm"
-                  color={tempSelectedSource === "npm" ? "primary" : "default"}
-                  variant={tempSelectedSource === "npm" ? "filled" : "outlined"}
-                  onClick={() => setTempSelectedSource("npm")}
-                  sx={{ cursor: "pointer" }}
-                />
-                <Chip
-                  label="Maven"
-                  color={tempSelectedSource === "maven" ? "primary" : "default"}
-                  variant={tempSelectedSource === "maven" ? "filled" : "outlined"}
-                  onClick={() => setTempSelectedSource("maven")}
-                  sx={{ cursor: "pointer" }}
-                />
-              </Stack>
+              {sourcesLoading ? (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 1 }}>
+                  <CircularProgress size={18} />
+                  <Typography variant="body2" color="text.secondary">
+                    Загружаем источники...
+                  </Typography>
+                </Box>
+              ) : (
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  <Chip
+                    label="Все"
+                    color={tempSelectedSource === null ? "primary" : "default"}
+                    variant={tempSelectedSource === null ? "filled" : "outlined"}
+                    onClick={() => setTempSelectedSource(null)}
+                    sx={{ cursor: "pointer" }}
+                  />
+                  {sources.map((sourceItem) => (
+                    <Chip
+                      key={sourceItem.key}
+                      label={sourceItem.displayName}
+                      color={tempSelectedSource === sourceItem.key ? "primary" : "default"}
+                      variant={tempSelectedSource === sourceItem.key ? "filled" : "outlined"}
+                      onClick={() => setTempSelectedSource(sourceItem.key)}
+                      sx={{ cursor: "pointer" }}
+                    />
+                  ))}
+                </Stack>
+              )}
             </FormControl>
 
             <FormControl fullWidth sx={{ mb: 3 }}>

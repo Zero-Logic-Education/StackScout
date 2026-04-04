@@ -11,6 +11,7 @@ import com.stackscout.model.UpdateType;
 import com.stackscout.repository.LibraryRepository;
 import com.stackscout.service.LibraryService;
 import com.stackscout.service.LibraryUpdateService;
+import com.stackscout.source.SourceRegistryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +40,7 @@ public class LibraryServiceImpl implements LibraryService {
     private final LibraryRepository libraryRepository;
     private final LibraryMapper libraryMapper;
     private final LibraryUpdateService libraryUpdateService;
+    private final SourceRegistryService sourceRegistryService;
     
     @Override
     public Page<LibraryDto> getAllLibraries(Pageable pageable) {
@@ -286,12 +289,15 @@ public class LibraryServiceImpl implements LibraryService {
     public Object getLibrariesStats() {
         List<Library> libraries = libraryRepository.findAll();
 
+        Map<String, Long> sources = libraries.stream()
+            .map(Library::getSource)
+            .map(this::normalizeSource)
+            .filter(Objects::nonNull)
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalLibraries", (long) libraries.size());
-        stats.put("sources", Map.of(
-            "pypi", libraries.stream().filter(l -> "pypi".equalsIgnoreCase(l.getSource())).count(),
-            "npm", libraries.stream().filter(l -> "npm".equalsIgnoreCase(l.getSource())).count(),
-            "dockerhub", libraries.stream().filter(l -> "dockerhub".equalsIgnoreCase(l.getSource())).count()));
+        stats.put("sources", sources);
         stats.put(
             "averageHealthScore",
             libraries.stream()
@@ -302,5 +308,17 @@ public class LibraryServiceImpl implements LibraryService {
                 .orElse(0.0));
 
         return stats;
+    }
+
+    private String normalizeSource(String source) {
+        if (source == null || source.isBlank()) {
+            return null;
+        }
+
+        try {
+            return sourceRegistryService.normalize(source);
+        } catch (IllegalArgumentException ignored) {
+            return source.trim().toLowerCase();
+        }
     }
 }

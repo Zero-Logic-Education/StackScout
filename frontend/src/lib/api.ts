@@ -236,12 +236,24 @@ export interface CacheStats {
   cacheNames: string[];
 }
 
+export interface SourceDefinition {
+  key: string;
+  displayName: string;
+  category: string;
+  description: string;
+  aliases: string[];
+}
+
 // API методы для аутентификации
 export const authApi = {
   login: (data: LoginRequest) =>
     apiClient.post<AuthResponse>("/auth/login", data),
   register: (data: RegisterRequest) =>
     apiClient.post<AuthResponse>("/auth/register", data),
+};
+
+export const sourceApi = {
+  getSources: () => apiClient.get<SourceDefinition[]>("/sources"),
 };
 
 // API методы для подписок

@@ -7,6 +7,7 @@ import com.stackscout.dto.LibraryDto;
 import com.stackscout.dto.MetricDetailDto;
 import com.stackscout.dto.UpdateLibraryRequest;
 import com.stackscout.service.LibraryService;
+import com.stackscout.source.SourceRegistryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -38,6 +39,7 @@ import java.time.temporal.ChronoUnit;
 public class LibraryController {
 
     private final LibraryService libraryService;
+    private final SourceRegistryService sourceRegistryService;
 
     /**
      * Получить список всех библиотек с поддержкой пагинации и сортировки.
@@ -104,19 +106,20 @@ public class LibraryController {
         Pageable pageable = PageRequest.of(page, size);
         Page<LibraryDto> result;
         boolean hasMinHealthScore = minHealthScore != null && minHealthScore > 0;
+        String normalizedSource = normalizeSource(source);
 
-        if (query != null && !query.trim().isEmpty() && source != null && !source.trim().isEmpty() && hasMinHealthScore) {
-            result = libraryService.searchLibrariesBySource(query, source, minHealthScore, pageable);
-        } else if (query != null && !query.trim().isEmpty() && source != null && !source.trim().isEmpty()) {
-            result = libraryService.searchLibrariesBySource(query, source, pageable);
+        if (query != null && !query.trim().isEmpty() && normalizedSource != null && hasMinHealthScore) {
+            result = libraryService.searchLibrariesBySource(query, normalizedSource, minHealthScore, pageable);
+        } else if (query != null && !query.trim().isEmpty() && normalizedSource != null) {
+            result = libraryService.searchLibrariesBySource(query, normalizedSource, pageable);
         } else if (query != null && !query.trim().isEmpty() && hasMinHealthScore) {
             result = libraryService.searchLibraries(query, minHealthScore, pageable);
         } else if (query != null && !query.trim().isEmpty()) {
             result = libraryService.searchLibraries(query, pageable);
-        } else if (source != null && !source.trim().isEmpty() && hasMinHealthScore) {
-            result = libraryService.getLibrariesBySource(source, minHealthScore, pageable);
-        } else if (source != null && !source.trim().isEmpty()) {
-            result = libraryService.getLibrariesBySource(source, pageable);
+        } else if (normalizedSource != null && hasMinHealthScore) {
+            result = libraryService.getLibrariesBySource(normalizedSource, minHealthScore, pageable);
+        } else if (normalizedSource != null) {
+            result = libraryService.getLibrariesBySource(normalizedSource, pageable);
         } else if (hasMinHealthScore) {
             result = libraryService.getAllLibraries(minHealthScore, pageable);
         } else {
@@ -384,10 +387,15 @@ public class LibraryController {
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalLibraries", libraries.size());
-        stats.put("sources", Map.of(
-                "pypi", libraries.stream().filter(l -> "pypi".equals(l.getSource())).count(),
-                "npm", libraries.stream().filter(l -> "npm".equals(l.getSource())).count(),
-                "dockerhub", libraries.stream().filter(l -> "dockerhub".equals(l.getSource())).count()));
+        Map<String, Long> sourceCounts = new HashMap<>();
+        for (LibraryDto library : libraries) {
+            String normalized = normalizeSource(library.getSource());
+            if (normalized == null) {
+                continue;
+            }
+            sourceCounts.merge(normalized, 1L, Long::sum);
+        }
+        stats.put("sources", sourceCounts);
         stats.put("averageHealthScore",
                 libraries.stream()
                         .filter(l -> l.getHealthScore() != null)
@@ -396,5 +404,17 @@ public class LibraryController {
                         .orElse(0.0));
 
         return ResponseEntity.ok(stats);
+    }
+
+    private String normalizeSource(String source) {
+        if (source == null || source.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return sourceRegistryService.normalize(source);
+        } catch (IllegalArgumentException ignored) {
+            return source.trim().toLowerCase();
+        }
     }
 }

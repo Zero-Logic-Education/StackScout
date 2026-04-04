@@ -39,6 +39,7 @@ import {
 } from '@mui/icons-material';
 import { useAdminProtection } from '@/lib/useAdminProtection';
 import { adminApi } from '@/lib/api';
+import { useSourceDefinitions } from '@/lib/hooks';
 
 interface ScraperTask {
   id: number;
@@ -60,6 +61,7 @@ export default function ScrapersMonitorPage() {
   const router = useRouter();
   const theme = useTheme();
   const { isAdminAuthenticated } = useAdminProtection();
+  const { sources } = useSourceDefinitions();
   const [scrapers, setScrapers] = useState<ScraperTask[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -196,6 +198,17 @@ export default function ScrapersMonitorPage() {
       case 'COMPLETED': return <CheckCircle />;
       default: return <Schedule />;
     }
+  };
+
+  const resolveSourceDefinition = (source?: string) => {
+    if (!source) {
+      return null;
+    }
+
+    const normalized = source.trim().toLowerCase();
+    return sources.find(
+      (item) => item.key === normalized || item.aliases.includes(normalized),
+    ) || null;
   };
 
   if (loading || !isAdminAuthenticated) {
@@ -437,7 +450,7 @@ export default function ScrapersMonitorPage() {
           </Box>
           {dialogScraper && (
             <Typography variant="body2" color="text.secondary">
-              Скрейпер: <strong>{dialogScraper.displayName}</strong> ({dialogScraper.source.toUpperCase()})
+              Скрейпер: <strong>{dialogScraper.displayName}</strong> ({resolveSourceDefinition(dialogScraper.source)?.displayName || dialogScraper.source.toUpperCase()})
             </Typography>
           )}
         </DialogTitle>
@@ -446,22 +459,25 @@ export default function ScrapersMonitorPage() {
             Введите названия пакетов через запятую или с новой строки. Пакеты будут поставлены в очередь
             и появятся в библиотеках после завершения сбора данных.
           </Typography>
-          <TextField
-            autoFocus
-            fullWidth
-            multiline
-            rows={5}
-            label={dialogScraper?.source === 'dockerhub' ? 'Docker образы' : 'PyPI пакеты'}
-            placeholder={
-              dialogScraper?.source === 'dockerhub'
-                ? 'nginx\nmysql\nredis, postgres'
-                : 'requests\ndjango\nnumpy, pandas'
-            }
-            value={packageInput}
-            onChange={(e) => setPackageInput(e.target.value)}
-            variant="outlined"
-            helperText="Например: requests, numpy, pandas"
-          />
+          {dialogScraper && (() => {
+            const sourceDefinition = resolveSourceDefinition(dialogScraper.source);
+            const isContainerRegistry = sourceDefinition?.category === 'container-registry';
+
+            return (
+              <TextField
+                autoFocus
+                fullWidth
+                multiline
+                rows={5}
+                label={isContainerRegistry ? 'Docker образы' : 'Пакеты'}
+                placeholder={isContainerRegistry ? 'nginx\nmysql\nredis, postgres' : 'requests\ndjango\nnumpy, pandas'}
+                value={packageInput}
+                onChange={(e) => setPackageInput(e.target.value)}
+                variant="outlined"
+                helperText={isContainerRegistry ? 'Например: nginx, mysql, redis' : 'Например: requests, numpy, pandas'}
+              />
+            );
+          })()}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button onClick={closeScanDialog} disabled={dialogLoading}>

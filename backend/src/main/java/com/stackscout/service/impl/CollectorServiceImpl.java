@@ -5,6 +5,8 @@ import com.stackscout.model.Library;
 import com.stackscout.repository.LibraryRepository;
 import com.stackscout.messaging.CollectorProducer;
 import com.stackscout.service.*;
+import com.stackscout.source.SourceAdapter;
+import com.stackscout.source.SourceRegistryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,20 +29,15 @@ public class CollectorServiceImpl implements CollectorService {
 	private final HealthScoreService healthScoreService;
 	private final LibraryRepository libraryRepository;
 	private final CollectorProducer collectorProducer;
+	private final SourceRegistryService sourceRegistryService;
 
 	@Override
 	@Transactional
 	public Library collect(String source, String name) {
 		log.info("Collecting metadata for package {} from {}", name, source);
 
-		Library library;
-		if ("pypi".equalsIgnoreCase(source)) {
-			library = pypiCollector.collect(name);
-		} else if ("dockerhub".equalsIgnoreCase(source) || "docker".equalsIgnoreCase(source)) {
-			library = dockerHubCollector.collect(name);
-		} else {
-			throw new IllegalArgumentException("Unsupported source: " + source);
-		}
+		SourceAdapter adapter = sourceRegistryService.getRequiredAdapter(source);
+		Library library = adapter.collect(name);
 
 		if (library == null) {
 			log.warn("No metadata found for {} from {}", name, source);
@@ -62,6 +59,7 @@ public class CollectorServiceImpl implements CollectorService {
 		if (existing != null) {
 			library.setId(existing.getId());
 		}
+		library.setSource(adapter.getDefinition().key());
 
 		return libraryRepository.save(library);
 	}
@@ -69,8 +67,9 @@ public class CollectorServiceImpl implements CollectorService {
 	@Override
 	public void collectBulk(String source, List<String> names) {
 		log.info("Queuing bulk scan for {} packages from {}", names.size(), source);
+		String normalizedSource = sourceRegistryService.normalize(source);
 		for (String name : names) {
-			collectorProducer.sendScanRequest(source, name);
+			collectorProducer.sendScanRequest(normalizedSource, name);
 		}
 	}
 }
