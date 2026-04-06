@@ -4,9 +4,10 @@
 
 **Интеллектуальная платформа для анализа Open Source библиотек**
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)](https://nextjs.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-6DB33F?logo=springboot)](https://spring.io/projects/spring-boot)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
+[![CI](https://github.com/Zero-Logic-Education/StackScout/actions/workflows/ci.yml/badge.svg)](https://github.com/Zero-Logic-Education/StackScout/actions/workflows/ci.yml)
 
 </div>
 
@@ -42,7 +43,7 @@
 |:---:|:---:|:---:|
 | Backend | Java, Spring Boot, Spring Security, Spring Data JPA | Java 21, Spring Boot 3.5 |
 | База данных | PostgreSQL, Redis, RabbitMQ | PostgreSQL 16, Redis 7+ |
-| Frontend | Next.js, React, Tailwind CSS, TypeScript | Next.js 15, React 19, Tailwind 4 |
+| Frontend | Next.js, React, Material UI, TypeScript | Next.js 16, React 19, MUI 7 |
 | Инфраструктура | Docker, Docker Compose, GitHub Actions | — |
 | Мониторинг | Prometheus, Grafana | — |
 
@@ -79,6 +80,11 @@ flowchart LR
     subgraph DS["Источники данных"]
         PyPI["PyPI API"]
         Docker["Docker Hub"]
+        Npm["npm Registry"]
+        Maven["Maven Central"]
+        NuGet["NuGet"]
+        GitHub["GitHub API"]
+        GitLab["GitLab API"]
     end
 
     User --> App
@@ -110,7 +116,7 @@ flowchart LR
 ### Клонирование репозитория
 
 ```bash
-git clone https://github.com/your-org/stackscout.git
+git clone https://github.com/Zero-Logic-Education/StackScout.git
 
 cd stackscout
 ```
@@ -126,7 +132,7 @@ cd stackscout
 
 ```bash
 # Сборка и запуск
-docker compose up -d
+docker compose up -d --build
 
 # Статус
 docker compose ps
@@ -213,3 +219,18 @@ pnpm docker:down
 pnpm docker:logs -- frontend
 pnpm docker:logs -- app
 ```
+
+---
+
+## CI/CD
+
+В проекте настроены GitHub Actions workflows:
+
+- CI: `.github/workflows/ci.yml`
+    - запускается на `push` и `pull_request` для `main`, `master`, `dev_s`
+    - проверяет frontend (`pnpm lint`, `pnpm build`)
+    - проверяет backend (`./gradlew test`, `./gradlew build -x test`)
+
+- CD: `.github/workflows/deploy.yml`
+    - запускается по тегам `v*` и вручную (`workflow_dispatch`)
+    - собирает и публикует Docker-образы backend/frontend в GHCR

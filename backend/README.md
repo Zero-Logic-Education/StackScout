@@ -15,6 +15,7 @@
 
 - [Назначение](#назначение)
 - [Структура модулей](#структура-модулей)
+- [Интеграции источников](#интеграции-источников)
 - [Команды backend](#команды-backend)
 - [Конфигурация](#конфигурация)
 
@@ -53,6 +54,17 @@
 
 ---
 
+## Интеграции источников
+
+Backend поддерживает адаптеры источников для:
+
+- PyPI, npm, Maven Central, NuGet
+- Docker Hub
+- GitHub и GitLab
+- NVD, OSV и GitHub Security Advisories
+
+---
+
 ## Команды backend
 
 ```bash
@@ -87,5 +99,6 @@ cd backend
 | `src/main/resources/application-dev.yml` | Конфигурация для профиля `dev` |
 | `src/main/resources/application.yml.example` | Пример конфигурации с описанием переменных |
 | `src/main/resources/db/migration/` | Flyway-миграции базы данных |
+| `src/main/resources/static/` | Статические ресурсы backend |
 
 </div>

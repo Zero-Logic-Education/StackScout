@@ -17,6 +17,7 @@
 - [Назначение](#назначение)
 - [Структура каталогов](#структура-каталогов)
 - [Конфигурация](#конфигурация)
+- [Связанные файлы](#связанные-файлы)
 
 ---
 
@@ -58,3 +59,13 @@
 | Grafana | `monitoring/grafana/provisioning/` | Источники данных и дашборды |
 
 </div>
+
+---
+
+## Связанные файлы
+
+- Основная оркестрация контейнеров: `docker-compose.yml` (корень проекта)
+- Dockerfile backend: `Dockerfile` (корень проекта)
+- Dockerfile frontend: `frontend/Dockerfile`
+- CI workflow: `.github/workflows/ci.yml`
+- CD workflow: `.github/workflows/deploy.yml`
