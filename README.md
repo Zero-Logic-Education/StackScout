@@ -219,18 +219,3 @@ pnpm docker:down
 pnpm docker:logs -- frontend
 pnpm docker:logs -- app
 ```
-
----
-
-## CI/CD
-
-В проекте настроены GitHub Actions workflows:
-
-- CI: `.github/workflows/ci.yml`
-    - запускается на `push` и `pull_request` для `main`, `master`, `dev_s`
-    - проверяет frontend (`pnpm lint`, `pnpm build`)
-    - проверяет backend (`./gradlew test`, `./gradlew build -x test`)
-
-- CD: `.github/workflows/deploy.yml`
-    - запускается по тегам `v*` и вручную (`workflow_dispatch`)
-    - собирает и публикует Docker-образы backend/frontend в GHCR
