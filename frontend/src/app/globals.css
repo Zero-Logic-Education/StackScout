@@ -22,8 +22,3 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-outfit);
   letter-spacing: -0.02em;
 }
-
-/* Smooth transitions */
-* {
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -10,6 +11,8 @@ import {
   Box,
   Typography,
   IconButton,
+  Menu,
+  MenuItem,
   alpha,
   useTheme,
 } from "@mui/material";
@@ -32,6 +35,17 @@ const AuthSection = dynamic(() => import("./AuthSection"), {
 export default function Navbar() {
   const pathname = usePathname();
   const theme = useTheme();
+  const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
+
+  const isMobileMenuOpen = Boolean(mobileMenuAnchor);
+
+  const handleOpenMobileMenu = (event: MouseEvent<HTMLElement>) => {
+    setMobileMenuAnchor(event.currentTarget);
+  };
+
+  const handleCloseMobileMenu = () => {
+    setMobileMenuAnchor(null);
+  };
 
   const links = [
     { href: "/", label: "Главная", icon: <HomeIcon fontSize="small" /> },
@@ -151,11 +165,55 @@ export default function Navbar() {
         >
           <AuthSection />
 
-          {/* Mobile Menu Icon (Placeholder for now) */}
+          {/* Mobile navigation */}
           <Box sx={{ display: { xs: "flex", md: "none" } }}>
-            <IconButton color="inherit">
+            <IconButton
+              color="inherit"
+              aria-label="Открыть навигационное меню"
+              aria-controls={isMobileMenuOpen ? "mobile-nav-menu" : undefined}
+              aria-haspopup="true"
+              aria-expanded={isMobileMenuOpen ? "true" : undefined}
+              onClick={handleOpenMobileMenu}
+            >
               <MenuIcon />
             </IconButton>
+            <Menu
+              id="mobile-nav-menu"
+              anchorEl={mobileMenuAnchor}
+              open={isMobileMenuOpen}
+              onClose={handleCloseMobileMenu}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
+              PaperProps={{
+                sx: {
+                  minWidth: 220,
+                  borderRadius: 2,
+                  mt: 1,
+                },
+              }}
+            >
+              {links.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <MenuItem
+                    key={link.href}
+                    component={Link}
+                    href={link.href}
+                    onClick={handleCloseMobileMenu}
+                    selected={isActive}
+                    sx={{
+                      gap: 1,
+                      py: 1.2,
+                      color: isActive ? "primary.main" : "text.primary",
+                      fontWeight: isActive ? 700 : 500,
+                    }}
+                  >
+                    {link.icon}
+                    {link.label}
+                  </MenuItem>
+                );
+              })}
+            </Menu>
           </Box>
         </Box>
       </Toolbar>

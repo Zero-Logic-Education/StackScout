@@ -81,7 +81,7 @@ export default function SourceStatsChart({
         {title}
       </Typography>
       <Box sx={{ width: "100%", height: 300, mt: 2 }}>
-        <ResponsiveContainer>
+        <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
             margin={{ top: 5, right: 20, left: 0, bottom: 5 }}

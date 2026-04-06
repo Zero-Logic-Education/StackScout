@@ -1,4 +1,4 @@
-import { Box, Typography, LinearProgress, Stack, Paper } from "@mui/material";
+import { Box, Typography, LinearProgress, Stack, Paper, Chip } from "@mui/material";
 import { TrendingUp, Code, Group, Speed } from "@mui/icons-material";
 import type { HealthMetrics, MetricDetail } from "@/lib/api";
 
@@ -38,6 +38,37 @@ export default function HealthMetricsDisplay({ metrics }: HealthMetricsProps) {
 
   const renderMetric = (type: string, metric: MetricDetail) => {
     const color = getMetricColor(metric.score);
+    const details = metric.details || {};
+
+    const detailEntries = Object.entries(details)
+      .filter(([, value]) => value !== null && value !== undefined && value !== "")
+      .slice(0, 4);
+
+    const formatValue = (value: unknown) => {
+      if (typeof value === "boolean") {
+        return value ? "Да" : "Нет";
+      }
+      if (typeof value === "number") {
+        return Number.isFinite(value) ? value.toString() : "-";
+      }
+      return String(value);
+    };
+
+    const formatLabel = (key: string) => {
+      const labels: Record<string, string> = {
+        lastRelease: "Релиз",
+        releaseRecency: "Свежесть",
+        releaseAgeDays: "Дней с релиза",
+        hasRepository: "Репозиторий",
+        hasLicense: "Лицензия",
+        hasDescription: "Описание",
+        descriptionLength: "Символов",
+        source: "Источник",
+        overallHealth: "Общий score",
+        basis: "Основа",
+      };
+      return labels[key] || key;
+    };
 
     return (
       <Paper
@@ -97,6 +128,19 @@ export default function HealthMetricsDisplay({ metrics }: HealthMetricsProps) {
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
             {metric.description}
           </Typography>
+        )}
+
+        {detailEntries.length > 0 && (
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 2 }}>
+            {detailEntries.map(([key, value]) => (
+              <Chip
+                key={`${type}-${key}`}
+                size="small"
+                variant="outlined"
+                label={`${formatLabel(key)}: ${formatValue(value)}`}
+              />
+            ))}
+          </Stack>
         )}
       </Paper>
     );

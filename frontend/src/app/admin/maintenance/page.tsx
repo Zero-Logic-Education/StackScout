@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   CircularProgress,
@@ -14,6 +14,8 @@ import {
   Stack,
   alpha,
   useTheme,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -30,41 +32,56 @@ export default function AdminMaintenancePage() {
   const theme = useTheme();
   const { isAdminAuthenticated } = useAdminProtection();
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState<'cache' | 'normalize' | 'duplicates' | null>(null);
   const [dashboardStats, setDashboardStats] = useState<AdminDashboardStats | null>(null);
   const [cacheStats, setCacheStats] = useState<CacheStats | null>(null);
+  const [toast, setToast] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
+
+  const showToast = (message: string, severity: 'success' | 'error') => {
+    setToast({ open: true, message, severity });
+  };
+
+  const loadStats = useCallback(async () => {
+    try {
+      const [dashboardResponse, cacheResponse] = await Promise.all([
+        adminApi.getDashboardStats(),
+        adminApi.getCacheStats(),
+      ]);
+
+      setDashboardStats(dashboardResponse.data);
+      setCacheStats(cacheResponse.data);
+    } catch (error) {
+      console.error('Failed to load maintenance stats:', error);
+      showToast('Не удалось обновить статистику обслуживания', 'error');
+    }
+  }, []);
 
   useEffect(() => {
     if (!isAdminAuthenticated) {
       return;
     }
 
-    const loadStats = async () => {
-      try {
-        const [dashboardResponse, cacheResponse] = await Promise.all([
-          adminApi.getDashboardStats(),
-          adminApi.getCacheStats(),
-        ]);
-
-        setDashboardStats(dashboardResponse.data);
-        setCacheStats(cacheResponse.data);
-      } catch (error) {
-        console.error('Failed to load maintenance stats:', error);
-      }
-    };
-
     loadStats();
-  }, [isAdminAuthenticated]);
+  }, [isAdminAuthenticated, loadStats]);
 
   const handleClearCache = async () => {
     setLoading(true);
+    setActionLoading('cache');
     try {
-      await adminApi.clearCache();
-      const cacheResponse = await adminApi.getCacheStats();
-      setCacheStats(cacheResponse.data);
-    } catch {
-      // Handle error silently
+      const response = await adminApi.clearCache();
+      await loadStats();
+      const clearedCaches = response.data?.clearedCaches ?? 0;
+      showToast(`Кэш успешно очищен: ${clearedCaches} кэшей`, 'success');
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+      showToast('Не удалось очистить кэш', 'error');
     } finally {
       setLoading(false);
+      setActionLoading(null);
     }
   };
 
@@ -72,12 +89,18 @@ export default function AdminMaintenancePage() {
     if (!confirm('Запустить нормализацию всех лицензий?')) return;
     
     setLoading(true);
+    setActionLoading('normalize');
     try {
-      await adminApi.normalizeLicenses();
-    } catch {
-      // Handle error silently
+      const response = await adminApi.normalizeLicenses();
+      await loadStats();
+      const normalizedCount = response.data?.normalizedCount ?? 0;
+      showToast(`Нормализация завершена: обновлено ${normalizedCount} лицензий`, 'success');
+    } catch (error) {
+      console.error('Failed to normalize licenses:', error);
+      showToast('Не удалось нормализовать лицензии', 'error');
     } finally {
       setLoading(false);
+      setActionLoading(null);
     }
   };
 
@@ -85,14 +108,18 @@ export default function AdminMaintenancePage() {
     if (!confirm('Удалить дубликаты библиотек? Это действие нельзя отменить!')) return;
     
     setLoading(true);
+    setActionLoading('duplicates');
     try {
-      await adminApi.removeDuplicates();
-      const dashboardResponse = await adminApi.getDashboardStats();
-      setDashboardStats(dashboardResponse.data);
-    } catch {
-      // Handle error silently
+      const response = await adminApi.removeDuplicates();
+      await loadStats();
+      const removedCount = response.data?.removedCount ?? 0;
+      showToast(`Дубликаты успешно удалены: ${removedCount} записей`, 'success');
+    } catch (error) {
+      console.error('Failed to remove duplicates:', error);
+      showToast('Не удалось удалить дубликаты', 'error');
     } finally {
       setLoading(false);
+      setActionLoading(null);
     }
   };
 
@@ -182,7 +209,7 @@ export default function AdminMaintenancePage() {
                   onClick={handleClearCache}
                   disabled={loading}
                 >
-                  {loading ? 'Очистка...' : 'Очистить кэш'}
+                  {actionLoading === 'cache' ? 'Очистка...' : 'Очистить кэш'}
                 </Button>
               </CardActions>
             </Card>
@@ -231,7 +258,7 @@ export default function AdminMaintenancePage() {
                   onClick={handleNormalizeLicenses}
                   disabled={loading}
                 >
-                  {loading ? 'Обработка...' : 'Нормализовать лицензии'}
+                  {actionLoading === 'normalize' ? 'Обработка...' : 'Нормализовать лицензии'}
                 </Button>
               </CardActions>
             </Card>
@@ -280,7 +307,7 @@ export default function AdminMaintenancePage() {
                   onClick={handleRemoveDuplicates}
                   disabled={loading}
                 >
-                  {loading ? 'Удаление...' : 'Удалить дубликаты'}
+                  {actionLoading === 'duplicates' ? 'Удаление...' : 'Удалить дубликаты'}
                 </Button>
               </CardActions>
             </Card>
@@ -346,6 +373,22 @@ export default function AdminMaintenancePage() {
             </Card>
           </Box>
         </Box>
+
+        <Snackbar
+          open={toast.open}
+          autoHideDuration={4000}
+          onClose={() => setToast((prev) => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert
+            onClose={() => setToast((prev) => ({ ...prev, open: false }))}
+            severity={toast.severity}
+            variant="filled"
+            sx={{ width: '100%' }}
+          >
+            {toast.message}
+          </Alert>
+        </Snackbar>
       </Container>
     </Box>
   );

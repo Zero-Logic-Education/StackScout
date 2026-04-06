@@ -1,108 +1,215 @@
 <div align="center">
- 
+
 # StackScout
- 
+
 **Интеллектуальная платформа для анализа Open Source библиотек**
- 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.11-6DB33F?logo=springboot)](https://spring.io/projects/spring-boot)
+
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs)](https://nextjs.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-6DB33F?logo=springboot)](https://spring.io/projects/spring-boot)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
- 
-[О проекте](#о-проекте) • [Архитектура](#архитектура) • [Структура проекта](#структура-проекта) • [Roadmap](#roadmap)
- 
+
 </div>
- 
----
- 
-## О проекте
- 
-### Проблема: Dependency Hell
-Современная разработка программного обеспечения во многом зависит от сторонних библиотек. Однако выбор правильной зависимости представляет серьезную проблему: уязвимости, конфликты лицензий и риски поддержки.
- 
-### Решение: StackScout
-**StackScout** — это комплексная платформа для **управления программными активами (Software Asset Management)**. Она автоматизирует сбор, анализ и мониторинг open-source библиотек, предоставляя оценку их "здоровья" и юридической чистоты.
- 
----
- 
-## Архитектура
- 
-```
-┌──────────────────┐      ┌──────────────────┐      ┌──────────────────┐
-│ Источники данных │      │   StackScout     │      │     Клиенты      │
-│                  │      │     Система      │      │                  │
-│  • PyPI API      │─────▶│                  │◀─────│  • Веб-приложение│
-│  • Docker Hub    │      │  ┌────────────┐  │      │  • CLI утилиты   │
-│                  │      │  │  Backend   │  │      │  • Интеграции    │
-└──────────────────┘      │  └──────┬─────┘  │      └──────────────────┘
-                          │         │        │
-                          │  ┌──────▼─────┐  │
-                          │  │ PostgreSQL │  │
-                          └──────────────────┘
-```
- 
----
- 
-## Структура проекта
- 
-Репозиторий разделен на независимые модули для упрощения разработки и масштабирования:
- 
-- **[backend/](./backend/README.md)**: Сердце системы на Java Spring Boot. Отвечает за API, сбор данных и алгоритмы анализа.
-- **[frontend/](./frontend/README.md)**: Пользовательский интерфейс на Next.js. Визуализация данных и дашборды.
-- **[docs/](./docs/)**: Общая проектная документация, технические задания и диаграммы.
-- **[infrastructure/](./infrastructure/)**: Конфигурации для развертывания (Docker, CI/CD).
 
 ---
- 
-## Общий технологический стек
- 
-- **Backend**: Java 21, Spring Boot, PostgreSQL, Redis, RabbitMQ.
-- **Frontend**: Next.js 15, React 19, Tailwind CSS 4, TypeScript.
-- **Infrastructure**: Docker, Docker Compose, GitHub Actions.
-- **Monitoring**: Prometheus, Grafana.
- 
+
+## Содержание
+
+- [О проекте](#о-проекте)
+- [Технологический стек](#технологический-стек)
+- [Архитектура](#архитектура)
+- [Быстрый старт](#быстрый-старт)
+- [Команды](#команды)
+
 ---
- 
-## Roadmap
- 
-### Неделя 1-3: Фундамент
-- [x] Настройка проекта с Spring Boot
-- [x] Конфигурация Docker окружения
-- [x] Проектирование схемы БД (Spring Data JPA)
-- [x] Базовые CRUD операции
- 
-### Неделя 4-6: Основные функции
-- [x] Интеграция с PyPI API
-- [x] Интеграция с Docker Hub API
-- [x] Модуль нормализации лицензий
-- [x] Калькулятор оценки здоровья
- 
-### Неделя 7-9: Продвинутые функции
-- [x] Система JWT-авторизации (Spring Security)
-- [x] Настройка очереди задач RabbitMQ
-- [x] Планировщик сборщика (@Scheduled)
-- [x] Слой кэширования Redis (Spring Cache)
- 
-### Неделя 10-12: Качество & DevOps
-- [ ] Unit & E2E тестирование (Jest)
-- [ ] CI/CD пайплайн GitHub Actions
-- [ ] Интеграция метрик Prometheus
-- [ ] Дашборды Grafana
- 
-### Неделя 13-15: Готовность к production
-- [ ] Ограничение частоты запросов API
-- [ ] Полная документация
-- [ ] Оптимизация производительности
-- [ ] Аудит безопасности
- 
-### Неделя 16-20: Frontend разработка
-- [x] Инициализация проекта на **Next.js**
-- [x] Дизайн интерфейса с Tailwind CSS 4
-- [x] Интеграция с Backend API
-- [x] Интерактивные дашборды оценки "здоровья"
- 
+
+## О проекте
+
+### Проблема: Dependency Hell
+
+Современная разработка программного обеспечения во многом зависит от сторонних библиотек. Однако выбор правильной зависимости представляет серьёзную проблему: уязвимости, конфликты лицензий и риски поддержки.
+
+### Решение: StackScout
+
+**StackScout** — это комплексная платформа для **управления программными активами (Software Asset Management)**. Она автоматизирует сбор, анализ и мониторинг open-source библиотек, предоставляя оценку их «здоровья» и юридической чистоты.
+
 ---
- 
-## Лицензия
- 
-Этот проект лицензирован под **MIT License** - подробности в файле [LICENSE](LICENSE).
+
+## Технологический стек
+
+<div align="center">
+
+| **Категория** | **Технологии** | **Версия / Детали** |
+|:---:|:---:|:---:|
+| Backend | Java, Spring Boot, Spring Security, Spring Data JPA | Java 21, Spring Boot 3.5 |
+| База данных | PostgreSQL, Redis, RabbitMQ | PostgreSQL 16, Redis 7+ |
+| Frontend | Next.js, React, Tailwind CSS, TypeScript | Next.js 15, React 19, Tailwind 4 |
+| Инфраструктура | Docker, Docker Compose, GitHub Actions | — |
+| Мониторинг | Prometheus, Grafana | — |
+
+</div>
+
+---
+
+## Архитектура
+
+```mermaid
+flowchart LR
+    subgraph Client["Клиент"]
+        User["Пользователь /\nАдминистратор"]
+    end
+
+    subgraph FE["Frontend (Next.js)"]
+        App["Next.js App"]
+    end
+
+    subgraph BE["Backend (Spring Boot)"]
+        API["REST API v1"]
+        Services["Services /\nBusiness Logic"]
+        Queries["Selectors /\nQueries"]
+        API --> Services
+        API --> Queries
+    end
+
+    subgraph Storage["Storage"]
+        DB[("PostgreSQL")]
+        Cache[("Redis")]
+        Queue["RabbitMQ"]
+    end
+
+    subgraph DS["Источники данных"]
+        PyPI["PyPI API"]
+        Docker["Docker Hub"]
+    end
+
+    User --> App
+    App --> API
+    Services --> DB
+    Queries --> DB
+    Services <--> Cache
+    Services <--> Queue
+    DS --> Services
+```
+
+---
+
+## Быстрый старт
+
+### Требования
+
+<div align="center">
+
+| Компонент | Минимум | Рекомендуется |
+|:---:|:---:|:---:|
+| Java | 21+ | 21 |
+| Node.js | 18.18+ | 20+ |
+| pnpm | 8+ | Latest |
+| Docker | 24+ | Latest |
+| Docker Compose | 2.20+ | Latest |
+</div>
+
+### Клонирование репозитория
+
+```bash
+git clone https://github.com/your-org/stackscout.git
+
+cd stackscout
+```
+
+### Настройки по умолчанию:
+
+- PostgreSQL: `localhost:5433` / `postgres` / `postgres`
+- Redis: `localhost:6379`
+- RabbitMQ: `localhost:5672` / `guest` / `guest`
+- Backend API: `http://localhost:8081`
+
+### 3. Запуск инфраструктуры
+
+```bash
+# Сборка и запуск
+docker compose up -d
+
+# Статус
+docker compose ps
+```
+
+---
+
+## Команды
+
+### Backend (Gradle)
+
+```bash
+# Сборка проекта
+cd backend && ./gradlew build
+
+# Запуск в режиме разработки
+cd backend && ./gradlew bootRun
+
+# Запуск тестов
+cd backend && ./gradlew test
+
+# Сборка без тестов
+cd backend && ./gradlew build -x test
+
+# Очистка артефактов сборки
+cd backend && ./gradlew clean
+```
+
+### Frontend (pnpm)
+
+```bash
+# Установка зависимостей
+cd frontend && pnpm install
+
+# Запуск dev-сервера (http://localhost:3000)
+cd frontend && pnpm dev
+
+# Сборка для production
+cd frontend && pnpm build
+
+# Запуск production-сборки
+cd frontend && pnpm start
+
+# Линтинг
+cd frontend && pnpm lint
+```
+
+### Docker
+
+```bash
+# Запустить все сервисы инфраструктуры
+docker compose up -d
+
+# Остановить все сервисы
+docker compose down
+
+# Пересобрать образы и запустить
+docker compose up -d --build
+
+# Логи конкретного сервиса
+docker compose logs -f postgres
+docker compose logs -f redis
+
+# Полная очистка (включая volumes)
+docker compose down -v
+```
+
+### Docker через pnpm (из корня проекта)
+
+```bash
+# Сборка docker-образов
+pnpm docker:build
+
+# Запуск контейнеров
+pnpm docker:up
+
+# Пересобрать и запустить
+pnpm docker:up:build
+
+# Остановить контейнеры
+pnpm docker:down
+
+# Логи (передайте имя сервиса после --)
+pnpm docker:logs -- frontend
+pnpm docker:logs -- app
+```

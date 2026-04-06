@@ -14,6 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * REST контроллер для административного управления библиотеками
  */
@@ -69,17 +72,27 @@ public class AdminLibraryController {
 
     @PostMapping("/bulk-normalize-licenses")
     @Operation(summary = "Массовая нормализация лицензий")
-    public ResponseEntity<Void> bulkNormalizeLicenses() {
+    public ResponseEntity<Map<String, Object>> bulkNormalizeLicenses() {
         log.info("POST /api/admin/libraries/bulk-normalize-licenses");
-        libraryService.bulkNormalizeLicenses();
-        return ResponseEntity.ok().build();
+        long normalizedCount = libraryService.bulkNormalizeLicenses();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("normalizedCount", normalizedCount);
+        response.put("message", "Нормализация лицензий завершена");
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/remove-duplicates")
     @Operation(summary = "Удалить дубликаты библиотек")
-    public ResponseEntity<Void> removeDuplicates() {
+    public ResponseEntity<Map<String, Object>> removeDuplicates() {
         log.info("DELETE /api/admin/libraries/remove-duplicates");
-        libraryService.removeDuplicates();
-        return ResponseEntity.ok().build();
+        long removedCount = libraryService.removeDuplicates();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("removedCount", removedCount);
+        response.put("message", "Удаление дубликатов завершено");
+        return ResponseEntity.ok(response);
     }
 }

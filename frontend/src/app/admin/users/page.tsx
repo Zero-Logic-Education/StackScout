@@ -7,7 +7,7 @@ import {
   Box,
   Container,
   Typography,
-  Card,
+  Paper,
   Button,
   TextField,
   Stack,
@@ -171,7 +171,7 @@ export default function AdminUsersPage() {
 
         {/* Table */}
         <TableContainer
-          component={Card}
+          component={Paper}
           elevation={0}
           sx={{
             border: '1px solid',
@@ -193,11 +193,15 @@ export default function AdminUsersPage() {
             </TableHead>
             <TableBody>
               {filteredUsers.map((user) => (
-                <TableRow key={user.id} sx={{
-                  '&:hover': {
-                    bgcolor: alpha(theme.palette.action.hover, 0.5),
-                  },
-                }}>
+                <TableRow
+                  key={user.id}
+                  sx={{
+                    transition: 'none',
+                    '&:hover, &:hover > *': {
+                      backgroundColor: 'transparent !important',
+                    },
+                  }}
+                >
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
                       {user.username}

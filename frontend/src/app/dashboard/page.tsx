@@ -17,7 +17,7 @@ function DashboardContent() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push("/");
+      router.push("/login");
     }
   }, [isAuthenticated, router]);
 

@@ -141,12 +141,26 @@ export interface MetricDetail {
 }
 
 export const libraryApi = {
-  getAll: (page = 0, size = 10) =>
-    apiClient.get<LibrariesResponse>(`/libraries?page=${page}&size=${size}`),
+  getAll: (page = 0, size = 10, minHealthScore?: number) => {
+    let url = `/libraries/search?page=${page}&size=${size}`;
+    if (minHealthScore && minHealthScore > 0) {
+      url += `&minHealthScore=${minHealthScore}`;
+    }
+    return apiClient.get<LibrariesResponse>(url);
+  },
 
-  search: (query: string, source?: string, page = 0, size = 10) => {
+  search: (
+    query: string,
+    source?: string,
+    page = 0,
+    size = 10,
+    minHealthScore?: number,
+  ) => {
     let url = `/libraries/search?query=${query}&page=${page}&size=${size}`;
     if (source) url += `&source=${source}`;
+    if (minHealthScore && minHealthScore > 0) {
+      url += `&minHealthScore=${minHealthScore}`;
+    }
     return apiClient.get<LibrariesResponse>(url);
   },
 
@@ -222,12 +236,32 @@ export interface CacheStats {
   cacheNames: string[];
 }
 
+export interface AdminActionResult {
+  success: boolean;
+  message: string;
+  clearedCaches?: number;
+  normalizedCount?: number;
+  removedCount?: number;
+}
+
+export interface SourceDefinition {
+  key: string;
+  displayName: string;
+  category: string;
+  description: string;
+  aliases: string[];
+}
+
 // API методы для аутентификации
 export const authApi = {
   login: (data: LoginRequest) =>
     apiClient.post<AuthResponse>("/auth/login", data),
   register: (data: RegisterRequest) =>
     apiClient.post<AuthResponse>("/auth/register", data),
+};
+
+export const sourceApi = {
+  getSources: () => apiClient.get<SourceDefinition[]>("/sources"),
 };
 
 // API методы для подписок
@@ -318,7 +352,7 @@ export const adminApi = {
     apiClient.get<CacheStats>(`/admin/statistics/cache-stats`),
 
   clearCache: () =>
-    apiClient.post(`/admin/statistics/clear-cache`),
+    apiClient.post<AdminActionResult>(`/admin/statistics/clear-cache`),
 
   // Users
   getUsers: (page = 0, size = 20) =>
@@ -375,8 +409,8 @@ export const adminApi = {
     adminApiClient.delete(`/api/admin/libraries/${id}`),
 
   normalizeLicenses: () =>
-    adminApiClient.post(`/api/admin/libraries/bulk-normalize-licenses`),
+    adminApiClient.post<AdminActionResult>(`/api/admin/libraries/bulk-normalize-licenses`),
 
   removeDuplicates: () =>
-    adminApiClient.delete(`/api/admin/libraries/remove-duplicates`),
+    adminApiClient.delete<AdminActionResult>(`/api/admin/libraries/remove-duplicates`),
 };

@@ -7,7 +7,7 @@ import {
   Box,
   Container,
   Typography,
-  Card,
+  Paper,
   Button,
   TextField,
   Stack,
@@ -232,7 +232,7 @@ export default function AdminLibrariesPage() {
 
         {/* Table */}
         <TableContainer
-          component={Card}
+          component={Paper}
           elevation={0}
           sx={{
             border: '1px solid',
@@ -255,11 +255,15 @@ export default function AdminLibrariesPage() {
             </TableHead>
             <TableBody>
               {filteredLibraries.map((library) => (
-                <TableRow key={library.id} sx={{
-                  '&:hover': {
-                    bgcolor: alpha(theme.palette.action.hover, 0.5),
-                  },
-                }}>
+                <TableRow
+                  key={library.id}
+                  sx={{
+                    transition: 'none',
+                    '&:hover, &:hover > *': {
+                      backgroundColor: 'transparent !important',
+                    },
+                  }}
+                >
                   <TableCell>
                     <Box>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>

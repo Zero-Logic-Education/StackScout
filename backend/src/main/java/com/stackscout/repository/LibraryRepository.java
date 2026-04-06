@@ -39,12 +39,24 @@ public interface LibraryRepository extends JpaRepository<Library, Long> {
     @Query("SELECT l FROM Library l WHERE LOWER(l.name) LIKE LOWER(CONCAT('%', :query, '%'))")
     Page<Library> searchByName(@Param("query") String query, Pageable pageable);
 
+        @Query("SELECT l FROM Library l WHERE LOWER(l.name) LIKE LOWER(CONCAT('%', :query, '%')) AND l.healthScore >= :minScore")
+        Page<Library> searchByNameAndMinScore(@Param("query") String query, @Param("minScore") Integer minScore,
+            Pageable pageable);
+
     /**
      * Поиск библиотек по имени и источнику
      */
     @Query("SELECT l FROM Library l WHERE LOWER(l.name) LIKE LOWER(CONCAT('%', :query, '%')) AND l.source = :source")
     Page<Library> searchByNameAndSource(@Param("query") String query, @Param("source") String source,
             Pageable pageable);
+
+        @Query("SELECT l FROM Library l WHERE LOWER(l.name) LIKE LOWER(CONCAT('%', :query, '%')) AND l.source = :source AND l.healthScore >= :minScore")
+        Page<Library> searchByNameAndSourceAndMinScore(@Param("query") String query, @Param("source") String source,
+            @Param("minScore") Integer minScore, Pageable pageable);
+
+        Page<Library> findBySourceAndHealthScoreGreaterThanEqual(String source, Integer minScore, Pageable pageable);
+
+        Page<Library> findByHealthScoreGreaterThanEqual(Integer minScore, Pageable pageable);
 
     /**
      * Найти библиотеки с оценкой здоровья выше определенного значения

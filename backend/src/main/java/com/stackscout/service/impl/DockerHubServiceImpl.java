@@ -4,6 +4,8 @@ package com.stackscout.service.impl;
 import com.stackscout.dto.dockerhub.DockerHubDTOs;
 import com.stackscout.model.Library;
 import com.stackscout.service.DockerHubService;
+import com.stackscout.source.SourceAdapter;
+import com.stackscout.source.SourceDefinition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,7 +18,7 @@ import org.springframework.web.client.RestClient;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DockerHubServiceImpl implements DockerHubService {
+public class DockerHubServiceImpl implements DockerHubService, SourceAdapter {
 
 	private final RestClient restClient;
 
@@ -78,7 +80,7 @@ public class DockerHubServiceImpl implements DockerHubService {
 		Library lib = new Library();
 		lib.setName(repo.namespace().equals("library") ? repo.name() : repo.namespace() + "/" + repo.name());
 		lib.setVersion("latest"); // Docker Hub API doesn't give a single version, defaulting to latest logic
-		lib.setSource("docker");
+		lib.setSource("dockerhub");
 		lib.setLicense(""); // Docker Hub API doesn't consistently provide license in this endpoint
 		lib.setHealthScore(0);
 		lib.setDescription(repo.description());
@@ -89,5 +91,16 @@ public class DockerHubServiceImpl implements DockerHubService {
 		}
 
 		return lib;
+	}
+
+	@Override
+	public SourceDefinition getDefinition() {
+		return new SourceDefinition(
+				"dockerhub",
+				"Docker Hub",
+				"container-registry",
+				"Container image registry",
+				java.util.List.of("docker")
+		);
 	}
 }

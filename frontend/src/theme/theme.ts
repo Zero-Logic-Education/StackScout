@@ -1,5 +1,11 @@
 'use client';
-import { createTheme } from '@mui/material/styles';
+import { alpha, createTheme } from '@mui/material/styles';
+
+const focusRing = {
+  outline: '3px solid rgba(129, 199, 132, 0.9)',
+  outlineOffset: '2px',
+  boxShadow: 'none',
+};
 
 export const theme = createTheme({
   palette: {
@@ -82,6 +88,7 @@ export const theme = createTheme({
           padding: '10px 24px',
           fontSize: '1rem',
           boxShadow: 'none',
+          '&:focus-visible': focusRing,
           '&:hover': {
             boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)',
           },
@@ -90,6 +97,13 @@ export const theme = createTheme({
           '&:hover': {
             boxShadow: '0 4px 12px rgba(76, 175, 80, 0.4)',
           },
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          '&:focus-visible': focusRing,
         },
       },
     },
@@ -136,6 +150,9 @@ export const theme = createTheme({
             '&.Mui-focused fieldset': {
               borderColor: '#4caf50',
             },
+            '&.Mui-focused': {
+              boxShadow: `0 0 0 3px ${alpha('#81c784', 0.28)}`,
+            },
           },
         },
       },
@@ -144,6 +161,21 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 6,
+          '&:focus-visible': focusRing,
+        },
+      },
+    },
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          '&:focus-visible': focusRing,
+        },
+      },
+    },
+    MuiMenuItem: {
+      styleOverrides: {
+        root: {
+          '&:focus-visible': focusRing,
         },
       },
     },

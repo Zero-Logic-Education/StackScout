@@ -4,12 +4,14 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { libraryApi, Library } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth";
+import { useSourceDefinitions } from "@/lib/hooks";
 import {
   Container,
   Box,
   Typography,
   TextField,
   Button,
+  CircularProgress,
   Card,
   CardContent,
   Alert,
@@ -32,6 +34,7 @@ import {
   FilterList,
   TrendingUp,
   Security,
+  OpenInNew,
 } from "@mui/icons-material";
 import LibraryCardSkeleton from "@/components/skeletons/LibraryCardSkeleton";
 import LoginModal from "@/components/LoginModal";
@@ -40,6 +43,7 @@ function ExploreContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated } = useAuthStore();
+  const { sources, isLoading: sourcesLoading } = useSourceDefinitions();
   const [libraries, setLibraries] = useState<Library[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -51,8 +55,42 @@ function ExploreContent() {
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [minHealthScore, setMinHealthScore] = useState<number>(0);
   const [showFiltersDialog, setShowFiltersDialog] = useState(false);
+  const [tempSelectedSource, setTempSelectedSource] = useState<string | null>(null);
   const [tempMinHealthScore, setTempMinHealthScore] = useState<number>(0);
   const pageSize = 12;
+
+  const applyFilters = useCallback(
+    (
+      nextQuery: string,
+      nextSource: string | null,
+      nextMinHealthScore: number,
+      page = 0,
+    ) => {
+      const params = new URLSearchParams();
+      if (nextQuery.trim()) params.set("q", nextQuery.trim());
+      if (nextSource) params.set("source", nextSource);
+      if (nextMinHealthScore > 0) {
+        params.set("minHealthScore", nextMinHealthScore.toString());
+      }
+      params.set("page", page.toString());
+      router.push(`/explore?${params.toString()}`);
+    },
+    [router],
+  );
+
+  const resolveSourceKey = useCallback(
+    (source: string | null) => {
+      if (!source) return null;
+
+      const normalized = source.trim().toLowerCase();
+      const matchedSource = sources.find(
+        (item) => item.key === normalized || item.aliases.includes(normalized),
+      );
+
+      return matchedSource?.key || normalized;
+    },
+    [sources],
+  );
 
   const fetchLibraries = useCallback(
     async (page: number, searchQuery: string, source: string | null, minScore: number) => {
@@ -65,23 +103,23 @@ function ExploreContent() {
             source || undefined,
             page,
             pageSize,
+            minScore > 0 ? minScore : undefined,
           );
           data = response.data;
         } else {
-          const response = await libraryApi.getAll(page, pageSize);
+          const response = await libraryApi.getAll(
+            page,
+            pageSize,
+            minScore > 0 ? minScore : undefined,
+          );
           data = response.data;
         }
 
-        // Фильтруем по минимальному health score на клиенте
-        let filteredLibraries = data.libraries;
-        if (minScore > 0) {
-          filteredLibraries = data.libraries.filter(lib => lib.healthScore >= minScore);
-        }
-
-        setLibraries(filteredLibraries);
+        const normalizedSource = resolveSourceKey(source);
+        setLibraries(data.libraries);
         setTotalPages(data.totalPages);
-        setTotalElements(minScore > 0 ? filteredLibraries.length : data.totalElements);
-        setError(null);
+        setTotalElements(data.totalElements);
+        setSelectedSource(normalizedSource);
       } catch (err: unknown) {
         console.error("Ошибка загрузки библиотек:", err);
         const error = err as Record<string, unknown>;
@@ -99,7 +137,7 @@ function ExploreContent() {
         setLoading(false);
       }
     },
-    [],
+    [pageSize, resolveSourceKey],
   );
 
   useEffect(() => {
@@ -107,51 +145,41 @@ function ExploreContent() {
     const searchQuery = searchParams.get("q") || "";
     const source = searchParams.get("source") || null;
     const minScore = parseInt(searchParams.get("minHealthScore") || "0");
+    const normalizedSource = resolveSourceKey(source);
 
     setQuery(searchQuery);
     setCurrentPage(page);
-    setSelectedSource(source);
+    setSelectedSource(normalizedSource);
     setMinHealthScore(minScore);
+    setTempSelectedSource(normalizedSource);
     setTempMinHealthScore(minScore);
-    fetchLibraries(page, searchQuery, source, minScore);
-  }, [searchParams, fetchLibraries]);
+    fetchLibraries(page, searchQuery, normalizedSource, minScore);
+  }, [searchParams, fetchLibraries, resolveSourceKey]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (selectedSource) params.set("source", selectedSource);
-    if (minHealthScore > 0) params.set("minHealthScore", minHealthScore.toString());
-    params.set("page", "0");
-    router.push(`/explore?${params.toString()}`);
+    applyFilters(query, selectedSource, minHealthScore, 0);
   };
 
-  const handleSourceFilter = (source: string | null) => {
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (source) params.set("source", source);
-    if (minHealthScore > 0) params.set("minHealthScore", minHealthScore.toString());
-    params.set("page", "0");
-    router.push(`/explore?${params.toString()}`);
+  const handleOpenFilters = () => {
+    setTempSelectedSource(selectedSource);
+    setTempMinHealthScore(minHealthScore);
+    setShowFiltersDialog(true);
   };
 
   const handleApplyFilters = () => {
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (selectedSource) params.set("source", selectedSource);
-    if (tempMinHealthScore > 0) params.set("minHealthScore", tempMinHealthScore.toString());
-    params.set("page", "0");
-    router.push(`/explore?${params.toString()}`);
+    setSelectedSource(tempSelectedSource);
+    setMinHealthScore(tempMinHealthScore);
+    applyFilters(query, tempSelectedSource, tempMinHealthScore, 0);
     setShowFiltersDialog(false);
   };
 
   const handleResetFilters = () => {
+    setSelectedSource(null);
+    setMinHealthScore(0);
+    setTempSelectedSource(null);
     setTempMinHealthScore(0);
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (selectedSource) params.set("source", selectedSource);
-    params.set("page", "0");
-    router.push(`/explore?${params.toString()}`);
+    applyFilters(query, null, 0, 0);
     setShowFiltersDialog(false);
   };
 
@@ -180,6 +208,8 @@ function ExploreContent() {
     if (score >= 60) return "Хорошо";
     return "Требует внимания";
   };
+
+  const activeFiltersCount = (selectedSource ? 1 : 0) + (minHealthScore > 0 ? 1 : 0);
 
   return (
     <Box sx={{ minHeight: "100vh", pb: 8 }}>
@@ -230,6 +260,7 @@ function ExploreContent() {
               Находите и анализируйте Open Source библиотеки из различных
               экосистем
             </Typography>
+
             <Box
               component="form"
               onSubmit={handleSearch}
@@ -245,6 +276,7 @@ function ExploreContent() {
                   border: "1px solid",
                   borderColor: "divider",
                   boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  flexDirection: { xs: "column", sm: "row" },
                 }}
               >
                 <TextField
@@ -257,8 +289,7 @@ function ExploreContent() {
                     disableUnderline: true,
                     startAdornment: (
                       <InputAdornment position="start">
-                        {" "}
-                        <Search sx={{ color: "primary.main" }} />{" "}
+                        <Search sx={{ color: "primary.main" }} />
                       </InputAdornment>
                     ),
                     sx: { px: 2 },
@@ -268,62 +299,11 @@ function ExploreContent() {
                   type="submit"
                   variant="contained"
                   size="large"
-                  sx={{ px: 4, minWidth: 120, boxShadow: "none" }}
+                  sx={{ px: 4, minWidth: { xs: "100%", sm: 120 }, boxShadow: "none" }}
                 >
                   Найти
                 </Button>
               </Box>
-              <Stack
-                direction="row"
-                spacing={1}
-                sx={{ mt: 3 }}
-                justifyContent="center"
-                flexWrap="wrap"
-                useFlexGap
-              >
-                <Chip
-                  label="Все"
-                  color={selectedSource === null ? "primary" : "default"}
-                  onClick={() => handleSourceFilter(null)}
-                  sx={{ cursor: "pointer" }}
-                />
-                <Chip
-                  label="PyPI"
-                  color={selectedSource === "pypi" ? "primary" : "default"}
-                  variant={selectedSource === "pypi" ? "filled" : "outlined"}
-                  onClick={() => handleSourceFilter("pypi")}
-                  sx={{ cursor: "pointer" }}
-                />
-                <Chip
-                  label="npm"
-                  color={selectedSource === "npm" ? "primary" : "default"}
-                  variant={selectedSource === "npm" ? "filled" : "outlined"}
-                  onClick={() => handleSourceFilter("npm")}
-                  sx={{ cursor: "pointer" }}
-                />
-                <Chip
-                  label="Maven"
-                  color={selectedSource === "maven" ? "primary" : "default"}
-                  variant={selectedSource === "maven" ? "filled" : "outlined"}
-                  onClick={() => handleSourceFilter("maven")}
-                  sx={{ cursor: "pointer" }}
-                />
-                <Chip
-                  label="Высокий рейтинг"
-                  color={minHealthScore >= 80 ? "primary" : "default"}
-                  variant={minHealthScore >= 80 ? "filled" : "outlined"}
-                  onClick={() => {
-                    setTempMinHealthScore(minHealthScore >= 80 ? 0 : 80);
-                    const params = new URLSearchParams();
-                    if (query) params.set("q", query);
-                    if (selectedSource) params.set("source", selectedSource);
-                    params.set("minHealthScore", minHealthScore >= 80 ? "0" : "80");
-                    params.set("page", "0");
-                    router.push(`/explore?${params.toString()}`);
-                  }}
-                  sx={{ cursor: "pointer" }}
-                />
-              </Stack>
             </Box>
           </Box>
         </Container>
@@ -397,6 +377,7 @@ function ExploreContent() {
                 justifyContent: "space-between",
                 alignItems: "center",
                 mb: 4,
+                gap: 2,
               }}
             >
               <Typography variant="h6" fontWeight={600}>
@@ -406,13 +387,48 @@ function ExploreContent() {
               </Typography>
               <Button
                 startIcon={<FilterList />}
-                variant="outlined"
-                onClick={() => setShowFiltersDialog(true)}
-                sx={{ display: { xs: "none", sm: "flex" } }}
+                variant="contained"
+                color="success"
+                onClick={handleOpenFilters}
+                sx={{
+                  whiteSpace: "nowrap",
+                  color: "common.white",
+                  "& .MuiButton-startIcon": {
+                    color: "common.white",
+                  },
+                }}
               >
-                Фильтры
+                {activeFiltersCount > 0 ? `Фильтр (${activeFiltersCount})` : "Фильтр"}
               </Button>
             </Box>
+
+            {activeFiltersCount > 0 && (
+              <Stack direction="row" spacing={1} sx={{ mb: 3 }} flexWrap="wrap" useFlexGap>
+                {selectedSource && (
+                  <Chip
+                    label={`Источник: ${selectedSource}`}
+                    color="success"
+                    onDelete={() => {
+                      setSelectedSource(null);
+                      setTempSelectedSource(null);
+                      applyFilters(query, null, minHealthScore, 0);
+                    }}
+                  />
+                )}
+                {minHealthScore > 0 && (
+                  <Chip
+                    label={`Рейтинг: от ${minHealthScore}%`}
+                    color="success"
+                    onDelete={() => {
+                      setMinHealthScore(0);
+                      setTempMinHealthScore(0);
+                      applyFilters(query, selectedSource, 0, 0);
+                    }}
+                  />
+                )}
+              </Stack>
+            )}
+
             <Box
               sx={{
                 display: "grid",
@@ -583,22 +599,39 @@ function ExploreContent() {
                         borderColor: "divider",
                       }}
                     >
-                      <Button
-                        fullWidth
-                        variant="outlined"
-                        size="small"
-                        sx={{ fontWeight: 600 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (isAuthenticated) {
-                            router.push(`/dashboard?libraryId=${lib.id}`);
-                          } else {
-                            setLoginModalOpen(true);
-                          }
-                        }}
-                      >
-                        Подробнее
-                      </Button>
+                      <Stack direction="row" spacing={1.5}>
+                        {lib.repositoryUrl && (
+                          <Button
+                            fullWidth
+                            variant="outlined"
+                            size="small"
+                            startIcon={<OpenInNew />}
+                            sx={{ fontWeight: 600 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(lib.repositoryUrl, "_blank", "noopener,noreferrer");
+                            }}
+                          >
+                            Репозиторий
+                          </Button>
+                        )}
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          size="small"
+                          sx={{ fontWeight: 600 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isAuthenticated) {
+                              router.push(`/dashboard?libraryId=${lib.id}`);
+                            } else {
+                              setLoginModalOpen(true);
+                            }
+                          }}
+                        >
+                          Подробнее
+                        </Button>
+                      </Stack>
                     </Box>
                   </CardContent>
                 </Card>
@@ -644,9 +677,41 @@ function ExploreContent() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Расширенные фильтры</DialogTitle>
+        <DialogTitle>Фильтр библиотек</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
+            <FormControl fullWidth sx={{ mb: 3 }}>
+              <FormLabel sx={{ mb: 1.5 }}>Источник</FormLabel>
+              {sourcesLoading ? (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 1 }}>
+                  <CircularProgress size={18} />
+                  <Typography variant="body2" color="text.secondary">
+                    Загружаем источники...
+                  </Typography>
+                </Box>
+              ) : (
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  <Chip
+                    label="Все"
+                    color={tempSelectedSource === null ? "primary" : "default"}
+                    variant={tempSelectedSource === null ? "filled" : "outlined"}
+                    onClick={() => setTempSelectedSource(null)}
+                    sx={{ cursor: "pointer" }}
+                  />
+                  {sources.map((sourceItem) => (
+                    <Chip
+                      key={sourceItem.key}
+                      label={sourceItem.displayName}
+                      color={tempSelectedSource === sourceItem.key ? "primary" : "default"}
+                      variant={tempSelectedSource === sourceItem.key ? "filled" : "outlined"}
+                      onClick={() => setTempSelectedSource(sourceItem.key)}
+                      sx={{ cursor: "pointer" }}
+                    />
+                  ))}
+                </Stack>
+              )}
+            </FormControl>
+
             <FormControl fullWidth sx={{ mb: 3 }}>
               <FormLabel sx={{ mb: 2 }}>
                 Минимальный рейтинг здоровья: {tempMinHealthScore}%
@@ -659,8 +724,9 @@ function ExploreContent() {
                 step={10}
                 marks={[
                   { value: 0, label: "0%" },
-                  { value: 50, label: "50%" },
+                  { value: 60, label: "60%" },
                   { value: 80, label: "80%" },
+                  { value: 90, label: "90%" },
                   { value: 100, label: "100%" },
                 ]}
                 valueLabelDisplay="auto"

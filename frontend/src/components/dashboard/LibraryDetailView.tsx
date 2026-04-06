@@ -12,6 +12,7 @@ import {
   Paper,
   Divider,
   Alert,
+  Snackbar,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -36,6 +37,15 @@ export default function LibraryDetailView({ libraryId }: LibraryDetailViewProps)
   const [healthMetrics, setHealthMetrics] = useState<HealthMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [shareToast, setShareToast] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const libraryIdNum = parseInt(libraryId);
   const { status, fetchSubscriptionStatus } = useLibrarySubscription(libraryIdNum);
@@ -108,9 +118,38 @@ export default function LibraryDetailView({ libraryId }: LibraryDetailViewProps)
 
   const handleShare = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      const shareData = {
+        title: library?.name || "Библиотека",
+        text: `Посмотри библиотеку ${library?.name || ""} в StackScout`,
+        url: window.location.href,
+      };
+
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+      }
+
+      setShareToast({
+        open: true,
+        message: "Ссылка готова к отправке",
+        severity: "success",
+      });
     } catch {
-      // Handle copy error silently
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        setShareToast({
+          open: true,
+          message: "Ссылка скопирована в буфер обмена",
+          severity: "success",
+        });
+      } catch {
+        setShareToast({
+          open: true,
+          message: "Не удалось поделиться ссылкой",
+          severity: "error",
+        });
+      }
     }
   };
 
@@ -127,9 +166,9 @@ export default function LibraryDetailView({ libraryId }: LibraryDetailViewProps)
         <Button
           variant="outlined"
           startIcon={<ArrowBack />}
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push("/explore")}
         >
-          Вернуться к дашборду
+          Вернуться к исследованию
         </Button>
       </Container>
     );
@@ -143,19 +182,20 @@ export default function LibraryDetailView({ libraryId }: LibraryDetailViewProps)
           bgcolor: "background.paper",
           borderBottom: "1px solid",
           borderColor: "divider",
-          pt: { xs: 4, md: 6 },
+          pt: { xs: 12, md: 14 },
           pb: 4,
           mb: 4,
         }}
       >
         <Container maxWidth="lg">
           <Button
-            variant="text"
+            variant="outlined"
+            color="primary"
             startIcon={<ArrowBack />}
-            onClick={() => router.push("/dashboard")}
-            sx={{ mb: 2 }}
+            onClick={() => router.push("/explore")}
+            sx={{ mb: 2, borderWidth: 1.5 }}
           >
-            Назад к обзору
+            Назад к исследованию
           </Button>
 
           <Box sx={{ mb: 3 }}>
@@ -166,9 +206,6 @@ export default function LibraryDetailView({ libraryId }: LibraryDetailViewProps)
               sx={{ fontSize: { xs: "2rem", md: "3rem" } }}
             >
               {library.name}
-            </Typography>
-            <Typography variant="body1" color="text.secondary" paragraph>
-              {library.description || "Описание отсутствует"}
             </Typography>
           </Box>
 
@@ -275,8 +312,6 @@ export default function LibraryDetailView({ libraryId }: LibraryDetailViewProps)
           }}
         >
           <Stack spacing={3}>
-            {healthMetrics && <HealthMetricsDisplay metrics={healthMetrics} />}
-
             <Paper
               elevation={0}
               sx={{ p: 3, border: "1px solid", borderColor: "divider" }}
@@ -289,11 +324,29 @@ export default function LibraryDetailView({ libraryId }: LibraryDetailViewProps)
                 {library.description || "Описание отсутствует"}
               </Typography>
             </Paper>
+
+            {healthMetrics && <HealthMetricsDisplay metrics={healthMetrics} />}
           </Stack>
 
           <LibraryInfo library={library} />
         </Box>
       </Container>
+
+      <Snackbar
+        open={shareToast.open}
+        autoHideDuration={2500}
+        onClose={() => setShareToast((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setShareToast((prev) => ({ ...prev, open: false }))}
+          severity={shareToast.severity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {shareToast.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

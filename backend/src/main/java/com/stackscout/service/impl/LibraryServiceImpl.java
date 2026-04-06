@@ -9,8 +9,10 @@ import com.stackscout.mapper.LibraryMapper;
 import com.stackscout.model.Library;
 import com.stackscout.model.UpdateType;
 import com.stackscout.repository.LibraryRepository;
+import com.stackscout.service.LicenseService;
 import com.stackscout.service.LibraryService;
 import com.stackscout.service.LibraryUpdateService;
+import com.stackscout.source.SourceRegistryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -20,8 +22,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -36,6 +43,8 @@ public class LibraryServiceImpl implements LibraryService {
     private final LibraryRepository libraryRepository;
     private final LibraryMapper libraryMapper;
     private final LibraryUpdateService libraryUpdateService;
+    private final SourceRegistryService sourceRegistryService;
+    private final LicenseService licenseService;
     
     @Override
     public Page<LibraryDto> getAllLibraries(Pageable pageable) {
@@ -135,6 +144,13 @@ public class LibraryServiceImpl implements LibraryService {
         return libraryRepository.searchByName(query, pageable)
                 .map(libraryMapper::toDto);
     }
+
+    @Override
+    public Page<LibraryDto> searchLibraries(String query, Integer minScore, Pageable pageable) {
+        log.debug("Поиск библиотек по запросу: {} с минимальной оценкой: {}", query, minScore);
+        return libraryRepository.searchByNameAndMinScore(query, minScore, pageable)
+                .map(libraryMapper::toDto);
+    }
     
     @Override
     public Page<LibraryDto> searchLibrariesBySource(String query, String source, Pageable pageable) {
@@ -142,11 +158,32 @@ public class LibraryServiceImpl implements LibraryService {
         return libraryRepository.searchByNameAndSource(query, source, pageable)
                 .map(libraryMapper::toDto);
     }
+
+    @Override
+    public Page<LibraryDto> searchLibrariesBySource(String query, String source, Integer minScore, Pageable pageable) {
+        log.debug("Поиск библиотек по запросу: {}, источнику: {} и минимальной оценке: {}", query, source, minScore);
+        return libraryRepository.searchByNameAndSourceAndMinScore(query, source, minScore, pageable)
+                .map(libraryMapper::toDto);
+    }
     
     @Override
     public Page<LibraryDto> getLibrariesBySource(String source, Pageable pageable) {
         log.debug("Получение библиотек по источнику: {}", source);
         return libraryRepository.findBySource(source, pageable)
+                .map(libraryMapper::toDto);
+    }
+
+    @Override
+    public Page<LibraryDto> getLibrariesBySource(String source, Integer minScore, Pageable pageable) {
+        log.debug("Получение библиотек по источнику: {} и минимальной оценке: {}", source, minScore);
+        return libraryRepository.findBySourceAndHealthScoreGreaterThanEqual(source, minScore, pageable)
+                .map(libraryMapper::toDto);
+    }
+
+    @Override
+    public Page<LibraryDto> getAllLibraries(Integer minScore, Pageable pageable) {
+        log.debug("Получение всех библиотек с минимальной оценкой: {}", minScore);
+        return libraryRepository.findByHealthScoreGreaterThanEqual(minScore, pageable)
                 .map(libraryMapper::toDto);
     }
     
@@ -228,32 +265,94 @@ public class LibraryServiceImpl implements LibraryService {
 
     @Override
     @Transactional
-    public void bulkNormalizeLicenses() {
+    public long bulkNormalizeLicenses() {
         log.info("Начало массовой нормализации лицензий");
         
         List<Library> libraries = libraryRepository.findAll();
-        libraries.forEach(library -> {
-            String normalizedLicense = library.getLicense();
-            log.debug("Нормализация лицензии для: {} ({})", library.getName(), normalizedLicense);
-        });
+        long normalizedCount = 0;
+
+        for (Library library : libraries) {
+            String currentLicense = library.getLicense();
+            String normalizedLicense = licenseService.normalizeLicense(currentLicense);
+
+            if (!Objects.equals(currentLicense, normalizedLicense)) {
+                library.setLicense(normalizedLicense);
+                libraryRepository.save(library);
+                normalizedCount++;
+                log.debug("Нормализация лицензии для: {} ({} -> {})", library.getName(), currentLicense, normalizedLicense);
+            }
+        }
         
-        log.info("Массовая нормализация лицензий завершена для {} библиотек", libraries.size());
+        log.info("Массовая нормализация лицензий завершена: изменено {} из {} библиотек", normalizedCount, libraries.size());
+        return normalizedCount;
     }
 
     @Override
     @Transactional
-    public void removeDuplicates() {
+    public long removeDuplicates() {
         log.info("Начало удаления дубликатов библиотек");
         
         // Дубликаты могут быть определены по названию и источнику
-        List<Library> libraries = libraryRepository.findAll();
+        List<Library> libraries = libraryRepository.findAll().stream()
+            .sorted((a, b) -> Long.compare(a.getId(), b.getId()))
+            .toList();
+
+        Set<String> seen = new HashSet<>();
+        List<Library> duplicates = new java.util.ArrayList<>();
+
+        for (Library library : libraries) {
+            String key = (library.getName() == null ? "" : library.getName().trim().toLowerCase())
+                + "|" + (library.getSource() == null ? "" : library.getSource().trim().toLowerCase())
+                + "|" + (library.getVersion() == null ? "" : library.getVersion().trim().toLowerCase());
+
+            if (!seen.add(key)) {
+                duplicates.add(library);
+            }
+        }
+
+        if (!duplicates.isEmpty()) {
+            libraryRepository.deleteAll(duplicates);
+        }
+
         log.debug("Найдено {} библиотек для проверки на дубликаты", libraries.size());
-        
-        log.info("Удаление дубликатов завершено");
+        log.info("Удаление дубликатов завершено: удалено {} записей", duplicates.size());
+        return duplicates.size();
     }
 
     @Override
     public Object getLibrariesStats() {
-        throw new UnsupportedOperationException("Unimplemented method 'getLibrariesStats'");
+        List<Library> libraries = libraryRepository.findAll();
+
+        Map<String, Long> sources = libraries.stream()
+            .map(Library::getSource)
+            .map(this::normalizeSource)
+            .filter(Objects::nonNull)
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalLibraries", (long) libraries.size());
+        stats.put("sources", sources);
+        stats.put(
+            "averageHealthScore",
+            libraries.stream()
+                .map(Library::getHealthScore)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(0.0));
+
+        return stats;
+    }
+
+    private String normalizeSource(String source) {
+        if (source == null || source.isBlank()) {
+            return null;
+        }
+
+        try {
+            return sourceRegistryService.normalize(source);
+        } catch (IllegalArgumentException ignored) {
+            return source.trim().toLowerCase();
+        }
     }
 }

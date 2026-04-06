@@ -9,20 +9,30 @@ export default function PasswordResetPage() {
   const [newPassword, setNewPassword] = useState('');
   const [step, setStep] = useState<'request' | 'confirm'>('request');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
     setLoading(true);
 
     try {
-      await fetch('/api/auth/password-reset/request', {
+      const response = await fetch('/api/auth/password-reset/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
+
+      if (!response.ok) {
+        throw new Error('Не удалось отправить запрос на восстановление пароля');
+      }
+
       setStep('confirm');
+      setSuccess('Письмо с инструкцией отправлено. Проверьте почту.');
     } catch {
-      // Handle error silently
+      setError('Не удалось отправить инструкции. Попробуйте снова через минуту.');
     } finally {
       setLoading(false);
     }
@@ -30,18 +40,26 @@ export default function PasswordResetPage() {
 
   const handleConfirmReset = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
     setLoading(true);
 
     try {
-      await fetch('/api/auth/password-reset/confirm', {
+      const response = await fetch('/api/auth/password-reset/confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, newPassword }),
       });
+
+      if (!response.ok) {
+        throw new Error('Не удалось обновить пароль');
+      }
+
       setToken('');
       setNewPassword('');
+      setSuccess('Пароль успешно обновлен. Теперь можно войти с новым паролем.');
     } catch {
-      // Handle error silently
+      setError('Не удалось обновить пароль. Проверьте токен и попробуйте снова.');
     } finally {
       setLoading(false);
     }
@@ -67,6 +85,17 @@ export default function PasswordResetPage() {
 
         {/* Form */}
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
+          {error && (
+            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
+              {success}
+            </div>
+          )}
+
           {step === 'request' ? (
             <form onSubmit={handleRequestReset}>
               <div className="mb-4">

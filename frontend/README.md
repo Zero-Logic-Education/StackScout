@@ -1,59 +1,91 @@
 <div align="center">
- 
-# StackScout - Frontend
- 
-**Пользовательский интерфейс платформы анализа Open Source библиотек**
- 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs)](https://nextjs.org/)
+
+# StackScout Frontend
+
+**Клиентская часть платформы StackScout на Next.js**
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.0-38B2AC?logo=tailwindcss)](https://tailwindcss.com/)
- 
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs)](https://nextjs.org/)
+
 </div>
- 
+
 ---
- 
-## Описание
- 
-Frontend часть StackScout предоставляет интуитивно понятный и современный интерфейс для визуализации данных об Open Source библиотеках, мониторинга их "здоровья" и управления рисками лицензирования.
- 
-## Возможности (в разработке)
- 
-- **Интерактивные дашборды**: Визуализация аналитики и метрик здоровья.
-- **Поиск и фильтрация**: Удобный поиск библиотек по репозиториям PyPI и Docker Hub.
-- **Управление проектами**: Возможность отслеживать зависимости своих проектов.
-- **Адаптивный дизайн**: Корректное отображение на всех типах устройств.
- 
-## Технологический стек
- 
-- **Фреймворк**: Next.js 15 (App Router)
-- **Библиотека**: React 19
-- **Стилизация**: Tailwind CSS 4
-- **Язык**: TypeScript
-- **Состояние**: TanStack Query (React Query)
- 
+
+## Содержание
+
+- [Назначение](#назначение)
+- [Структура модулей](#структура-модулей)
+- [Команды frontend](#команды-frontend)
+- [Конфигурация](#конфигурация)
+
 ---
- 
-## Быстрый старт
- 
-### Требования
-- Node.js 18.x или выше
-- npm или yarn
- 
-### Установка зависимостей
- 
+
+## Назначение
+
+Frontend отвечает за пользовательский интерфейс платформы:
+
+- отображение библиотек, метрик и аналитики;
+- взаимодействие с REST API backend;
+- маршрутизацию и клиентские сценарии.
+
+---
+
+## Структура модулей
+
+<div align="center">
+
+| **Директория** | **Назначение** |
+|:---|:---|
+| `src/app/` | Страницы и layout (Next.js App Router) |
+| `src/app/dashboard/` | Дашборд пользователя |
+| `src/app/library/` | Просмотр и поиск библиотек |
+| `src/app/explore/` | Каталог и фильтрация |
+| `src/app/admin/` | Административная панель |
+| `src/components/` | Переиспользуемые UI-компоненты |
+| `src/components/charts/` | Графики и диаграммы |
+| `src/components/layout/` | Шапка, сайдбар, обёртки |
+| `src/components/skeletons/` | Скелетоны загрузки |
+| `src/lib/` | API-клиент, auth, хуки |
+| `src/theme/` | Тема приложения (MUI) |
+
+</div>
+
+---
+
+## Команды frontend
+
 ```bash
-npm install
+# Перейти в директорию frontend
+cd frontend
+
+# Установка зависимостей
+pnpm install
+
+# Запуск dev-сервера (http://localhost:3000)
+pnpm dev
+
+# Сборка для production
+pnpm build
+
+# Запуск production-сборки
+pnpm start
+
+# Линтинг
+pnpm lint
 ```
- 
-### Запуск в режиме разработки
- 
-```bash
-npm run dev
-```
-Фронтенд будет доступен по адресу: **http://localhost:3000**
- 
-### Связь с API
-Для настройки подключения к бэкенду используйте файл `.env.local`:
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8081/api/v1
-```
+
+---
+
+## Конфигурация
+
+<div align="center">
+
+| **Файл** | **Назначение** |
+|:---|:---|
+| `next.config.ts` | Конфигурация Next.js |
+| `tsconfig.json` | Настройки TypeScript |
+| `eslint.config.mjs` | Правила линтинга |
+| `postcss.config.mjs` | Конфигурация PostCSS / Tailwind |
+
+</div>

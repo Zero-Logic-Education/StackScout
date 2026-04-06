@@ -4,6 +4,8 @@ package com.stackscout.service.impl;
 import com.stackscout.dto.pypi.PyPiDTOs;
 import com.stackscout.model.Library;
 import com.stackscout.service.PyPiService;
+import com.stackscout.source.SourceAdapter;
+import com.stackscout.source.SourceDefinition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,10 +20,9 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PyPiServiceImpl implements PyPiService {
+public class PyPiServiceImpl implements PyPiService, SourceAdapter {
 
 	private final RestClient restClient;
-
 	/**
 	 * Конструктор по умолчанию. Настраивает RestClient для PyPI API.
 	 */
@@ -65,6 +66,17 @@ public class PyPiServiceImpl implements PyPiService {
 			log.warn("Failed to fetch PyPI package info for: {}", packageName, e.getMessage());
 			return null;
 		}
+	}
+
+	@Override
+	public SourceDefinition getDefinition() {
+		return new SourceDefinition(
+				"pypi",
+				"PyPI",
+				"package-registry",
+				"Python package registry",
+				java.util.List.of("python")
+		);
 	}
 
 	private Library mapToLibrary(PyPiDTOs.PyPiResponse response) {

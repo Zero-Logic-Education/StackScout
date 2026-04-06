@@ -1,73 +1,60 @@
-# StackScout Infrastructure Documentation
+<div align="center">
 
-Папка содержит конфигурации для инфраструктурных компонентов.
+# StackScout Infrastructure
 
-## Структура
+**Инфраструктурные конфигурации проекта StackScout**
 
-### docker/
-Конфигурации для Docker контейнеров:
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://www.docker.com/)
+[![Prometheus](https://img.shields.io/badge/Prometheus-Metrics-E6522C?logo=prometheus)](https://prometheus.io/)
+[![Grafana](https://img.shields.io/badge/Grafana-Dashboards-F46800?logo=grafana)](https://grafana.com/)
 
-- **postgres/init.sql** - Инициализация PostgreSQL
-  - Создание таблиц (Packages, Licenses, Projects, Dependencies, Vulnerabilities)
-  - Создание индексов
-  - Вставка стандартных лицензий
-  - Установка триггеров для обновления временных меток
+</div>
 
-- **redis/redis.conf** - Конфигурация Redis кэша
-  - Параметры памяти (maxmemory: 256mb)
-  - RDB persistence
-  - Keyspace notifications для сессий
+---
 
-### monitoring/
+## Содержание
 
-#### prometheus/prometheus.yml
-- Конфигурация Prometheus для сбора метрик
-- Job'ы для:
-  - Самого Prometheus
-  - Spring Boot приложения (StackScout Backend)
-  - PostgreSQL (через экспортер)
-  - Redis (через экспортер)
-  - RabbitMQ
+- [Назначение](#назначение)
+- [Структура каталогов](#структура-каталогов)
+- [Конфигурация](#конфигурация)
 
-#### grafana/
-- **provisioning/datasources.yml** - Конфигурация источников данных
-  - Prometheus как основной источник
-  - Backend API как отдельный источник
+---
 
-- **provisioning/dashboards.yml** - Конфигурация дашбордов
-  - Подключение файлов дашбордов
+## Назначение
 
-- **provisioning/grafana.ini** - Конфигурация Grafana
-  - Параметры сервера
-  - Интеграция с PostgreSQL
-  - Учетные данные администратора
+Папка содержит инфраструктурные артефакты проекта:
 
-- **dashboards/backend-metrics.json** - Дашборд метрик Backend
-  - HTTP Request Rate
-  - Total Requests
-  - JVM Memory Usage
-  - JVM Thread Count
+- bootstrap для сервисов хранения и кэша;
+- мониторинг и визуализацию метрик;
+- вспомогательные конфиги контейнеров.
 
-## Использование
+---
 
-### Для локальной разработки
+## Структура каталогов
 
-Все конфиги уже интегрированы в docker-compose:
+<div align="center">
 
-```bash
-docker-compose up -d
-```
+| **Путь** | **Назначение** |
+|:---|:---|
+| `docker/postgres/init.sql` | Инициализация схем и данных PostgreSQL |
+| `docker/redis/redis.conf` | Конфигурация Redis (память, persistence) |
+| `monitoring/prometheus/prometheus.yml` | Источники сбора метрик Prometheus |
+| `monitoring/grafana/provisioning/` | Автоматический provisioning Grafana |
+| `monitoring/grafana/dashboards/` | Дашборды Grafana |
 
-### Доступ
+</div>
 
-- Prometheus: http://localhost:9090
-- Grafana: http://localhost:3000 (admin/admin)
-- Redis: localhost:6379
-- PostgreSQL: localhost:5432 (postgres/postgres)
+---
 
-## Развитие
+## Конфигурация
 
-- [ ] Добавить экспортеры для Postgres и Redis
-- [ ] Создать кастомные метрики для бизнес-логики
-- [ ] Настроить alerting правила
-- [ ] Добавить темплейты для дашбордов
+<div align="center">
+
+| **Сервис** | **Конфиг** | **Что настраивается** |
+|:---|:---|:---|
+| PostgreSQL | `docker/postgres/init.sql` | Инициализация схем и базовые данные |
+| Redis | `docker/redis/redis.conf` | Лимиты памяти и режим persistence |
+| Prometheus | `monitoring/prometheus/prometheus.yml` | Источники сбора метрик (scrape targets) |
+| Grafana | `monitoring/grafana/provisioning/` | Источники данных и дашборды |
+
+</div>

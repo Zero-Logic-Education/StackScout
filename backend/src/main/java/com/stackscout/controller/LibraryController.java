@@ -7,6 +7,7 @@ import com.stackscout.dto.LibraryDto;
 import com.stackscout.dto.MetricDetailDto;
 import com.stackscout.dto.UpdateLibraryRequest;
 import com.stackscout.service.LibraryService;
+import com.stackscout.source.SourceRegistryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -22,6 +23,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 
 /**
  * REST контроллер для управления библиотеками
@@ -34,6 +39,7 @@ import java.util.Map;
 public class LibraryController {
 
     private final LibraryService libraryService;
+    private final SourceRegistryService sourceRegistryService;
 
     /**
      * Получить список всех библиотек с поддержкой пагинации и сортировки.
@@ -94,17 +100,28 @@ public class LibraryController {
     public ResponseEntity<Map<String, Object>> searchLibraries(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String source,
+            @RequestParam(required = false) Integer minHealthScore,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<LibraryDto> result;
+        boolean hasMinHealthScore = minHealthScore != null && minHealthScore > 0;
+        String normalizedSource = normalizeSource(source);
 
-        if (query != null && !query.trim().isEmpty() && source != null && !source.trim().isEmpty()) {
-            result = libraryService.searchLibrariesBySource(query, source, pageable);
+        if (query != null && !query.trim().isEmpty() && normalizedSource != null && hasMinHealthScore) {
+            result = libraryService.searchLibrariesBySource(query, normalizedSource, minHealthScore, pageable);
+        } else if (query != null && !query.trim().isEmpty() && normalizedSource != null) {
+            result = libraryService.searchLibrariesBySource(query, normalizedSource, pageable);
+        } else if (query != null && !query.trim().isEmpty() && hasMinHealthScore) {
+            result = libraryService.searchLibraries(query, minHealthScore, pageable);
         } else if (query != null && !query.trim().isEmpty()) {
             result = libraryService.searchLibraries(query, pageable);
-        } else if (source != null && !source.trim().isEmpty()) {
-            result = libraryService.getLibrariesBySource(source, pageable);
+        } else if (normalizedSource != null && hasMinHealthScore) {
+            result = libraryService.getLibrariesBySource(normalizedSource, minHealthScore, pageable);
+        } else if (normalizedSource != null) {
+            result = libraryService.getLibrariesBySource(normalizedSource, pageable);
+        } else if (hasMinHealthScore) {
+            result = libraryService.getAllLibraries(minHealthScore, pageable);
         } else {
             result = libraryService.getAllLibraries(pageable);
         }
@@ -187,33 +204,160 @@ public class LibraryController {
     public ResponseEntity<HealthMetricsDto> getLibraryHealth(@PathVariable Long id) {
         LibraryDto library = libraryService.getLibraryById(id);
         
-        Integer healthScore = library.getHealthScore() != null ? library.getHealthScore() : 0;
+        int overall = clampScore(library.getHealthScore());
+        int actualityScore = calculateActualityScore(library);
+        int repositoryScore = calculateRepositoryScore(library);
+        int communityScore = calculateCommunityScore(library);
+        int activityScore = calculateActivityScore(actualityScore, repositoryScore, communityScore, overall);
+
+        String releaseRecency = getReleaseRecencyLabel(library.getLastRelease());
+        int descriptionLength = library.getDescription() != null ? library.getDescription().trim().length() : 0;
+        boolean hasRepository = library.getRepository() != null && !library.getRepository().isBlank();
+        boolean hasLicense = library.getLicense() != null && !library.getLicense().isBlank();
+        boolean hasDescription = descriptionLength >= 40;
+        int releaseAgeDays = getReleaseAgeDays(library.getLastRelease());
         
         HealthMetricsDto healthMetrics = HealthMetricsDto.builder()
                 .actuality(MetricDetailDto.builder()
-                        .score(Math.min(healthScore, 100))
+                        .score(actualityScore)
                         .label("Актуальность")
-                        .description("Показатель актуальности версии библиотеки")
+                        .description("Оценивает свежесть последнего релиза")
+                        .details(Map.of(
+                                "lastRelease", library.getLastRelease() != null ? library.getLastRelease() : "unknown",
+                                "releaseRecency", releaseRecency,
+                                "releaseAgeDays", releaseAgeDays >= 0 ? releaseAgeDays : "unknown"
+                        ))
                         .build())
                 .activity(MetricDetailDto.builder()
-                        .score(Math.min(healthScore, 100))
+                        .score(activityScore)
                         .label("Активность")
-                        .description("Уровень активности разработки")
+                        .description("Композитная оценка динамики проекта")
+                        .details(Map.of(
+                                "overallHealth", overall,
+                                "basis", "actuality+repository+community"
+                        ))
                         .build())
                 .repository(MetricDetailDto.builder()
-                        .score(Math.min(healthScore, 100))
+                        .score(repositoryScore)
                         .label("Репозиторий")
-                        .description("Качество репозитория")
+                        .description("Наличие репозитория и наполненность метаданных")
+                        .details(Map.of(
+                                "hasRepository", hasRepository,
+                                "hasLicense", hasLicense,
+                                "hasDescription", hasDescription,
+                                "descriptionLength", descriptionLength
+                        ))
                         .build())
                 .community(MetricDetailDto.builder()
-                        .score(Math.min(healthScore, 100))
+                        .score(communityScore)
                         .label("Сообщество")
-                        .description("Здоровье сообщества")
+                        .description("Косвенная оценка зрелости экосистемы")
+                        .details(Map.of(
+                                "source", library.getSource() != null ? library.getSource() : "unknown",
+                                "hasRepository", hasRepository,
+                                "hasLicense", hasLicense
+                        ))
                         .build())
-                .overallScore(healthScore)
+                .overallScore(overall)
                 .build();
         
         return ResponseEntity.ok(healthMetrics);
+    }
+
+    private int clampScore(Integer score) {
+        if (score == null) return 0;
+        return Math.max(0, Math.min(100, score));
+    }
+
+    private int calculateActualityScore(LibraryDto library) {
+        int days = getReleaseAgeDays(library.getLastRelease());
+        if (days < 0) return 20;
+        if (days <= 30) return 100;
+        if (days <= 90) return 90;
+        if (days <= 180) return 75;
+        if (days <= 365) return 55;
+        if (days <= 730) return 35;
+        return 15;
+    }
+
+    private int calculateRepositoryScore(LibraryDto library) {
+        int score = 0;
+
+        if (library.getRepository() != null && !library.getRepository().isBlank()) {
+            score += 60;
+        }
+
+        if (library.getLicense() != null && !library.getLicense().isBlank()) {
+            score += 20;
+        }
+
+        if (library.getDescription() != null && library.getDescription().trim().length() >= 40) {
+            score += 20;
+        }
+
+        return Math.min(100, score);
+    }
+
+    private int calculateCommunityScore(LibraryDto library) {
+        int score = 10;
+
+        String source = library.getSource() != null ? library.getSource().toLowerCase() : "";
+        if ("npm".equals(source) || "pypi".equals(source)) {
+            score += 30;
+        } else if ("maven".equals(source)) {
+            score += 25;
+        } else {
+            score += 20;
+        }
+
+        if (library.getRepository() != null && !library.getRepository().isBlank()) {
+            score += 35;
+        }
+
+        if (library.getLicense() != null && !library.getLicense().isBlank()) {
+            score += 25;
+        }
+
+        return Math.min(100, score);
+    }
+
+    private int calculateActivityScore(int actuality, int repository, int community, int overall) {
+        double composite = actuality * 0.45 + repository * 0.25 + community * 0.15 + overall * 0.15;
+        return Math.max(0, Math.min(100, (int) Math.round(composite)));
+    }
+
+    private String getReleaseRecencyLabel(String release) {
+        int days = getReleaseAgeDays(release);
+        if (days < 0) return "unknown";
+        if (days <= 30) return "fresh";
+        if (days <= 180) return "recent";
+        if (days <= 365) return "aging";
+        return "stale";
+    }
+
+    private int getReleaseAgeDays(String release) {
+        if (release == null || release.isBlank()) return -1;
+
+        try {
+            LocalDateTime dt = LocalDateTime.parse(release);
+            return (int) ChronoUnit.DAYS.between(dt.toLocalDate(), LocalDate.now());
+        } catch (Exception ignored) {
+            // try next format
+        }
+
+        try {
+            OffsetDateTime odt = OffsetDateTime.parse(release);
+            return (int) ChronoUnit.DAYS.between(odt.toLocalDate(), LocalDate.now());
+        } catch (Exception ignored) {
+            // try next format
+        }
+
+        try {
+            LocalDate date = LocalDate.parse(release);
+            return (int) ChronoUnit.DAYS.between(date, LocalDate.now());
+        } catch (Exception ignored) {
+            return -1;
+        }
     }
 
     /**
@@ -243,10 +387,16 @@ public class LibraryController {
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalLibraries", libraries.size());
-        stats.put("sources", Map.of(
-                "pypi", libraries.stream().filter(l -> "pypi".equals(l.getSource())).count(),
-                "npm", libraries.stream().filter(l -> "npm".equals(l.getSource())).count(),
-                "dockerhub", libraries.stream().filter(l -> "dockerhub".equals(l.getSource())).count()));
+        Map<String, Long> sourceCounts = new HashMap<>();
+        for (LibraryDto library : libraries) {
+            String normalized = normalizeSource(library.getSource());
+            if (normalized == null) {
+                continue;
+            }
+            Long current = sourceCounts.get(normalized);
+            sourceCounts.put(normalized, current == null ? 1L : current + 1L);
+        }
+        stats.put("sources", sourceCounts);
         stats.put("averageHealthScore",
                 libraries.stream()
                         .filter(l -> l.getHealthScore() != null)
@@ -255,5 +405,17 @@ public class LibraryController {
                         .orElse(0.0));
 
         return ResponseEntity.ok(stats);
+    }
+
+    private String normalizeSource(String source) {
+        if (source == null || source.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return sourceRegistryService.normalize(source);
+        } catch (IllegalArgumentException ignored) {
+            return source.trim().toLowerCase();
+        }
     }
 }

@@ -87,7 +87,7 @@ export default function DistributionChart({
         {title}
       </Typography>
       <Box sx={{ width: "100%", height: 300, mt: 2 }}>
-        <ResponsiveContainer>
+        <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={data}

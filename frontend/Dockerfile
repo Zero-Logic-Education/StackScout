@@ -15,6 +15,9 @@ RUN pnpm install --frozen-lockfile
 # Копируем исходный код
 COPY . .
 
+# Создаем public если не существует (Next.js требует эту папку)
+RUN mkdir -p public
+
 # Аргумент для API URL
 ARG NEXT_PUBLIC_API_URL=http://localhost:8081/api/v1
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}

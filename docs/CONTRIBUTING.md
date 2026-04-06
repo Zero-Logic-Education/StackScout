@@ -1,612 +1,218 @@
-# Руководство для контрибьюторов
-
 <div align="center">
 
-**Как внести вклад в развитие StackScout**
+# Contributing to StackScout
+
+**Руководство по вкладу в проект без дублирования основной документации**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../LICENSE)
-
-[Процесс разработки](#процесс-разработки) • [Установка](#установка) • [Правила кода](#правила-кода) • [Pull Requests](#pull-requests)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#pull-requests)
 
 </div>
 
 ---
 
-## Для начинающих
+## Содержание
 
-### По каким направлениям можно внести вклад?
-
-StackScout активно приветствует контрибьюции в следующих областях:
-
-- **Backend (Java)**: API improvements, performance optimization, bug fixes
-- **Frontend (Next.js/React)**: UI/UX improvements, new features, testing
-- **DevOps**: Docker, CI/CD, deployment optimization
-- **Documentation**: Улучшение документации, добавление примеров
-- **Testing**: Unit tests, integration tests, E2E tests
-- **Translations**: Локализация на другие языки
-
-### Чего искать для начала?
-
-Начните с issues, отмеченных как:
-- `good first issue` - идеальные для новичков
-- `help wanted` - нужна помощь сообщества
-- `documentation` - работа с документацией
+- [Что вносить](#что-вносить)
+- [Процесс работы](#процесс-работы)
+- [Требования к изменениям](#требования-к-изменениям)
+- [Тестирование изменений](#тестирование-изменений)
+- [Pull Requests](#pull-requests)
+- [Commit сообщения](#commit-сообщения)
+- [Коммуникация](#коммуникация)
 
 ---
 
-## Процесс разработки
+## Что вносить
 
-### 1. Форк и клонирование репозитория
+<div align="center">
+
+| **Направление** | **Примеры вклада** |
+|:---|:---|
+| Backend | API, производительность, исправления ошибок |
+| Frontend | UX/UI, новые сценарии, устойчивость интерфейса |
+| DevOps | Контейнеризация, CI/CD, наблюдаемость |
+| Testing | Unit, integration, e2e |
+| Documentation | Улучшение и актуализация документации |
+| Translation | Локализация материалов |
+
+</div>
+
+Для старта выбирайте задачи с метками:
+
+- `good first issue`
+- `help wanted`
+- `documentation`
+
+---
+
+## Процесс работы
+
+### 1. Подготовьте форк и upstream
 
 ```bash
-# Форк репозитория на GitHub (кнопка Fork)
-
-# Клонирование вашего форка
+# Клонировать свой форк
 git clone https://github.com/YOUR_USERNAME/StackScout.git
+
+# Перейти в директорию проекта
 cd StackScout
 
-# Добавление ссылки на оригинальный репозиторий
-git remote add upstream https://github.com/original/StackScout.git
+# Добавить оригинальный репозиторий как upstream
+git remote add upstream https://github.com/Zero-Logic-Education/StackScout.git
 ```
 
-### 2. Создание ветки для разработки
+### 2. Создайте отдельную ветку
 
 ```bash
-# Получение актуальной версии мастера
+# Получить актуальные изменения из upstream
 git fetch upstream
-git checkout upstream/main
 
-# Создание ветки с описательным названием
-git checkout -b feature/your-feature-name
-# или
-git checkout -b fix/issue-description
-# или
-git checkout -b docs/documentation-update
+# Создать ветку от upstream/main
+git checkout -b feature/short-description upstream/main
 ```
 
-**Правила именования веток:**
-- `feature/*` - новые функции
-- `fix/*` - исправление ошибок
-- `docs/*` - документация
-- `refactor/*` - рефакторинг
-- `test/*` - добавление тестов
+Допустимые префиксы веток:
 
-Пример: `feature/license-compatibility-check`
+<div align="center">
+
+| **Префикс** | **Назначение** |
+|:---|:---|
+| `feature/*` | Новая функциональность |
+| `fix/*` | Исправление ошибок |
+| `docs/*` | Изменения в документации |
+| `refactor/*` | Рефакторинг без изменения поведения |
+| `test/*` | Тесты и тестовая инфраструктура |
+
+</div>
+
+### 3. Держите ветку актуальной
+
+```bash
+# Обновить ссылки на ветки upstream
+git fetch upstream
+
+# Перебазировать текущую ветку на upstream/main
+git rebase upstream/main
+```
 
 ---
 
-## Установка локального окружения
+## Требования к изменениям
 
-### Требования
+- Один Pull Request должен решать одну задачу.
+- Изменения должны быть локальными и понятными по объему.
+- Новая функциональность должна сопровождаться тестами.
+- Если поведение изменено, документация должна быть обновлена.
+- Нельзя добавлять секреты, токены, пароли и приватные ключи.
 
-- **Java 21+** (для backend)
-- **Node.js 18+** (для frontend)
-- **PostgreSQL 16**
-- **Docker & Docker Compose**
-- **Git**
+### Код-стиль (кратко)
 
-### Backend (Java/Spring Boot)
+<div align="center">
 
-```bash
-cd backend
+| **Стек** | **Ожидание** |
+|:---|:---|
+| Java | Понятные имена, единый стиль аннотаций, публичные API с документацией |
+| TypeScript/React | Строгая типизация, без неявных `any`, предсказуемые пропсы и контракты |
+| Комментарии | Объясняют причину решения, а не пересказывают код |
 
-# Установка зависимостей (gradle wrapper)
-./gradlew build
-
-# Запуск в режиме разработки
-./gradlew bootRun
-
-# Запуск тестов
-./gradlew test
-
-# Запуск тестов с покрытием
-./gradlew test jacocoTestReport
-```
-
-**Environment переменные:**
-
-```bash
-# .env.local или переменные окружения
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/stackscout_dev
-SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=postgres
-SPRING_DATA_REDIS_HOST=localhost
-SPRING_RABBITMQ_HOST=localhost
-```
-
-### Frontend (Next.js/React)
-
-```bash
-cd frontend
-
-# Установка зависимостей (используем pnpm)
-pnpm install
-
-# Запуск в режиме разработки
-pnpm dev
-
-# Сборка для production
-pnpm build
-
-# Запуск тестов
-pnpm test
-
-# Linting
-pnpm lint
-```
-
-**Environment переменные:**
-
-```bash
-# .env.local
-NEXT_PUBLIC_API_URL=http://localhost:8081/api/v1
-```
-
-### Docker Compose (быстрый старт)
-
-```bash
-# Запуск всех сервисов
-docker-compose up -d
-
-# Проверка статуса
-docker-compose ps
-
-# Остановка
-docker-compose down
-
-# Просмотр логов
-docker-compose logs -f app
-```
-
-После запуска:
-- Backend: http://localhost:8081
-- Frontend: http://localhost:3000
-- PostgreSQL: localhost:5432
-- Redis: localhost:6379
-- RabbitMQ: http://localhost:15672 (guest/guest)
+</div>
 
 ---
 
-## Правила кода
+## Тестирование изменений
 
-### Java (Backend)
+Перед PR убедитесь, что:
 
-#### Стиль кодирования
-
-```java
-// ✅ Хорошо: camelCase для переменных/методов
-private String packageName;
-public PackageDto getPackageById(Long id) { }
-
-// ❌ Недопустимо: snake_case
-private String package_name;
-
-// ✅ Используйте описательные имена
-public List<PackageDto> findActivePackages() { }
-
-// ❌ Избегайте сокращений
-public List<PackageDto> getActPkgs() { }
-```
-
-#### Конвенции
-
-```java
-// Используйте Spring annotations
-@Service
-@Transactional
-public class PackageService {
-    
-    @Autowired
-    private PackageRepository packageRepository;
-    
-    // Документация методов
-    /**
-     * Получить пакет по ID
-     *
-     * @param id идентификатор пакета
-     * @return PackageDto
-     * @throws ResourceNotFoundException если пакет не найден
-     */
-    public PackageDto getPackageById(Long id) {
-        // Implementation
-    }
-    
-    // Обработка исключений
-    try {
-        return packageRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException());
-    } catch (DatabaseException e) {
-        logger.error("Database error: {}", e.getMessage());
-        throw new RuntimeException("Failed to fetch package", e);
-    }
-}
-```
-
-#### Структура класса
-
-```java
-@Service
-public class ExampleService {
-    
-    // 1. Константы
-    private static final String LOG_PREFIX = "ExampleService";
-    
-    // 2. Зависимости
-    @Autowired
-    private ExampleRepository repository;
-    
-    @Autowired
-    private Logger logger;
-    
-    // 3. Поля
-    private String state;
-    
-    // 4. Конструктор(ы)
-    public ExampleService() { }
-    
-    // 5. Публичные методы
-    public void publicMethod() { }
-    
-    // 6. Приватные методы
-    private void privateMethod() { }
-}
-```
-
-### TypeScript/React (Frontend)
-
-#### Стиль компонентов
-
-```typescript
-// ✅ Функциональный компонент с типами
-interface PackageCardProps {
-  packageId: number;
-  name: string;
-  healthScore: number;
-  onSelect: (id: number) => void;
-}
-
-export const PackageCard: React.FC<PackageCardProps> = ({
-  packageId,
-  name,
-  healthScore,
-  onSelect,
-}) => {
-  return (
-    <div className="card">
-      <h3>{name}</h3>
-      <p>Health: {healthScore}</p>
-      <button onClick={() => onSelect(packageId)}>Select</button>
-    </div>
-  );
-};
-
-// ❌ Недопустимо: без типов
-const PackageCard = (props) => {
-  return <div>{props.name}</div>;
-};
-```
-
-#### Конвенции
-
-```typescript
-// Используйте const и let (не var)
-const MAX_RETRIES = 3;
-let currentAttempt = 0;
-
-// Явная типизация
-interface ApiResponse<T> {
-  data: T;
-  status: number;
-  message: string;
-}
-
-// Используйте async/await
-async function fetchPackages(): Promise<Package[]> {
-  try {
-    const response = await apiClient.get('/packages');
-    return response.data;
-  } catch (error) {
-    console.error('Failed to fetch packages:', error);
-    throw error;
-  }
-}
-
-// Деструктуризация
-const { data, status, message } = response;
-```
-
-### Правила во всех языках
-
-1. **Комментарии**: Объясняйте ПОЧЕМУ, а не ЧТО
-2. **Документация**: Документируйте публичные методы
-3. **Логирование**: Используйте уровни логирования правильно
-4. **Производительность**: Профилируйте перед оптимизацией
-5. **Безопасность**: Никогда не коммитьте secrets/passwords
-
----
-
-## Тестирование
-
-### Backend (JUnit 5 + Mockito)
-
-```java
-@SpringBootTest
-class PackageServiceTest {
-    
-    @Mock
-    private PackageRepository packageRepository;
-    
-    @InjectMocks
-    private PackageService packageService;
-    
-    @Test
-    void shouldReturnPackageById() {
-        // Arrange
-        Long packageId = 1L;
-        Package package = new Package();
-        package.setId(packageId);
-        package.setName("requests");
-        
-        when(packageRepository.findById(packageId))
-            .thenReturn(Optional.of(package));
-        
-        // Act
-        PackageDto result = packageService.getPackageById(packageId);
-        
-        // Assert
-        assertThat(result.getId()).isEqualTo(packageId);
-        assertThat(result.getName()).isEqualTo("requests");
-        
-        // Verify
-        verify(packageRepository, times(1)).findById(packageId);
-    }
-}
-```
-
-### Frontend (Jest)
-
-```typescript
-import { render, screen, fireEvent } from '@testing-library/react';
-import { PackageCard } from './PackageCard';
-
-describe('PackageCard', () => {
-  it('should render package name', () => {
-    const mockOnSelect = jest.fn();
-    
-    render(
-      <PackageCard
-        packageId={1}
-        name="requests"
-        healthScore={92}
-        onSelect={mockOnSelect}
-      />
-    );
-    
-    expect(screen.getByText('requests')).toBeInTheDocument();
-  });
-  
-  it('should call onSelect when clicked', () => {
-    const mockOnSelect = jest.fn();
-    
-    render(
-      <PackageCard
-        packageId={1}
-        name="requests"
-        healthScore={92}
-        onSelect={mockOnSelect}
-      />
-    );
-    
-    fireEvent.click(screen.getByText('Select'));
-    expect(mockOnSelect).toHaveBeenCalledWith(1);
-  });
-});
-```
-
-### Требования по тестированию
-
-- **Покрытие**: Минимум 80% для новых функций
-- **Unit тесты**: Для всех сервисов и утилит
-- **Integration тесты**: Для API endpoints
-- **Test naming**: Описывает что тестируется и ожидаемый результат
-
-Запуск:
-```bash
-# Backend
-./gradlew test
-
-# Frontend
-pnpm test
-```
+- тесты проходят локально;
+- линтеры и проверки стиля проходят;
+- изменение покрыто тестами на уровне, достаточном для регрессий.
 
 ---
 
 ## Pull Requests
 
-### Прежде чем создавать PR
+### Чек-лист перед открытием PR
 
-1. **Обновите вашу ветку**
-   ```bash
-   git fetch upstream
-   git rebase upstream/main
-   ```
+- [ ] Ветка синхронизирована с upstream/main
+- [ ] Лишние/временные файлы не добавлены
+- [ ] Добавлены или обновлены тесты
+- [ ] Обновлена документация при изменении поведения
+- [ ] Изменения проходят локальные проверки
 
-2. **Запустите тесты локально**
-   ```bash
-   # Backend
-   ./gradlew test
-   
-   # Frontend
-   pnpm test
-   ```
-
-3. **Проверьте лиминг**
-   ```bash
-   # Backend - через IDE или
-   ./gradlew checkstyleMain
-   
-   # Frontend
-   pnpm lint
-   ```
-
-4. **Создайте нужные тесты**
-
-### Создание PR
-
-1. **Пуш ветки в ваш форк**
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-2. **Откройте PR на GitHub**
-
-3. **Заполните описание PR по шаблону:**
+### Шаблон описания PR
 
 ```markdown
 ## Описание
 Что было сделано и почему
 
 ## Type of change
-- [ ] Bug fix (исправление ошибки)
-- [ ] New feature (новая функция)
+- [ ] Bug fix
+- [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
-## Как это было протестировано?
-Описание процесса тестирования
+## Как проверялось
+Кратко опишите сценарии проверки
 
 ## Чек-лист
-- [ ] Код следует стилю проекта
-- [ ] Добавлены необходимые тесты
+- [ ] Код соответствует стилю проекта
+- [ ] Добавлены нужные тесты
 - [ ] Обновлена документация
-- [ ] Все тесты проходят
-- [ ] Не добавлены ненужные файлы
+- [ ] Все проверки проходят
 
-## Скриншоты (если UI изменения)
-[Добавить скриншоты]
-
-## Закрывает issue (если есть)
+## Related issue
 Closes #123
 ```
 
-### Требования к PR
+### После открытия PR
 
-- [ ] Один функционал на один PR
-- [ ] Понятное описание изменений
-- [ ] Тесты для новых функций
-- [ ] Обновленная документация
-- [ ] Без конфликтов с `main` веткой
-
-### Что происходит после создания PR?
-
-1. **CI/CD проверки**: Автоматизированное тестирование и linting
-2. **Код Review**: Минимум 1 одобрения от мейнтейнера
-3. **Обсуждение**: Если есть замечания, их нужно исправить
-4. **Merge**: Мейнтейнер объединит ветку в `main`
+1. Автопроверки CI должны быть зелеными.
+2. Требуется минимум одно ревью и одобрение.
+3. Замечания ревью должны быть закрыты до merge.
 
 ---
 
 ## Commit сообщения
 
-Используйте **Conventional Commits**:
+Используйте формат Conventional Commits:
 
-```
+```text
 <type>(<scope>): <subject>
-<BLANK LINE>
-<body>
-<BLANK LINE>
-<footer>
 ```
 
-### Примеры
+Рекомендуемые type:
 
-```
-feat(api): add package search endpoint
-- Implement search by name and health score
-- Add pagination support
-- Tests included
+<div align="center">
 
-Closes #123
-
----
-
-fix(frontend): resolve package card rendering bug
-The component was not updating when props changed
-
----
-
-docs(architecture): update database schema diagram
-
----
-
-refactor(service): simplify health score calculation
-No functional changes, improved readability
-
----
-
-test(backend): add unit tests for PackageService
-```
-
-### Type (тип коммита)
-
-| Type | Описание |
-|------|---------|
-| `feat` | Новая функция |
+| **Type** | **Назначение** |
+|:---|:---|
+| `feat` | Новая функциональность |
 | `fix` | Исправление ошибки |
-| `docs` | Документация |
-| `style` | Форматирование (не меняет логику) |
-| `refactor` | Рефакторинг кода |
+| `docs` | Изменения в документации |
+| `refactor` | Рефакторинг без изменения поведения |
+| `test` | Добавление или обновление тестов |
+| `chore` | Служебные изменения и обслуживание |
 | `perf` | Оптимизация производительности |
-| `test` | Добавление тестов |
-| `chore` | Изменение конфигурации, зависимостей |
+| `style` | Форматирование и stylistic-правки |
 
-### Scope (область)
+</div>
 
-Можно опустить, но рекомендуется указывать:
-- `api`, `service`, `controller`, `repository` (backend)
-- `component`, `page`, `lib`, `hook` (frontend)
-- `docker`, `pipeline`, `config` (devops)
+Рекомендуемые scope:
 
----
+<div align="center">
 
-## Общение с сообществом
+| **Scope** | **Примеры** |
+|:---|:---|
+| `backend` | `api`, `service`, `controller`, `repository` |
+| `frontend` | `component`, `page`, `lib`, `hook` |
+| `devops` | `docker`, `pipeline`, `config` |
 
-### Где задавать вопросы?
-
-- **Issues** на GitHub - для баг-репортов и функций
-- **Discussions** на GitHub - для вопросов и идей
-- **Pull Requests** - для обсуждения кода
-
-### Правила вежливости (Code of Conduct)
-
-- Будьте уважительны к другим контрибьюторам
-- Принимайте конструктивную критику
-- Сосредоточьтесь на проблеме, а не на человеке
-- Не допускать дискриминацию и оскорбления
+</div>
 
 ---
 
-## Раскрытие и признание
+## Коммуникация
 
-Мы благодарны всем, кто вносит вклад в StackScout!
-
-Список контрибьюторов ведется в [CONTRIBUTORS.md](#) (в разработке).
-
----
-
-## Дополнительные ресурсы
-
-- [Architecture](./ARCHITECTURE.md) - Техническая архитектура
-- [API Documentation](./API.md) - REST API
-- [Database Schema](./DATABASE.md) - Структура БД
-- [Backend README](../backend/README.md)
-- [Frontend README](../frontend/README.md)
-- [License](../LICENSE)
-
----
-
-## Вопросы?
-
-Открывайте issue с меткой `question` или создавайте Discussion.
-
-**Спасибо за вклад в StackScout! 🚀**
+- Используйте Issues для багов и feature-запросов.
+- Используйте Discussions для вопросов и идей.
+- В обсуждениях придерживайтесь уважительного и конструктивного тона.

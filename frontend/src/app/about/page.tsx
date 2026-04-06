@@ -1,33 +1,22 @@
 import type { Metadata } from "next";
-import { Container, Box, Typography, Card, CardContent, Stack, Chip, Divider } from '@mui/material';
+import { Container, Box, Typography, Card, CardContent, Button } from '@mui/material';
 import { 
   RocketLaunch, 
   Visibility, 
-  EmojiEvents,
   Code,
   Security,
   Speed,
   Public,
   GitHub
 } from '@mui/icons-material';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: "О нас | StackScout",
-  description: "Узнайте больше о StackScout — профессиональной платформе для анализа Open Source библиотек",
+  description: "Актуальная информация о StackScout: миссия, ценности и репозиторий проекта",
 };
 
 export default function AboutPage() {
-  const technologies = [
-    'Next.js 15',
-    'Spring Boot 3',
-    'PostgreSQL',
-    'Redis',
-    'TypeScript',
-    'Material-UI',
-    'Docker',
-    'REST API',
-  ];
-
   const values = [
     {
       icon: Code,
@@ -42,7 +31,7 @@ export default function AboutPage() {
     {
       icon: Speed,
       title: 'Производительность',
-      description: 'Быстрый и эффективный анализ тысяч библиотек в реальном времени',
+      description: 'Оптимизированные процессы сбора и анализа данных для быстрого принятия решений',
     },
     {
       icon: Public,
@@ -53,20 +42,20 @@ export default function AboutPage() {
 
   const features = [
     {
-      title: 'Многоплатформенная поддержка',
-      description: 'Анализ библиотек из npm, Maven, PyPI, NuGet и других популярных экосистем',
+      title: 'Управление программными активами (SAM)',
+      description: 'Централизованный анализ зависимостей, рисков лицензирования и технического долга по библиотекам.',
     },
     {
-      title: 'Глубокая аналитика',
-      description: 'Метрики качества кода, безопасности, производительности и активности сообщества',
+      title: 'Глубокая аналитика и мониторинг',
+      description: 'Метрики качества, уязвимостей, активности экосистем и обновлений в едином контуре аналитики.',
     },
     {
-      title: 'Автоматизация',
-      description: 'CI/CD интеграция для автоматической проверки зависимостей в ваших проектах',
+      title: 'Асинхронная обработка данных',
+      description: 'Фоновые задачи и очередь сообщений для стабильного сбора данных из внешних источников.',
     },
     {
-      title: 'Предиктивный анализ',
-      description: 'ML-модели для прогнозирования надёжности и долговечности библиотек',
+      title: 'Production-ready инфраструктура',
+      description: 'Docker Compose, healthchecks сервисов и наблюдаемость через Prometheus/Grafana.',
     },
   ];
 
@@ -93,8 +82,26 @@ export default function AboutPage() {
             color="text.secondary"
             sx={{ maxWidth: '800px', mx: 'auto', lineHeight: 1.7 }}
           >
-            Профессиональная платформа для анализа и мониторинга Open Source библиотек
+            Актуальная платформа для анализа и мониторинга Open Source библиотек с фокусом
+            на безопасность, лицензии и управляемость зависимостей
           </Typography>
+          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+            <Link
+              href="https://github.com/Zero-Logic-Education/StackScout.git"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: 'none' }}
+            >
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<GitHub />}
+                sx={{ px: 4, py: 1.5, fontWeight: 700 }}
+              >
+                Перейти в репозиторий
+              </Button>
+            </Link>
+          </Box>
         </Box>
 
         {/* Mission */}
@@ -126,7 +133,8 @@ export default function AboutPage() {
               <Typography variant="body1" sx={{ fontSize: '1.1rem', lineHeight: 1.8, color: 'text.secondary' }}>
                 Мы создаём инструменты, которые помогают разработчикам и командам принимать 
                 обоснованные решения о выборе Open Source зависимостей. Наша цель — сделать 
-                экосистему открытого ПО более безопасной, прозрачной и доступной для всех.
+                экосистему открытого ПО более безопасной, прозрачной и предсказуемой
+                для продуктовых и инженерных команд.
               </Typography>
             </Box>
             <Box>
@@ -138,8 +146,8 @@ export default function AboutPage() {
               </Box>
               <Typography variant="body1" sx={{ fontSize: '1.1rem', lineHeight: 1.8, color: 'text.secondary' }}>
                 Мы стремимся стать главным источником аналитической информации о Open Source 
-                библиотеках, предоставляя разработчикам данные для выбора надёжных, 
-                безопасных и поддерживаемых зависимостей.
+                библиотеках, чтобы команды могли быстрее переходить от анализа данных
+                к конкретным решениям в спринтах и релизах.
               </Typography>
             </Box>
           </Box>
@@ -209,6 +217,7 @@ export default function AboutPage() {
           </Box>
         </Box>
 
+
         {/* What We Offer */}
         <Box sx={{ mb: 10 }}>
           <Typography
@@ -262,73 +271,43 @@ export default function AboutPage() {
           </Box>
         </Box>
 
-        {/* Tech Stack */}
+        {/* Repository Snapshot */}
         <Card
           elevation={0}
           sx={{
-            p: { xs: 4, md: 6 },
-            mb: 8,
+            p: { xs: 4, md: 5 },
+            mb: 10,
             border: '1px solid',
-            borderColor: 'divider',
+            borderColor: 'rgba(76, 175, 80, 0.25)',
+            backgroundImage: 'linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, rgba(26, 26, 26, 0.05) 100%)',
           }}
         >
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <EmojiEvents sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-            <Typography variant="h3" fontWeight={700} gutterBottom>
-              Современный технологический стек
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
-              StackScout построен с использованием передовых технологий для обеспечения 
-              максимальной производительности и надёжности
-            </Typography>
-          </Box>
-          <Divider sx={{ my: 4 }} />
-          <Stack direction="row" spacing={2} flexWrap="wrap" justifyContent="center" useFlexGap>
-            {technologies.map((tech, index) => (
-              <Chip
-                key={index}
-                label={tech}
-                variant="outlined"
-                sx={{
-                  fontSize: '1rem',
-                  py: 2.5,
-                  px: 1,
-                  borderColor: 'primary.main',
-                  color: 'primary.main',
-                  fontWeight: 600,
-                }}
-              />
-            ))}
-          </Stack>
-        </Card>
-
-        {/* Open Source */}
-        <Card
-          elevation={0}
-          sx={{
-            p: { xs: 4, md: 6 },
-            textAlign: 'center',
-            backgroundImage: `linear-gradient(135deg, rgba(26, 26, 26, 0.8) 0%, rgba(55, 100, 80, 0.2) 100%)`,
-            border: '1px solid',
-            borderColor: 'rgba(76, 175, 80, 0.3)',
-          }}
-        >
-          <GitHub sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
-          <Typography variant="h3" fontWeight={700} gutterBottom>
-            Открытый исходный код
+          <Typography variant="h4" fontWeight={700} sx={{ mb: 2, textAlign: 'center' }}>
+            Репозиторий проекта
           </Typography>
           <Typography
             variant="body1"
             color="text.secondary"
-            sx={{ mb: 3, maxWidth: '700px', mx: 'auto', fontSize: '1.1rem', lineHeight: 1.8 }}
+            sx={{ mb: 3, maxWidth: '820px', mx: 'auto', textAlign: 'center', lineHeight: 1.8 }}
           >
-            StackScout — это open source проект. Мы верим в прозрачность и приветствуем вклад 
-            сообщества. Наш код доступен на GitHub, и мы рады любым улучшениям и предложениям.
+            В GitHub-репозитории доступны исходный код, релизы, документация и история развития проекта.
+            Этот раздел отражает открытый и прозрачный подход к развитию StackScout.
           </Typography>
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Chip label="MIT License" color="primary" />
-            <Chip label="Community Driven" color="primary" />
-            <Chip label="Actively Maintained" color="primary" />
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Link
+              href="https://github.com/Zero-Logic-Education/StackScout.git"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: 'none' }}
+            >
+              <Button
+                variant="outlined"
+                startIcon={<GitHub />}
+                sx={{ px: 3.5, py: 1.2, fontWeight: 700, borderWidth: 1.5 }}
+              >
+                Открыть GitHub
+              </Button>
+            </Link>
           </Box>
         </Card>
       </Container>
