@@ -236,6 +236,14 @@ export interface CacheStats {
   cacheNames: string[];
 }
 
+export interface AdminActionResult {
+  success: boolean;
+  message: string;
+  clearedCaches?: number;
+  normalizedCount?: number;
+  removedCount?: number;
+}
+
 export interface SourceDefinition {
   key: string;
   displayName: string;
@@ -344,7 +352,7 @@ export const adminApi = {
     apiClient.get<CacheStats>(`/admin/statistics/cache-stats`),
 
   clearCache: () =>
-    apiClient.post(`/admin/statistics/clear-cache`),
+    apiClient.post<AdminActionResult>(`/admin/statistics/clear-cache`),
 
   // Users
   getUsers: (page = 0, size = 20) =>
@@ -401,8 +409,8 @@ export const adminApi = {
     adminApiClient.delete(`/api/admin/libraries/${id}`),
 
   normalizeLicenses: () =>
-    adminApiClient.post(`/api/admin/libraries/bulk-normalize-licenses`),
+    adminApiClient.post<AdminActionResult>(`/api/admin/libraries/bulk-normalize-licenses`),
 
   removeDuplicates: () =>
-    adminApiClient.delete(`/api/admin/libraries/remove-duplicates`),
+    adminApiClient.delete<AdminActionResult>(`/api/admin/libraries/remove-duplicates`),
 };

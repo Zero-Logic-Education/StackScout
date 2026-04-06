@@ -9,6 +9,7 @@ import com.stackscout.mapper.LibraryMapper;
 import com.stackscout.model.Library;
 import com.stackscout.model.UpdateType;
 import com.stackscout.repository.LibraryRepository;
+import com.stackscout.service.LicenseService;
 import com.stackscout.service.LibraryService;
 import com.stackscout.service.LibraryUpdateService;
 import com.stackscout.source.SourceRegistryService;
@@ -25,6 +26,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -41,6 +44,7 @@ public class LibraryServiceImpl implements LibraryService {
     private final LibraryMapper libraryMapper;
     private final LibraryUpdateService libraryUpdateService;
     private final SourceRegistryService sourceRegistryService;
+    private final LicenseService licenseService;
     
     @Override
     public Page<LibraryDto> getAllLibraries(Pageable pageable) {
@@ -261,28 +265,58 @@ public class LibraryServiceImpl implements LibraryService {
 
     @Override
     @Transactional
-    public void bulkNormalizeLicenses() {
+    public long bulkNormalizeLicenses() {
         log.info("Начало массовой нормализации лицензий");
         
         List<Library> libraries = libraryRepository.findAll();
-        libraries.forEach(library -> {
-            String normalizedLicense = library.getLicense();
-            log.debug("Нормализация лицензии для: {} ({})", library.getName(), normalizedLicense);
-        });
+        long normalizedCount = 0;
+
+        for (Library library : libraries) {
+            String currentLicense = library.getLicense();
+            String normalizedLicense = licenseService.normalizeLicense(currentLicense);
+
+            if (!Objects.equals(currentLicense, normalizedLicense)) {
+                library.setLicense(normalizedLicense);
+                libraryRepository.save(library);
+                normalizedCount++;
+                log.debug("Нормализация лицензии для: {} ({} -> {})", library.getName(), currentLicense, normalizedLicense);
+            }
+        }
         
-        log.info("Массовая нормализация лицензий завершена для {} библиотек", libraries.size());
+        log.info("Массовая нормализация лицензий завершена: изменено {} из {} библиотек", normalizedCount, libraries.size());
+        return normalizedCount;
     }
 
     @Override
     @Transactional
-    public void removeDuplicates() {
+    public long removeDuplicates() {
         log.info("Начало удаления дубликатов библиотек");
         
         // Дубликаты могут быть определены по названию и источнику
-        List<Library> libraries = libraryRepository.findAll();
+        List<Library> libraries = libraryRepository.findAll().stream()
+            .sorted((a, b) -> Long.compare(a.getId(), b.getId()))
+            .toList();
+
+        Set<String> seen = new HashSet<>();
+        List<Library> duplicates = new java.util.ArrayList<>();
+
+        for (Library library : libraries) {
+            String key = (library.getName() == null ? "" : library.getName().trim().toLowerCase())
+                + "|" + (library.getSource() == null ? "" : library.getSource().trim().toLowerCase())
+                + "|" + (library.getVersion() == null ? "" : library.getVersion().trim().toLowerCase());
+
+            if (!seen.add(key)) {
+                duplicates.add(library);
+            }
+        }
+
+        if (!duplicates.isEmpty()) {
+            libraryRepository.deleteAll(duplicates);
+        }
+
         log.debug("Найдено {} библиотек для проверки на дубликаты", libraries.size());
-        
-        log.info("Удаление дубликатов завершено");
+        log.info("Удаление дубликатов завершено: удалено {} записей", duplicates.size());
+        return duplicates.size();
     }
 
     @Override

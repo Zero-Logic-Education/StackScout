@@ -41,3 +41,6 @@ application-local.yml
 
 # Build artifacts from IDEs
 bin/
+
+# Ai generated files
+*.qwen

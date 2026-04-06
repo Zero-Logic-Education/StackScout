@@ -1,4 +1,4 @@
-import { Container, Box, Typography, Button, Card, CardContent, Stack, Chip } from '@mui/material';
+import { Container, Box, Typography, Button, Card, CardContent, Stack } from '@mui/material';
 import { 
   Search, 
   Dashboard, 
@@ -6,19 +6,21 @@ import {
   TrendingUp, 
   Speed,
   CheckCircle,
-  Code,
   Analytics,
   Shield,
-  Insights
+  Insights,
+  AutoGraph,
+  NotificationsActive,
+  Hub
 } from '@mui/icons-material';
 import Link from 'next/link';
 
 export default function Home() {
   const stats = [
-    { value: '50K+', label: 'Библиотек' },
-    { value: '99.9%', label: 'Точность' },
-    { value: '24/7', label: 'Мониторинг' },
-    { value: '5 экосистем', label: 'Поддержка' },
+    { value: '50K+', label: 'Библиотек в каталоге' },
+    { value: '7+', label: 'Источников данных' },
+    { value: '24/7', label: 'Фоновый мониторинг' },
+    { value: 'Live', label: 'Актуальная аналитика' },
   ];
 
   const features = [
@@ -55,12 +57,30 @@ export default function Home() {
   ];
 
   const whyChooseUs = [
-    'Анализ более 50,000 Open Source библиотек',
-    'Интеграция с GitHub, npm, Maven, PyPI, NuGet',
-    'Автоматическое обновление данных каждые 24 часа',
-    'Расширенные метрики качества кода',
-    'Анализ сообщества и активности разработчиков',
-    'Отслеживание CVE и уязвимостей безопасности',
+    'Единое место для анализа риска, лицензий и обновлений',
+    'Интеграции с GitHub, npm, Maven, PyPI, NuGet и Docker',
+    'Оперативные метрики по качеству и активности экосистемы',
+    'Отслеживание CVE и уязвимостей по версиям зависимостей',
+    'Быстрый переход от обзора к детальной аналитике',
+    'Поддержка командного сценария через API и админ-панель',
+  ];
+
+  const useCases = [
+    {
+      icon: AutoGraph,
+      title: 'Контроль стабильности релизов',
+      description: 'Сверяйте динамику обновлений и уровень риска до публикации новой версии продукта.',
+    },
+    {
+      icon: NotificationsActive,
+      title: 'Приоритет уязвимостей',
+      description: 'Фокусируйтесь на критичных зависимостях по влиянию на ваши сервисы, а не только по CVSS.',
+    },
+    {
+      icon: Hub,
+      title: 'Единая картина экосистемы',
+      description: 'Сравнивайте библиотеки между экосистемами и выбирайте наиболее живые и поддерживаемые решения.',
+    },
   ];
 
   return (
@@ -149,7 +169,7 @@ export default function Home() {
                   startIcon={<Dashboard />}
                   sx={{ px: 5, py: 2, fontSize: '1.1rem', fontWeight: 600 }}
                 >
-                  Открыть дашборд
+                  Перейти к аналитике
                 </Button>
               </Link>
             </Stack>
@@ -258,6 +278,69 @@ export default function Home() {
         </Box>
       </Container>
 
+      {/* Use Cases Section */}
+      <Container maxWidth="lg" sx={{ mt: 14 }}>
+        <Box sx={{ textAlign: 'center', mb: 7 }}>
+          <Typography
+            variant="h2"
+            sx={{
+              mb: 2,
+              fontWeight: 700,
+              fontSize: { xs: '2rem', md: '2.75rem' },
+            }}
+          >
+            Что даёт StackScout команде
+          </Typography>
+          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: '760px', mx: 'auto' }}>
+            Практические сценарии, которые помогают принимать решения быстрее и снижать стоимость ошибок в зависимостях.
+          </Typography>
+        </Box>
+
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+            gap: 3,
+          }}
+        >
+          {useCases.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <Card
+                key={index}
+                elevation={0}
+                sx={{
+                  p: 3.5,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  bgcolor: 'background.paper',
+                  height: '100%',
+                }}
+              >
+                <Box
+                  sx={{
+                    display: 'inline-flex',
+                    p: 1.5,
+                    borderRadius: 2,
+                    bgcolor: 'rgba(76, 175, 80, 0.14)',
+                    color: 'primary.main',
+                    mb: 2,
+                  }}
+                >
+                  <Icon sx={{ fontSize: 30 }} />
+                </Box>
+                <Typography variant="h6" fontWeight={700} sx={{ mb: 1.5 }}>
+                  {item.title}
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                  {item.description}
+                </Typography>
+              </Card>
+            );
+          })}
+        </Box>
+      </Container>
+
       {/* Why Choose Us Section */}
       <Container maxWidth="lg" sx={{ mt: 16 }}>
         <Box
@@ -295,89 +378,31 @@ export default function Home() {
             </Stack>
           </Box>
           <Box>
-            <Card
-              elevation={0}
+            <Box
               sx={{
                 p: 4,
-                bgcolor: 'background.paper',
+                borderRadius: 2,
                 border: '1px solid',
-                borderColor: 'divider',
+                borderColor: 'rgba(76, 175, 80, 0.25)',
+                backgroundImage: 'linear-gradient(135deg, rgba(76, 175, 80, 0.12) 0%, rgba(26, 26, 26, 0.06) 100%)',
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <Code sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
-                <Typography variant="h4" fontWeight={700}>
-                  Для разработчиков
-                </Typography>
-              </Box>
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 3, lineHeight: 1.8 }}>
-                StackScout интегрируется с вашими существующими инструментами разработки, 
-                предоставляя критически важную информацию прямо в вашем рабочем процессе.
+              <Typography variant="h4" fontWeight={700} sx={{ mb: 2 }}>
+                Фокус на решениях, а не на шуме
               </Typography>
-              <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-                <Chip label="CLI инструменты" variant="outlined" />
-                <Chip label="CI/CD интеграция" variant="outlined" />
-                <Chip label="REST API" variant="outlined" />
-                <Chip label="Webhooks" variant="outlined" />
-              </Stack>
-            </Card>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 3, lineHeight: 1.8 }}>
+                Главная цель StackScout: помочь вам быстрее перейти от вопроса «что происходит с зависимостями»
+                к ответу «что делать в этом спринте». На одной странице вы видите здоровье, риски и динамику,
+                а в аналитике уже работаете с деталями по каждому пакету.
+              </Typography>
+              <Link href="/dashboard" style={{ textDecoration: 'none' }}>
+                <Button variant="contained" startIcon={<Dashboard />} sx={{ px: 3.5, py: 1.2 }}>
+                  Перейти к аналитике
+                </Button>
+              </Link>
+            </Box>
           </Box>
         </Box>
-      </Container>
-
-      {/* CTA Section */}
-      <Container maxWidth="md" sx={{ mt: 16 }}>
-        <Card
-          elevation={0}
-          sx={{
-            p: { xs: 4, md: 6 },
-            textAlign: 'center',
-            backgroundImage: `linear-gradient(135deg, rgba(26, 26, 26, 0.8) 0%, rgba(55, 100, 80, 0.2) 100%)`,
-            backdropFilter: 'blur(0.5px)',
-            border: '1px solid',
-            borderColor: 'rgba(76, 175, 80, 0.3)',
-          }}
-        >
-          <Typography
-            variant="h3"
-            sx={{
-              mb: 2,
-              fontWeight: 700,
-              fontSize: { xs: '1.75rem', md: '2.5rem' },
-            }}
-          >
-            Готовы начать?
-          </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ mb: 4, maxWidth: '600px', mx: 'auto' }}>
-            Присоединяйтесь к тысячам разработчиков, которые уже используют StackScout 
-            для анализа своих зависимостей.
-          </Typography>
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={2}
-            justifyContent="center"
-          >
-            <Link href="/explore" style={{ textDecoration: 'none' }}>
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={<Search />}
-                sx={{ px: 4, py: 1.5 }}
-              >
-                Исследовать библиотеки
-              </Button>
-            </Link>
-            <Link href="/about" style={{ textDecoration: 'none' }}>
-              <Button
-                variant="outlined"
-                size="large"
-                sx={{ px: 4, py: 1.5 }}
-              >
-                Узнать больше
-              </Button>
-            </Link>
-          </Stack>
-        </Card>
       </Container>
     </Box>
   );

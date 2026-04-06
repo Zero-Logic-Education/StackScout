@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { apiClient, libraryApi, libraryUpdateApi, type UpdateStats, type UpdateType } from "@/lib/api";
 import {
   Container,
@@ -16,6 +16,7 @@ import {
   Divider,
   ToggleButtonGroup,
   ToggleButton,
+  IconButton,
 } from "@mui/material";
 import {
   LibraryBooks,
@@ -26,6 +27,7 @@ import {
   Warning,
   Error as ErrorIcon,
   Update,
+  Refresh,
 } from "@mui/icons-material";
 import {
   ResponsiveContainer,
@@ -49,6 +51,13 @@ interface StatsData {
   sources: Record<string, number>;
   [key: string]: unknown;
 }
+
+type SourceHealthBucket = {
+  total: number;
+  healthy: number;
+  warning: number;
+  critical: number;
+};
 
 function StatCard({
   icon,
@@ -137,10 +146,115 @@ export default function OverviewDashboard() {
     warning: 0,
     critical: 0,
   });
+  const [sourceHealthStats, setSourceHealthStats] = useState<Record<string, SourceHealthBucket>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timelineDays, setTimelineDays] = useState<7 | 14 | 30>(14);
   const [selectedUpdateType, setSelectedUpdateType] = useState<"ALL" | UpdateType>("ALL");
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+
+  const isMountedRef = useRef(true);
+  const inFlightRef = useRef(false);
+  const hasInitialDataRef = useRef(false);
+
+  const fetchStats = useCallback(async (silent = true) => {
+    if (inFlightRef.current) {
+      return;
+    }
+
+    inFlightRef.current = true;
+    if (!silent && isMountedRef.current) {
+      setRefreshing(true);
+    }
+
+    try {
+      const [{ data }, updatesResponse] = await Promise.all([
+        apiClient.get("/libraries/stats"),
+        libraryUpdateApi.getUpdateStats(),
+      ]);
+
+      const totalLibraries = Number(data.totalLibraries) || 0;
+      let nextHealthDistribution = { healthy: 0, warning: 0, critical: 0 };
+      let nextSourceHealthStats: Record<string, SourceHealthBucket> = {};
+
+      if (totalLibraries > 0) {
+        try {
+          const librariesResponse = await libraryApi.getAll(0, totalLibraries);
+          const libraries = librariesResponse.data.libraries || [];
+
+          nextHealthDistribution = {
+            healthy: libraries.filter((library) => library.healthScore >= 80).length,
+            warning: libraries.filter((library) => library.healthScore >= 60 && library.healthScore < 80).length,
+            critical: libraries.filter((library) => library.healthScore < 60).length,
+          };
+
+          nextSourceHealthStats = libraries.reduce((acc, library) => {
+            const sourceKey = String(library.source || "unknown").toLowerCase();
+            if (!acc[sourceKey]) {
+              acc[sourceKey] = { total: 0, healthy: 0, warning: 0, critical: 0 };
+            }
+
+            acc[sourceKey].total += 1;
+            if (library.healthScore >= 80) {
+              acc[sourceKey].healthy += 1;
+            } else if (library.healthScore >= 60) {
+              acc[sourceKey].warning += 1;
+            } else {
+              acc[sourceKey].critical += 1;
+            }
+
+            return acc;
+          }, {} as Record<string, SourceHealthBucket>);
+        } catch (distributionError) {
+          console.error("Ошибка загрузки распределения здоровья:", distributionError);
+        }
+      }
+
+      if (isMountedRef.current) {
+        const rawSources =
+          data && typeof data === "object" && data.sources && typeof data.sources === "object"
+            ? (data.sources as Record<string, unknown>)
+            : {};
+
+        const normalizedSources = Object.fromEntries(
+          Object.entries(rawSources).map(([key, value]) => [key, Number(value) || 0]),
+        ) as Record<string, number>;
+
+        setHealthDistribution(nextHealthDistribution);
+        setSourceHealthStats(nextSourceHealthStats);
+        setStats({
+          ...(data as StatsData),
+          sources: normalizedSources,
+        });
+        setUpdatesStats(updatesResponse.data);
+        setLastUpdatedAt(new Date());
+        setError(null);
+        hasInitialDataRef.current = true;
+      }
+    } catch (err: unknown) {
+      console.error("Ошибка загрузки статистики:", err);
+      if (isMountedRef.current && !hasInitialDataRef.current) {
+        const parsedError = err as Record<string, unknown>;
+        if (
+          parsedError.code === "ERR_NETWORK" ||
+          String(parsedError.message).includes("Network")
+        ) {
+          setError(
+            "Не удалось подключиться к серверу. Убедитесь, что бэкенд запущен на http://localhost:8081",
+          );
+        } else {
+          setError("Не удалось загрузить статистику");
+        }
+      }
+    } finally {
+      inFlightRef.current = false;
+      if (isMountedRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    }
+  }, []);
 
   const getSourceCount = (sourceKey: string): number => {
     if (!stats?.sources) {
@@ -150,77 +264,33 @@ export default function OverviewDashboard() {
   };
 
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
+    void fetchStats(true);
 
-    const fetchStats = async () => {
-      try {
-        const [{ data }, updatesResponse] = await Promise.all([
-          apiClient.get("/libraries/stats"),
-          libraryUpdateApi.getUpdateStats(),
-        ]);
+    const intervalId = window.setInterval(() => {
+      void fetchStats(true);
+    }, 30000);
 
-        const totalLibraries = Number(data.totalLibraries) || 0;
-        if (totalLibraries > 0) {
-          try {
-            const librariesResponse = await libraryApi.getAll(0, totalLibraries);
-            const libraries = librariesResponse.data.libraries || [];
+    const handleWindowFocus = () => {
+      void fetchStats(true);
+    };
 
-            const healthy = libraries.filter((library) => library.healthScore >= 80).length;
-            const warning = libraries.filter((library) => library.healthScore >= 60 && library.healthScore < 80).length;
-            const critical = libraries.filter((library) => library.healthScore < 60).length;
-
-            if (isMounted) {
-              setHealthDistribution({ healthy, warning, critical });
-            }
-          } catch (distributionError) {
-            console.error("Ошибка загрузки распределения здоровья:", distributionError);
-          }
-        }
-
-        if (isMounted) {
-          const rawSources =
-            data && typeof data === "object" && data.sources && typeof data.sources === "object"
-              ? (data.sources as Record<string, unknown>)
-              : {};
-
-          const normalizedSources = Object.fromEntries(
-            Object.entries(rawSources).map(([key, value]) => [key, Number(value) || 0]),
-          ) as Record<string, number>;
-
-          setStats({
-            ...(data as StatsData),
-            sources: normalizedSources,
-          });
-          setUpdatesStats(updatesResponse.data);
-        }
-      } catch (err: unknown) {
-        console.error("Ошибка загрузки статистики:", err);
-        if (isMounted) {
-          const error = err as Record<string, unknown>;
-          if (
-            error.code === "ERR_NETWORK" ||
-            String(error.message).includes("Network")
-          ) {
-            setError(
-              "Не удалось подключиться к серверу. Убедитесь, что бэкенд запущен на http://localhost:8081",
-            );
-          } else {
-            setError("Не удалось загрузить статистику");
-          }
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void fetchStats(true);
       }
     };
 
-    fetchStats();
+    window.addEventListener("focus", handleWindowFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleWindowFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [fetchStats]);
 
   if (loading) {
     return (
@@ -374,6 +444,40 @@ export default function OverviewDashboard() {
     return source.filter((item) => item.updateType === selectedUpdateType);
   })();
 
+  const fallbackSourceEntries = (() => {
+    if (Object.keys(sourceHealthStats).length === 0) {
+      return sourceEntries.slice(0, 5).map(([source, total]) => ({
+        source,
+        value: total,
+        metricLabel: "библиотек",
+      }));
+    }
+
+    const rows = Object.entries(sourceHealthStats).map(([source, bucket]) => {
+      if (selectedUpdateType === "MAJOR") {
+        return { source, value: bucket.critical, metricLabel: "критических" };
+      }
+      if (selectedUpdateType === "MINOR") {
+        return { source, value: bucket.warning, metricLabel: "требуют внимания" };
+      }
+      if (selectedUpdateType === "PATCH") {
+        return { source, value: bucket.healthy, metricLabel: "здоровых" };
+      }
+
+      return { source, value: bucket.total, metricLabel: "библиотек" };
+    });
+
+    const positiveRows = rows.filter((row) => row.value > 0).sort((a, b) => b.value - a.value);
+    if (positiveRows.length > 0) {
+      return positiveRows.slice(0, 5);
+    }
+
+    return Object.entries(sourceHealthStats)
+      .map(([source, bucket]) => ({ source, value: bucket.total, metricLabel: "библиотек" }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+  })();
+
   const hasTimelineData = timelineData.some((item) => item.total > 0);
   const hasUpdateTypeData = updateTypeChartData.length > 0;
 
@@ -397,11 +501,65 @@ export default function OverviewDashboard() {
         key: item.name,
       }));
 
+  const pieSummaryCards = hasUpdateTypeData
+    ? [
+        {
+          label: "Major",
+          value: updateTypeStats.major,
+          color: "error.main" as const,
+          borderColor: "error.main" as const,
+          bgColor: "rgba(244, 67, 54, 0.1)",
+        },
+        {
+          label: "Minor",
+          value: updateTypeStats.minor,
+          color: "warning.main" as const,
+          borderColor: "warning.main" as const,
+          bgColor: "rgba(255, 152, 0, 0.1)",
+        },
+        {
+          label: "Patch",
+          value: updateTypeStats.patch,
+          color: "success.main" as const,
+          borderColor: "success.main" as const,
+          bgColor: "rgba(76, 175, 80, 0.1)",
+        },
+      ]
+    : [
+        {
+          label: "Критические",
+          value: criticalLibs,
+          color: "error.main" as const,
+          borderColor: "error.main" as const,
+          bgColor: "rgba(244, 67, 54, 0.1)",
+        },
+        {
+          label: "Требуют внимания",
+          value: warningLibs,
+          color: "warning.main" as const,
+          borderColor: "warning.main" as const,
+          bgColor: "rgba(255, 152, 0, 0.1)",
+        },
+        {
+          label: "Здоровые",
+          value: healthyLibs,
+          color: "success.main" as const,
+          borderColor: "success.main" as const,
+          bgColor: "rgba(76, 175, 80, 0.1)",
+        },
+      ];
+
   function formatSourceLabel(source: string) {
     const lower = source.toLowerCase();
     if (lower === "pypi") return "PyPI";
     if (lower === "npm") return "NPM";
     if (lower === "maven") return "Maven";
+    if (lower === "dockerhub") return "Docker Hub";
+    if (lower === "github") return "GitHub";
+    if (lower === "gitlab") return "GitLab";
+    if (lower === "nuget") return "NuGet";
+    if (lower === "nvd") return "NVD";
+    if (lower === "osv") return "OSV";
     return source;
   }
 
@@ -469,6 +627,20 @@ export default function OverviewDashboard() {
             >
               Полный обзор ключевых метрик и статистики Open Source библиотек
             </Typography>
+            <Box sx={{ mt: 2, display: "flex", alignItems: "center", justifyContent: "center", gap: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                Обновлено: {lastUpdatedAt ? lastUpdatedAt.toLocaleTimeString("ru-RU") : "-"}
+              </Typography>
+              <IconButton
+                size="small"
+                color="success"
+                onClick={() => void fetchStats(false)}
+                disabled={refreshing}
+                aria-label="Обновить аналитику"
+              >
+                {refreshing ? <CircularProgress size={16} color="inherit" /> : <Refresh fontSize="small" />}
+              </IconButton>
+            </Box>
           </Box>
 
           <Box
@@ -725,16 +897,19 @@ export default function OverviewDashboard() {
             sx={{
               border: "1px solid",
               borderColor: "divider",
+              height: "100%",
             }}
           >
-            <CardContent sx={{ p: 4 }}>
+            <CardContent sx={{ p: 4, height: "100%", display: "flex", flexDirection: "column" }}>
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, mb: 2 }}>
                 <Box>
                   <Typography variant="h5" fontWeight={700}>
-                    Динамика обновлений
+                    {hasTimelineData ? "Динамика обновлений" : "Снимок состояния каталога"}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Интерактивный график по последним изменениям версий
+                    {hasTimelineData
+                      ? "Интерактивный график по последним изменениям версий"
+                      : "Пока нет событий обновлений, показываем актуальное распределение библиотек"}
                   </Typography>
                 </Box>
                 <ToggleButtonGroup
@@ -752,7 +927,7 @@ export default function OverviewDashboard() {
                 </ToggleButtonGroup>
               </Box>
 
-              <Box sx={{ height: 280, mt: 2 }}>
+              <Box sx={{ flex: 1, minHeight: 320, mt: 2 }}>
                 {hasTimelineData ? (
                   <ResponsiveContainer width="100%" height="100%" minWidth={280} minHeight={220}>
                     <AreaChart data={timelineData} margin={{ top: 8, right: 10, left: -20, bottom: 0 }}>
@@ -760,6 +935,7 @@ export default function OverviewDashboard() {
                       <XAxis dataKey="label" tick={{ fill: "#b0b0b0", fontSize: 12 }} />
                       <YAxis allowDecimals={false} tick={{ fill: "#b0b0b0", fontSize: 12 }} />
                       <Tooltip
+                        cursor={false}
                         contentStyle={{
                           backgroundColor: "#1f1f1f",
                           border: "1px solid rgba(255,255,255,0.14)",
@@ -779,6 +955,7 @@ export default function OverviewDashboard() {
                       <XAxis dataKey="label" tick={{ fill: "#b0b0b0", fontSize: 12 }} />
                       <YAxis allowDecimals={false} tick={{ fill: "#b0b0b0", fontSize: 12 }} />
                       <Tooltip
+                        cursor={false}
                         contentStyle={{
                           backgroundColor: "#1f1f1f",
                           border: "1px solid rgba(255,255,255,0.14)",
@@ -798,9 +975,10 @@ export default function OverviewDashboard() {
             sx={{
               border: "1px solid",
               borderColor: "divider",
+              height: "100%",
             }}
           >
-            <CardContent sx={{ p: 4 }}>
+            <CardContent sx={{ p: 4, height: "100%", display: "flex", flexDirection: "column" }}>
               <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
                 <AccountTree sx={{ fontSize: 32, color: "primary.main", mr: 2 }} />
                 <Box>
@@ -813,7 +991,7 @@ export default function OverviewDashboard() {
                 </Box>
               </Box>
               <Divider sx={{ mb: 3 }} />
-              <Stack spacing={2}>
+              <Stack spacing={2} sx={{ flex: 1, overflow: "auto", pr: 0.5 }}>
                 {sourceEntries.map(([source, count]) => {
                   const percent = stats.totalLibraries > 0
                     ? Math.round((count / stats.totalLibraries) * 100)
@@ -949,12 +1127,14 @@ export default function OverviewDashboard() {
 
                 {filteredRecentUpdates.length === 0 && (
                   <Stack spacing={1}>
-                    <Alert severity="info" sx={{ borderRadius: 2 }}>
-                      Свежих обновлений пока нет. Ниже показаны самые наполненные источники каталога.
-                    </Alert>
-                    {sourceEntries.slice(0, 5).map(([source, count]) => {
+                    <Typography variant="caption" color="text.secondary" sx={{ px: 0.5 }}>
+                      {selectedUpdateType === "ALL"
+                        ? "Текущая картина по источникам каталога"
+                        : `Срез по ${formatUpdateType(selectedUpdateType)}: источники с наибольшими значениями`}
+                    </Typography>
+                    {fallbackSourceEntries.map(({ source, value, metricLabel }) => {
                       const percent = stats.totalLibraries > 0
-                        ? Math.round((count / stats.totalLibraries) * 100)
+                        ? Math.round((value / stats.totalLibraries) * 100)
                         : 0;
 
                       return (
@@ -972,7 +1152,7 @@ export default function OverviewDashboard() {
                             {formatSourceLabel(source)}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {count.toLocaleString()} библиотек ({percent}%)
+                            {value.toLocaleString()} {metricLabel} ({percent}%)
                           </Typography>
                         </Box>
                       );
@@ -989,6 +1169,9 @@ export default function OverviewDashboard() {
               p: { xs: 4, md: 6 },
               border: "1px solid",
               borderColor: "divider",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
             }}
           >
             <Typography variant="h5" fontWeight={700} gutterBottom>
@@ -1006,9 +1189,10 @@ export default function OverviewDashboard() {
                 gridTemplateColumns: { xs: "1fr", md: "1.4fr 1fr" },
                 gap: 3,
                 alignItems: "center",
+                flex: 1,
               }}
             >
-              <Box sx={{ height: 260 }}>
+              <Box sx={{ height: "100%", minHeight: 320 }}>
                 {pieData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%" minWidth={260} minHeight={220}>
                     <PieChart>
@@ -1025,14 +1209,6 @@ export default function OverviewDashboard() {
                           <Cell key={entry.key} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "#1f1f1f",
-                          border: "1px solid rgba(255,255,255,0.14)",
-                          borderRadius: 8,
-                        }}
-                      />
-                      <Legend />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
@@ -1043,18 +1219,15 @@ export default function OverviewDashboard() {
               </Box>
 
               <Stack spacing={1.5}>
-                <Box sx={{ p: 2, borderRadius: 2, bgcolor: "rgba(244, 67, 54, 0.1)", border: "1px solid", borderColor: "error.main" }}>
-                  <Typography variant="caption" color="text.secondary">Major</Typography>
-                  <Typography variant="h5" fontWeight={700} color="error.main">{updateTypeStats.major}</Typography>
-                </Box>
-                <Box sx={{ p: 2, borderRadius: 2, bgcolor: "rgba(255, 152, 0, 0.1)", border: "1px solid", borderColor: "warning.main" }}>
-                  <Typography variant="caption" color="text.secondary">Minor</Typography>
-                  <Typography variant="h5" fontWeight={700} color="warning.main">{updateTypeStats.minor}</Typography>
-                </Box>
-                <Box sx={{ p: 2, borderRadius: 2, bgcolor: "rgba(76, 175, 80, 0.1)", border: "1px solid", borderColor: "success.main" }}>
-                  <Typography variant="caption" color="text.secondary">Patch</Typography>
-                  <Typography variant="h5" fontWeight={700} color="success.main">{updateTypeStats.patch}</Typography>
-                </Box>
+                {pieSummaryCards.map((card) => (
+                  <Box
+                    key={card.label}
+                    sx={{ p: 2, borderRadius: 2, bgcolor: card.bgColor, border: "1px solid", borderColor: card.borderColor }}
+                  >
+                    <Typography variant="caption" color="text.secondary">{card.label}</Typography>
+                    <Typography variant="h5" fontWeight={700} color={card.color}>{card.value}</Typography>
+                  </Box>
+                ))}
               </Stack>
             </Box>
           </Card>

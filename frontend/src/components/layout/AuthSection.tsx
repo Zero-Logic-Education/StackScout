@@ -151,15 +151,6 @@ export default function AuthSection() {
             },
           }}
         >
-          <Box sx={{ px: 2.5, py: 2 }}>
-            <Typography variant="subtitle2" noWrap fontWeight={700}>
-              {user?.name}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>
-              {user?.email}
-            </Typography>
-          </Box>
-          <Divider sx={{ my: 1 }} />
           <MenuItem
             onClick={handleClose}
             component={Link}

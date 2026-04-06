@@ -92,12 +92,12 @@ public interface LibraryService {
     /**
      * Массовая нормализация лицензий
      */
-    void bulkNormalizeLicenses();
+    long bulkNormalizeLicenses();
     
     /**
      * Удалить дубликаты библиотек
      */
-    void removeDuplicates();
+    long removeDuplicates();
 
 	Object getLibrariesStats();
 }

@@ -390,7 +390,13 @@ function ExploreContent() {
                 variant="contained"
                 color="success"
                 onClick={handleOpenFilters}
-                sx={{ whiteSpace: "nowrap" }}
+                sx={{
+                  whiteSpace: "nowrap",
+                  color: "common.white",
+                  "& .MuiButton-startIcon": {
+                    color: "common.white",
+                  },
+                }}
               >
                 {activeFiltersCount > 0 ? `Фильтр (${activeFiltersCount})` : "Фильтр"}
               </Button>

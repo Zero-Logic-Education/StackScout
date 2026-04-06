@@ -19,6 +19,7 @@ public class OSVServiceImpl implements SourceAdapter {
 
     private final RestClient.Builder restClientBuilder;
 
+    @SuppressWarnings("null")
     @Override
     public Library collect(String identifier) {
         // identifier format: "ecosystem:package@version" or "package@version"
