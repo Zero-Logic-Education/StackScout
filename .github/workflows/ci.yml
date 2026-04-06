@@ -52,9 +52,6 @@ jobs:
   backend:
     name: Backend test and build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
 
     steps:
       - name: Checkout
@@ -68,10 +65,10 @@ jobs:
           cache: gradle
 
       - name: Make gradlew executable
-        run: chmod +x gradlew
+        run: chmod +x ./gradlew
 
       - name: Run tests
-        run: ./gradlew test --no-daemon
+        run: ./gradlew :backend:test --no-daemon
 
       - name: Build artifact
-        run: ./gradlew build -x test --no-daemon
+        run: ./gradlew :backend:build -x :backend:test --no-daemon
