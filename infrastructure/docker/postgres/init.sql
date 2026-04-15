@@ -1,34 +1,34 @@
 -- StackScout PostgreSQL Initialization Script
--- Создание базовой схемы БД и таблиц
+-- Синхронизировано с Flyway миграциями (V1-V13)
 
 -- Включить необходимые расширения
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
--- Создать основные таблицы
-CREATE TABLE IF NOT EXISTS packages (
+-- ═══════════════════════════════════════════
+-- V1: Initial Schema (libraries)
+-- ═══════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS libraries (
     id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE,
-    version VARCHAR(100) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    version VARCHAR(50) NOT NULL,
+    source VARCHAR(50) NOT NULL,
+    license_name VARCHAR(100),
+    health_score INTEGER,
+    last_release VARCHAR(50),
+    repository VARCHAR(500),
     description TEXT,
-    source_type VARCHAR(50) NOT NULL,
-    repository_url VARCHAR(500),
-    homepage_url VARCHAR(500),
-    health_score INTEGER CHECK (health_score >= 0 AND health_score <= 100),
-    actuality_score INTEGER,
-    activity_score INTEGER,
-    repository_score INTEGER,
-    community_score INTEGER,
-    license VARCHAR(100),
-    downloads_count BIGINT DEFAULT 0,
-    author VARCHAR(255),
-    maintainer VARCHAR(255),
-    last_update TIMESTAMP,
-    last_checked TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
 );
 
+CREATE INDEX IF NOT EXISTS idx_library_name ON libraries(name);
+CREATE INDEX IF NOT EXISTS idx_library_source ON libraries(source);
+CREATE INDEX IF NOT EXISTS idx_library_health_score ON libraries(health_score);
+
+-- ═══════════════════════════════════════════
+-- V2: Licenses and compatibility
+-- ═══════════════════════════════════════════
 CREATE TABLE IF NOT EXISTS licenses (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
@@ -38,82 +38,13 @@ CREATE TABLE IF NOT EXISTS licenses (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS projects (
+CREATE TABLE IF NOT EXISTS license_compatibility (
     id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    source_url VARCHAR(500),
-    status VARCHAR(50) DEFAULT 'ACTIVE',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS project_dependencies (
-    id BIGSERIAL PRIMARY KEY,
-    project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    package_id BIGINT NOT NULL REFERENCES packages(id) ON DELETE RESTRICT,
-    version_specified VARCHAR(100) NOT NULL,
-    version_locked VARCHAR(100),
-    status VARCHAR(50) DEFAULT 'ACTIVE',
-    license_compliant BOOLEAN DEFAULT TRUE,
-    has_vulnerabilities BOOLEAN DEFAULT FALSE,
-    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    checked_at TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS package_dependencies (
-    id BIGSERIAL PRIMARY KEY,
-    package_id BIGINT NOT NULL REFERENCES packages(id) ON DELETE CASCADE,
-    dependency_id BIGINT NOT NULL REFERENCES packages(id) ON DELETE RESTRICT,
-    version_range VARCHAR(100),
-    is_optional BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS vulnerabilities (
-    id BIGSERIAL PRIMARY KEY,
-    package_id BIGINT NOT NULL REFERENCES packages(id) ON DELETE CASCADE,
-    cve_id VARCHAR(50) UNIQUE,
-    severity VARCHAR(50),
-    description TEXT,
-    affected_versions_from VARCHAR(100),
-    affected_versions_to VARCHAR(100),
-    patched_versions VARCHAR(500),
-    source_url VARCHAR(500),
-    published_at TIMESTAMP,
-    discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    license_id BIGINT NOT NULL REFERENCES licenses(id) ON DELETE CASCADE,
+    compatible_with_id BIGINT NOT NULL REFERENCES licenses(id) ON DELETE CASCADE,
+    is_compatible BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE TABLE IF NOT EXISTS health_check_logs (
-    id BIGSERIAL PRIMARY KEY,
-    package_id BIGINT NOT NULL REFERENCES packages(id) ON DELETE CASCADE,
-    health_score INTEGER,
-    actuality_score INTEGER,
-    activity_score INTEGER,
-    repository_score INTEGER,
-    community_score INTEGER,
-    source VARCHAR(100),
-    status VARCHAR(50),
-    error_message TEXT,
-    checked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Создать индексы для оптимизации запросов
-CREATE INDEX IF NOT EXISTS idx_packages_name ON packages(name);
-CREATE INDEX IF NOT EXISTS idx_packages_health_score ON packages(health_score DESC);
-CREATE INDEX IF NOT EXISTS idx_packages_source_type ON packages(source_type);
-CREATE INDEX IF NOT EXISTS idx_packages_last_update ON packages(last_update DESC);
-CREATE INDEX IF NOT EXISTS idx_licenses_classification ON licenses(classification);
-CREATE INDEX IF NOT EXISTS idx_project_deps_project_id ON project_dependencies(project_id);
-CREATE INDEX IF NOT EXISTS idx_project_deps_package_id ON project_dependencies(package_id);
-CREATE INDEX IF NOT EXISTS idx_package_deps_package_id ON package_dependencies(package_id);
-CREATE INDEX IF NOT EXISTS idx_vulnerabilities_severity ON vulnerabilities(severity);
-CREATE INDEX IF NOT EXISTS idx_vulnerabilities_package_id ON vulnerabilities(package_id);
-CREATE INDEX IF NOT EXISTS idx_health_check_package_id ON health_check_logs(package_id);
 
 -- Вставить стандартные лицензии
 INSERT INTO licenses (name, description, classification) VALUES
@@ -131,7 +62,122 @@ INSERT INTO licenses (name, description, classification) VALUES
 ('CC0-1.0', 'Creative Commons Zero v1.0', 'PERMISSIVE')
 ON CONFLICT (name) DO NOTHING;
 
--- Создать функцию для обновления updated_at
+-- ═══════════════════════════════════════════
+-- V3: Scan jobs
+-- ═══════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS scan_jobs (
+    id BIGSERIAL PRIMARY KEY,
+    library_id BIGINT,
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    scan_type VARCHAR(50),
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    result TEXT,
+    error_message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ═══════════════════════════════════════════
+-- V4: Users
+-- ═══════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL DEFAULT 'USER',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+-- ═══════════════════════════════════════════
+-- V5: Scraper tasks
+-- ═══════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS scraper_tasks (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    source VARCHAR(50) NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    progress INTEGER DEFAULT 0,
+    total_packages INTEGER DEFAULT 0,
+    processed_packages INTEGER DEFAULT 0,
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    error_message TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+-- ═══════════════════════════════════════════
+-- V6: Moderation fields on libraries
+-- ═══════════════════════════════════════════
+ALTER TABLE libraries ADD COLUMN IF NOT EXISTS moderation_status VARCHAR(50) DEFAULT 'PENDING';
+ALTER TABLE libraries ADD COLUMN IF NOT EXISTS moderation_notes TEXT;
+ALTER TABLE libraries ADD COLUMN IF NOT EXISTS moderated_by BIGINT REFERENCES users(id);
+ALTER TABLE libraries ADD COLUMN IF NOT EXISTS moderated_at TIMESTAMP;
+
+-- ═══════════════════════════════════════════
+-- V7: Subscriptions and library updates
+-- ═══════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS library_subscriptions (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    library_id BIGINT NOT NULL REFERENCES libraries(id) ON DELETE CASCADE,
+    notifications_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP,
+    UNIQUE(user_id, library_id)
+);
+
+CREATE TABLE IF NOT EXISTS library_updates (
+    id BIGSERIAL PRIMARY KEY,
+    library_id BIGINT NOT NULL REFERENCES libraries(id) ON DELETE CASCADE,
+    old_version VARCHAR(50) NOT NULL,
+    new_version VARCHAR(50) NOT NULL,
+    update_type VARCHAR(50) NOT NULL,
+    update_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    old_health_score INTEGER,
+    new_health_score INTEGER,
+    changelog TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON library_subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_library_id ON library_subscriptions(library_id);
+CREATE INDEX IF NOT EXISTS idx_updates_library_id ON library_updates(library_id);
+
+-- ═══════════════════════════════════════════
+-- V8: User status fields
+-- ═══════════════════════════════════════════
+ALTER TABLE users ADD COLUMN IF NOT EXISTS enabled BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS locked BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- ═══════════════════════════════════════════
+-- V9: Password reset tokens
+-- ═══════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    expiry_date TIMESTAMP NOT NULL,
+    used BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_reset_tokens_token ON password_reset_tokens(token);
+
+-- ═══════════════════════════════════════════
+-- V10-V13: Stage 2-5 sources (additional columns)
+-- ═══════════════════════════════════════════
+-- Эти миграции расширяют список источников данных
+-- и не добавляют новых таблиц, только конфигурацию
+
+-- ═══════════════════════════════════════════
+-- Триггеры для updated_at
+-- ═══════════════════════════════════════════
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -140,18 +186,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Применить триггеры
-CREATE TRIGGER update_packages_updated_at BEFORE UPDATE ON packages
+CREATE TRIGGER update_libraries_updated_at BEFORE UPDATE ON libraries
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_projects_updated_at BEFORE UPDATE ON projects
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_project_dependencies_updated_at BEFORE UPDATE ON project_dependencies
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_package_dependencies_updated_at BEFORE UPDATE ON package_dependencies
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Коммент для отслеживания версии
-COMMENT ON SCHEMA public IS 'StackScout Database Schema v1.0';
+COMMENT ON SCHEMA public IS 'StackScout Database Schema v13.0 (Synced with Flyway)';

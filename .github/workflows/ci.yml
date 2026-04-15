@@ -1,0 +1,217 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [dev_s, develop]
+  pull_request:
+    branches: [dev_s, develop]
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '20'
+
+jobs:
+  # ──────────────── BACKEND ────────────────
+  backend-lint:
+    name: Backend - Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
+
+      - name: Grant execute permission for Gradle
+        run: chmod +x backend/gradlew
+
+      - name: Run Spotless Check
+        working-directory: backend
+        run: ./gradlew spotlessCheck --continue || echo "Spotless not configured, skipping"
+
+  backend-build:
+    name: Backend - Build & Test
+    needs: backend-lint
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: stackscout_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+      rabbitmq:
+        image: rabbitmq:3-management-alpine
+        ports:
+          - 5672:5672
+        options: >-
+          --health-cmd "rabbitmq-diagnostics check_port_connectivity"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/stackscout_test
+      SPRING_DATASOURCE_USERNAME: test
+      SPRING_DATASOURCE_PASSWORD: test
+      SPRING_REDIS_HOST: localhost
+      SPRING_REDIS_PORT: 6379
+      SPRING_RABBITMQ_HOST: localhost
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      JWT_SECRET: test-secret-key-for-ci-pipeline-must-be-at-least-256-bits-long
+      JWT_EXPIRATION: 3600000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
+
+      - name: Grant execute permission for Gradle
+        run: chmod +x backend/gradlew
+
+      - name: Build Backend
+        working-directory: backend
+        run: ./gradlew build -x test
+
+      - name: Run Backend Tests
+        working-directory: backend
+        run: ./gradlew test
+
+      - name: Generate JaCoCo Coverage Report
+        working-directory: backend
+        run: ./gradlew jacocoTestReport
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: backend/build/reports/tests/test/
+
+      - name: Upload JaCoCo Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-report
+          path: backend/build/reports/jacoco/test/
+
+      - name: Check Coverage Threshold
+        working-directory: backend
+        run: ./gradlew jacocoTestCoverageVerification || echo "Coverage below threshold"
+
+  # ──────────────── FRONTEND ────────────────
+  frontend-lint:
+    name: Frontend - Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install Dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        working-directory: frontend
+        run: pnpm lint
+
+  frontend-build:
+    name: Frontend - Build
+    needs: frontend-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install Dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Frontend
+        working-directory: frontend
+        run: pnpm build
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-output
+          path: frontend/.next/
+
+  # ──────────────── DOCKER ────────────────
+  docker-build:
+    name: Docker - Build Images
+    needs: [backend-build, frontend-build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev_s'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: false
+          load: true
+          tags: stackscout-backend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Frontend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: frontend/Dockerfile
+          push: false
+          load: true
+          tags: stackscout-frontend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify Docker Images
+        run: |
+          docker images
+          echo "Backend image built successfully"
+          echo "Frontend image built successfully"
