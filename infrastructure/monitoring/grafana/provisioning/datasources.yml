@@ -15,11 +15,3 @@ data:
         editable: true
         jsonData:
           timeInterval: 15s
-
-      - name: StackScout Backend
-        type: prometheus
-        access: proxy
-        url: http://app:8081/api/v1/actuator/prometheus
-        editable: true
-        jsonData:
-          timeInterval: 30s

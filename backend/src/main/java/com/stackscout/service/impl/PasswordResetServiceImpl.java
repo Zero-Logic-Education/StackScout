@@ -8,6 +8,7 @@ import com.stackscout.model.User;
 import com.stackscout.repository.PasswordResetTokenRepository;
 import com.stackscout.repository.UserRepository;
 import com.stackscout.service.PasswordResetService;
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,6 +35,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
     @Override
     @Transactional
+    @Timed(value = "stackscout.password_reset.operation", extraTags = {"operation", "initiate"})
     @SuppressWarnings("null")
     public void initiatePasswordReset(PasswordResetRequestDto request) {
         log.info("Инициализация сброса пароля для email: {}", request.getEmail());
@@ -54,7 +56,6 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
         tokenRepository.save(resetToken);
 
-        // emailService.sendPasswordResetEmail(user.getEmail(), token);
         log.info("Email с токеном сброса должен быть отправлен на: {}", user.getEmail());
 
         log.info("Токен сброса пароля создан для пользователя: {}", user.getUsername());
@@ -63,6 +64,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
     @Override
     @Transactional
+    @Timed(value = "stackscout.password_reset.operation", extraTags = {"operation", "confirm"})
     public void confirmPasswordReset(PasswordResetConfirmDto request) {
         log.info("Подтверждение сброса пароля");
 
@@ -83,6 +85,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
     @Override
     @Transactional
+    @Timed(value = "stackscout.password_reset.operation", extraTags = {"operation", "force"})
     public void forceResetAdminPassword(String username, String newPassword) {
         log.warn("ПРИНУДИТЕЛЬНЫЙ СБРОС ПАРОЛЯ для пользователя: {}", username);
 

@@ -15,6 +15,7 @@ import com.stackscout.service.LibraryUpdateService;
 import com.stackscout.source.SourceRegistryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import io.micrometer.core.annotation.Timed;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -47,6 +48,7 @@ public class LibraryServiceImpl implements LibraryService {
     private final LicenseService licenseService;
     
     @Override
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "get_all"})
     public Page<LibraryDto> getAllLibraries(Pageable pageable) {
         log.debug("Получение всех библиотек с пагинацией: {}", pageable);
         if (pageable == null) {
@@ -58,6 +60,7 @@ public class LibraryServiceImpl implements LibraryService {
     
     @Override
     @Cacheable(value = "libraries", key = "#id")
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "get_by_id"})
     public LibraryDto getLibraryById(Long id) {
         log.debug("Поиск библиотеки с ID: {}", id);
         if (id == null) {
@@ -71,6 +74,7 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     @Transactional
     @CacheEvict(value = {"libraries", "libraries_search"}, allEntries = true)
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "create"})
     public LibraryDto createLibrary(CreateLibraryRequest request) {
         log.info("Создание новой библиотеки: {}", request.getName());
         
@@ -87,6 +91,7 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     @Transactional
     @CacheEvict(value = {"libraries", "libraries_search"}, allEntries = true)
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "update"})
     public LibraryDto updateLibrary(Long id, UpdateLibraryRequest request) {
         log.info("Обновление библиотеки с ID: {}", id);
         if (id == null) {
@@ -123,6 +128,7 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     @Transactional
     @CacheEvict(value = {"libraries", "libraries_search"}, allEntries = true)
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "delete"})
     public void deleteLibrary(Long id) {
         log.info("Удаление библиотеки с ID: {}", id);
         if (id == null) {
@@ -139,6 +145,7 @@ public class LibraryServiceImpl implements LibraryService {
     
     @Override
     @Cacheable(value = "libraries_search", key = "{#query, #pageable}")
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "search"})
     public Page<LibraryDto> searchLibraries(String query, Pageable pageable) {
         log.debug("Поиск библиотек по запросу: {}", query);
         return libraryRepository.searchByName(query, pageable)
@@ -146,6 +153,7 @@ public class LibraryServiceImpl implements LibraryService {
     }
 
     @Override
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "search_with_score"})
     public Page<LibraryDto> searchLibraries(String query, Integer minScore, Pageable pageable) {
         log.debug("Поиск библиотек по запросу: {} с минимальной оценкой: {}", query, minScore);
         return libraryRepository.searchByNameAndMinScore(query, minScore, pageable)
@@ -153,6 +161,7 @@ public class LibraryServiceImpl implements LibraryService {
     }
     
     @Override
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "search_by_source"})
     public Page<LibraryDto> searchLibrariesBySource(String query, String source, Pageable pageable) {
         log.debug("Поиск библиотек по запросу: {} и источнику: {}", query, source);
         return libraryRepository.searchByNameAndSource(query, source, pageable)
@@ -160,6 +169,7 @@ public class LibraryServiceImpl implements LibraryService {
     }
 
     @Override
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "search_by_source_with_score"})
     public Page<LibraryDto> searchLibrariesBySource(String query, String source, Integer minScore, Pageable pageable) {
         log.debug("Поиск библиотек по запросу: {}, источнику: {} и минимальной оценке: {}", query, source, minScore);
         return libraryRepository.searchByNameAndSourceAndMinScore(query, source, minScore, pageable)
@@ -167,6 +177,7 @@ public class LibraryServiceImpl implements LibraryService {
     }
     
     @Override
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "get_by_source"})
     public Page<LibraryDto> getLibrariesBySource(String source, Pageable pageable) {
         log.debug("Получение библиотек по источнику: {}", source);
         return libraryRepository.findBySource(source, pageable)
@@ -174,6 +185,7 @@ public class LibraryServiceImpl implements LibraryService {
     }
 
     @Override
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "get_by_source_with_score"})
     public Page<LibraryDto> getLibrariesBySource(String source, Integer minScore, Pageable pageable) {
         log.debug("Получение библиотек по источнику: {} и минимальной оценке: {}", source, minScore);
         return libraryRepository.findBySourceAndHealthScoreGreaterThanEqual(source, minScore, pageable)
@@ -181,6 +193,7 @@ public class LibraryServiceImpl implements LibraryService {
     }
 
     @Override
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "get_all_with_score"})
     public Page<LibraryDto> getAllLibraries(Integer minScore, Pageable pageable) {
         log.debug("Получение всех библиотек с минимальной оценкой: {}", minScore);
         return libraryRepository.findByHealthScoreGreaterThanEqual(minScore, pageable)
@@ -188,12 +201,13 @@ public class LibraryServiceImpl implements LibraryService {
     }
     
     @Override
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "get_healthy"})
     public List<LibraryDto> getHealthyLibraries(Integer minScore) {
         log.debug("Получение библиотек с минимальной оценкой: {}", minScore);
         return libraryRepository.findByHealthScoreGreaterThanEqual(minScore)
                 .stream()
                 .map(libraryMapper::toDto)
-                .collect(Collectors.toList());
+            .toList();
     }
 
     private UpdateType determineUpdateType(String oldVersion, String newVersion) {
@@ -217,7 +231,7 @@ public class LibraryServiceImpl implements LibraryService {
 
         String[] tokens = version.split("\\.");
         for (int i = 0; i < Math.min(tokens.length, 3); i++) {
-            String numeric = tokens[i].replaceAll("[^0-9]", "");
+            String numeric = tokens[i].replaceAll("\\D", "");
             if (!numeric.isBlank()) {
                 try {
                     parts[i] = Integer.parseInt(numeric);
@@ -231,17 +245,12 @@ public class LibraryServiceImpl implements LibraryService {
 
     @Override
     @Transactional
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "update_moderation"})
     public LibraryDto updateModerationStatus(Long id, com.stackscout.dto.UpdateLibraryModerationRequest request) {
         log.info("Обновление статуса модерации для библиотеки: {}", id);
         @SuppressWarnings("null")
         Library library = libraryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Библиотека не найдена: " + id));
-        
-        // Обновление полей модерации
-        if (request != null && request.getModerationStatus() != null) {
-            // library.setModerationStatus(request.getModerationStatus());
-            // library.setModerationNotes(request.getModerationNotes());
-        }
         
         @SuppressWarnings("null")
         Library updated = libraryRepository.save(library);
@@ -250,6 +259,7 @@ public class LibraryServiceImpl implements LibraryService {
 
     @Override
     @Transactional
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "recalculate_health"})
     public LibraryDto recalculateHealthScore(Long id) {
         log.info("Пересчет Health Score для библиотеки: {}", id);
         @SuppressWarnings("null")
@@ -257,14 +267,13 @@ public class LibraryServiceImpl implements LibraryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Библиотека не найдена: " + id));
         
         log.debug("Пересчет health score для библиотеки: {}", library.getName());
-        // library.setHealthScore(calculateHealthScore(library));
-        
         Library updated = libraryRepository.save(library);
         return libraryMapper.toDto(updated);
     }
 
     @Override
     @Transactional
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "bulk_normalize_licenses"})
     public long bulkNormalizeLicenses() {
         log.info("Начало массовой нормализации лицензий");
         
@@ -289,6 +298,7 @@ public class LibraryServiceImpl implements LibraryService {
 
     @Override
     @Transactional
+    @Timed(value = "stackscout.library.operation", extraTags = {"operation", "remove_duplicates"})
     public long removeDuplicates() {
         log.info("Начало удаления дубликатов библиотек");
         

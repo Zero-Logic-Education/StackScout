@@ -7,6 +7,7 @@ import com.stackscout.exception.ResourceNotFoundException;
 import com.stackscout.model.ScanJob;
 import com.stackscout.repository.ScanJobRepository;
 import com.stackscout.service.ScanJobService;
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -19,7 +20,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Реализация сервиса для управления задачами сканирования.
@@ -34,6 +34,7 @@ public class ScanJobServiceImpl implements ScanJobService {
     private final ScanJobRepository scanJobRepository;
 
     @Override
+    @Timed(value = "stackscout.scan_job.operation", extraTags = {"operation", "get_all"})
     public Page<ScanJobDto> getAllScanJobs(Pageable pageable) {
         log.debug("Получение всех задач сканирования с пагинацией: {}", pageable);
         if (pageable == null) {
@@ -44,6 +45,7 @@ public class ScanJobServiceImpl implements ScanJobService {
     }
 
     @Override
+    @Timed(value = "stackscout.scan_job.operation", extraTags = {"operation", "get_by_id"})
     public ScanJobDto getScanJobById(Long id) {
         log.debug("Поиск задачи сканирования с ID: {}", id);
         if (id == null) {
@@ -56,6 +58,7 @@ public class ScanJobServiceImpl implements ScanJobService {
 
     @Override
     @Transactional
+    @Timed(value = "stackscout.scan_job.operation", extraTags = {"operation", "create"})
     public ScanJobDto createScanJob(CreateScanJobRequest request) {
         log.info("Создание новой задачи сканирования для источника: {}", request.getSource());
 
@@ -74,6 +77,7 @@ public class ScanJobServiceImpl implements ScanJobService {
 
     @Override
     @Transactional
+    @Timed(value = "stackscout.scan_job.operation", extraTags = {"operation", "update_status"})
     public ScanJobDto updateScanJobStatus(Long id, ScanJob.ScanStatus status) {
         log.info("Обновление статуса задачи {} на {}", id, status);
         if (id == null) {
@@ -101,6 +105,7 @@ public class ScanJobServiceImpl implements ScanJobService {
 
     @Override
     @Transactional
+    @Timed(value = "stackscout.scan_job.operation", extraTags = {"operation", "delete"})
     public void deleteScanJob(Long id) {
         log.info("Удаление задачи сканирования с ID: {}", id);
         if (id == null) {
@@ -116,6 +121,7 @@ public class ScanJobServiceImpl implements ScanJobService {
     }
 
     @Override
+    @Timed(value = "stackscout.scan_job.operation", extraTags = {"operation", "get_by_status"})
     public Page<ScanJobDto> getScanJobsByStatus(ScanJob.ScanStatus status, Pageable pageable) {
         log.debug("Получение задач по статусу: {}", status);
         return scanJobRepository.findByStatus(status, pageable)
@@ -123,6 +129,7 @@ public class ScanJobServiceImpl implements ScanJobService {
     }
 
     @Override
+    @Timed(value = "stackscout.scan_job.operation", extraTags = {"operation", "get_by_source"})
     public Page<ScanJobDto> getScanJobsBySource(String source, Pageable pageable) {
         log.debug("Получение задач по источнику: {}", source);
         return scanJobRepository.findBySource(source, pageable)
@@ -130,15 +137,17 @@ public class ScanJobServiceImpl implements ScanJobService {
     }
 
     @Override
+    @Timed(value = "stackscout.scan_job.operation", extraTags = {"operation", "get_recent_by_source"})
     public List<ScanJobDto> getRecentJobsBySource(String source, int limit) {
         log.debug("Получение последних {} задач для источника: {}", limit, source);
         return scanJobRepository.findRecentJobsBySource(source, PageRequest.of(0, limit))
                 .stream()
                 .map(this::toDto)
-                .collect(Collectors.toList());
+            .toList();
     }
 
     @Override
+    @Timed(value = "stackscout.scan_job.operation", extraTags = {"operation", "get_statistics"})
     public Map<String, Long> getStatusStatistics() {
         log.debug("Получение статистики по статусам");
         List<Object[]> stats = scanJobRepository.getStatusStatistics();

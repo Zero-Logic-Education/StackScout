@@ -6,6 +6,7 @@ import com.stackscout.dto.RegisterRequest;
 import com.stackscout.model.Role;
 import com.stackscout.model.User;
 import com.stackscout.repository.UserRepository;
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +24,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
+        @Timed(value = "stackscout.auth.operation", extraTags = {"operation", "register"})
     public AuthResponse register(RegisterRequest request) {
         Role role = request.getRole() == null ? Role.USER : request.getRole();
         User user = User.builder()
@@ -38,6 +40,7 @@ public class AuthService {
                 .build();
     }
 
+        @Timed(value = "stackscout.auth.operation", extraTags = {"operation", "login"})
     public AuthResponse authenticate(AuthenticationRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(

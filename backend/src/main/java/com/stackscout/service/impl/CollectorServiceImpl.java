@@ -7,6 +7,7 @@ import com.stackscout.messaging.CollectorProducer;
 import com.stackscout.service.*;
 import com.stackscout.source.SourceAdapter;
 import com.stackscout.source.SourceRegistryService;
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class CollectorServiceImpl implements CollectorService {
 
 	@Override
 	@Transactional
+	@Timed(value = "stackscout.collector.operation", extraTags = {"operation", "collect"})
 	public Library collect(String source, String name) {
 		log.info("Collecting metadata for package {} from {}", name, source);
 
@@ -63,6 +65,7 @@ public class CollectorServiceImpl implements CollectorService {
 	}
 
 	@Override
+	@Timed(value = "stackscout.collector.operation", extraTags = {"operation", "collect_bulk"})
 	public void collectBulk(String source, List<String> names) {
 		log.info("Queuing bulk scan for {} packages from {}", names.size(), source);
 		String normalizedSource = sourceRegistryService.normalize(source);

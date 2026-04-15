@@ -12,6 +12,7 @@ import com.stackscout.repository.LibraryRepository;
 import com.stackscout.repository.LibrarySubscriptionRepository;
 import com.stackscout.repository.UserRepository;
 import com.stackscout.service.SubscriptionService;
+import io.micrometer.core.annotation.Timed;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     @Transactional
+    @Timed(value = "stackscout.subscription.operation", extraTags = {"operation", "subscribe"})
     @SuppressWarnings("null")
     public LibrarySubscriptionDto subscribe(Long userId, CreateSubscriptionRequest request) {
         log.info("User {} subscribing to library {}", userId, request.getLibraryId());
@@ -68,6 +70,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     @Transactional
+    @Timed(value = "stackscout.subscription.operation", extraTags = {"operation", "unsubscribe"})
     public void unsubscribe(Long userId, Long libraryId) {
         log.info("User {} unsubscribing from library {}", userId, libraryId);
         
@@ -80,6 +83,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
+    @Timed(value = "stackscout.subscription.operation", extraTags = {"operation", "get_user_subscriptions"})
     public Page<LibrarySubscriptionDto> getUserSubscriptions(Long userId, Pageable pageable) {
         log.debug("Getting subscriptions for user {}", userId);
         
@@ -88,6 +92,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
+    @Timed(value = "stackscout.subscription.operation", extraTags = {"operation", "get_status"})
     public SubscriptionStatusDto getSubscriptionStatus(Long userId, Long libraryId) {
         log.debug("Getting subscription status for user {} and library {}", userId, libraryId);
         
@@ -103,6 +108,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     @Transactional
+    @Timed(value = "stackscout.subscription.operation", extraTags = {"operation", "update"})
     public LibrarySubscriptionDto updateSubscription(Long userId, Long libraryId, UpdateSubscriptionRequest request) {
         log.info("Updating subscription for user {} and library {}", userId, libraryId);
         

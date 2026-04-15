@@ -24,7 +24,7 @@ scrape_configs:
 
   # Spring Boot Application (StackScout Backend)
   - job_name: 'stackscout-backend'
-    metrics_path: '/api/v1/actuator/prometheus'
+    metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: ['app:8081']
     scrape_interval: 30s
