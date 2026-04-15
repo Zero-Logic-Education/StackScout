@@ -1,59 +1,85 @@
-name: CD
+name: Deploy
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types:
+      - completed
   workflow_dispatch:
 
-concurrency:
-  group: cd-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_BACKEND: ${{ github.repository }}/backend
+  IMAGE_NAME_FRONTEND: ${{ github.repository }}/frontend
 
 jobs:
-  publish-images:
-    name: Build and publish Docker images
+  deploy:
+    name: Build & Push Docker Images
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
     permissions:
       contents: read
       packages: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Setup Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Normalize owner name
-        run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
-        shell: bash
-
-      - name: Login to GHCR
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push backend image
-        uses: docker/build-push-action@v6
+      - name: Extract metadata (Backend)
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile
+          file: Dockerfile
           push: true
-          tags: |
-            ghcr.io/${{ env.OWNER_LC }}/stackscout-app:${{ github.ref_name }}
-            ghcr.io/${{ env.OWNER_LC }}/stackscout-app:latest
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Build and push frontend image
-        uses: docker/build-push-action@v6
+      - name: Extract metadata (Frontend)
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v5
         with:
           context: ./frontend
-          file: ./frontend/Dockerfile
+          file: frontend/Dockerfile
           push: true
-          build-args: |
-            NEXT_PUBLIC_API_URL=http://localhost:8081/api/v1
-          tags: |
-            ghcr.io/${{ env.OWNER_LC }}/stackscout-frontend:${{ github.ref_name }}
-            ghcr.io/${{ env.OWNER_LC }}/stackscout-frontend:latest
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deployment Summary
+        run: |
+          echo "✅ Docker images pushed to GitHub Container Registry"
+          echo "Backend: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest"
+          echo "Frontend: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest"
