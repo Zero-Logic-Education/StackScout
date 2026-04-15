@@ -219,3 +219,29 @@ pnpm docker:down
 pnpm docker:logs -- frontend
 pnpm docker:logs -- app
 ```
+
+---
+
+## Статус проекта
+
+StackScout находится в рабочем состоянии и включает:
+
+- CI/CD через GitHub Actions;
+- backend и frontend тесты;
+- нагрузочное тестирование через `k6`;
+- мониторинг через Prometheus и Grafana;
+- Docker Compose для локального запуска;
+- русскоязычный отчет по нагрузочному тестированию в [load-tests/report.md](load-tests/report.md).
+
+### Полезные команды
+
+```bash
+# Нагрузочный тест API
+npm run load:api
+
+# Нагрузочный тест поиска
+npm run load:search
+
+# Нагрузочный тест admin/scraper endpoint'ов
+npm run load:scraper
+```
