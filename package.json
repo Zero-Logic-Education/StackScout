@@ -6,6 +6,9 @@
     "docker:up": "docker compose up -d",
     "docker:up:build": "docker compose up -d --build",
     "docker:down": "docker compose down",
-    "docker:logs": "docker compose logs -f"
+    "docker:logs": "docker compose logs -f",
+    "load:api": "k6 run load-tests/k6/api-load-test.js",
+    "load:search": "k6 run load-tests/k6/search-stress.js",
+    "load:scraper": "k6 run load-tests/k6/scraper-stress.js"
   }
 }
