@@ -11,7 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.TestWithSecurityContext;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -37,7 +37,7 @@ class AdminLibraryControllerTest {
     private LibraryService libraryService;
 
     @Test
-    @TestWithSecurityContext
+    @WithMockUser
     void getAllLibraries_ShouldReturnPagedResponse() throws Exception {
         // Given
         LibraryDto library = createTestLibrary();
@@ -56,7 +56,7 @@ class AdminLibraryControllerTest {
     }
 
     @Test
-    @TestWithSecurityContext
+    @WithMockUser
     void createLibrary_ShouldReturnCreatedLibrary() throws Exception {
         // Given
         CreateLibraryRequest request = new CreateLibraryRequest();
@@ -82,7 +82,7 @@ class AdminLibraryControllerTest {
     }
 
     @Test
-    @TestWithSecurityContext
+    @WithMockUser
     void updateLibrary_ShouldReturnUpdatedLibrary() throws Exception {
         // Given
         UpdateLibraryRequest request = new UpdateLibraryRequest();
@@ -102,7 +102,7 @@ class AdminLibraryControllerTest {
     }
 
     @Test
-    @TestWithSecurityContext
+    @WithMockUser
     void deleteLibrary_ShouldReturnSuccessMessage() throws Exception {
         // Given
         // (service method will be called)
@@ -115,7 +115,7 @@ class AdminLibraryControllerTest {
     }
 
     @Test
-    @TestWithSecurityContext
+    @WithMockUser
     void updateModerationStatus_ShouldReturnUpdatedLibrary() throws Exception {
         // Given
         UpdateLibraryModerationRequest request = new UpdateLibraryModerationRequest();

@@ -183,7 +183,7 @@ class SubscriptionServiceImplTest {
         SubscriptionStatusDto result = subscriptionService.getSubscriptionStatus(1L, 1L);
 
         // Then
-        assertTrue(result.isSubscribed());
+        assertTrue(result.getIsSubscribed());
         assertEquals(5L, result.getSubscribersCount());
         assertTrue(result.getNotificationsEnabled());
     }
@@ -195,7 +195,7 @@ class SubscriptionServiceImplTest {
 
         SubscriptionStatusDto result = subscriptionService.getSubscriptionStatus(1L, 1L);
 
-        assertFalse(result.isSubscribed());
+        assertFalse(result.getIsSubscribed());
         assertEquals(3L, result.getSubscribersCount());
     }
 
