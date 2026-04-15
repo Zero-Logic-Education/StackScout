@@ -1,7 +1,9 @@
 package com.stackscout.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.stackscout.config.JwtAuthenticationFilter;
 import com.stackscout.dto.*;
+import com.stackscout.source.SourceRegistryService;
 import com.stackscout.service.AuthService;
 import com.stackscout.service.LibraryService;
 import org.junit.jupiter.api.Test;
@@ -37,6 +39,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test
     void register_ShouldReturnAuthResponse() throws Exception {
@@ -89,11 +94,14 @@ class LibraryControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @MockitoBean
     private LibraryService libraryService;
+
+    @MockitoBean
+    private SourceRegistryService sourceRegistryService;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test
     void getAllLibraries_ShouldReturnPagedResponse() throws Exception {
@@ -143,6 +151,7 @@ class LibraryControllerTest {
         LibraryDto library = createTestLibrary();
         Page<LibraryDto> page = new PageImpl<>(List.of(library), PageRequest.of(0, 10), 1);
 
+        when(sourceRegistryService.normalize("pypi")).thenReturn("pypi");
         when(libraryService.getLibrariesBySource(eq("pypi"), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/libraries/search")
@@ -155,14 +164,15 @@ class LibraryControllerTest {
     void getHealthyLibraries_ShouldReturnFilteredByMinScore() throws Exception {
         LibraryDto library = createTestLibrary();
         library.setHealthScore(85);
+        Page<LibraryDto> page = new PageImpl<>(List.of(library), PageRequest.of(0, 10), 1);
 
-        when(libraryService.getHealthyLibraries(80)).thenReturn(List.of(library));
+        when(libraryService.getAllLibraries(eq(80), any())).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/libraries/healthy")
-                        .param("minScore", "80"))
+        mockMvc.perform(get("/api/v1/libraries/search")
+                .param("minHealthScore", "80"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("requests"))
-                .andExpect(jsonPath("$[0].healthScore").value(85));
+            .andExpect(jsonPath("$.libraries[0].name").value("requests"))
+            .andExpect(jsonPath("$.libraries[0].healthScore").value(85));
     }
 
     @Test
