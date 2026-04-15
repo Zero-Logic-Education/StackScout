@@ -7,7 +7,7 @@ spring:
     name: StackScout
 
   profiles:
-    active: dev
+    default: dev
 
   # Настройки подключения к базе данных PostgreSQL
   datasource:

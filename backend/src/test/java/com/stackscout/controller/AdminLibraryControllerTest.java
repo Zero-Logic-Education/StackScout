@@ -6,6 +6,7 @@ import com.stackscout.dto.*;
 import com.stackscout.service.LibraryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -27,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Integration тесты для AdminLibraryController
  */
 @WebMvcTest(AdminLibraryController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class AdminLibraryControllerTest {
 
     @Autowired
