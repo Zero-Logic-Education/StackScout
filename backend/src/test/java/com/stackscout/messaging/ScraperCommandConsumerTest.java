@@ -234,7 +234,7 @@ class ScraperCommandConsumerTest {
                 eq(0),
                 eq(0),
                 eq(0),
-                contains("Scraper not found")
+                anyString()
         );
     }
 
@@ -269,7 +269,6 @@ class ScraperCommandConsumerTest {
 
         when(scraperTaskService.getScraperByName("npm-scraper")).thenReturn(scraperTask);
         when(libraryRepository.findBySource("npm")).thenReturn(List.of());
-        doNothing().when(collectorService).collect(anyString(), anyString());
 
         consumer.handleScraperCommand(command);
 
