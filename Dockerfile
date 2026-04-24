@@ -1,19 +1,18 @@
 # Build stage
-FROM gradle:8-jdk21-alpine AS build
+FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 
 # Копируем только файлы для разрешения зависимостей
 COPY settings.gradle.kts ./
+COPY gradlew ./
+COPY gradle/wrapper ./gradle/wrapper
 COPY backend/build.gradle.kts backend/gradle.properties ./backend/
-
-# Скачиваем зависимости (кешируется отдельным слоем)
-RUN cd backend && gradle dependencies --no-daemon || true
 
 # Копируем исходный код
 COPY backend/src ./backend/src
 
 # Собираем приложение
-RUN cd backend && gradle build -x test --no-daemon
+RUN chmod +x ./gradlew && ./gradlew build -x test --no-daemon
 
 # Run stage
 FROM eclipse-temurin:21-jre-alpine

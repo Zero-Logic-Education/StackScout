@@ -157,7 +157,7 @@
       },
       "targets": [
         {
-          "expr": "topk(10, rate(http_server_requests_seconds_count{job=\"stackscout-backend\",status=~\"5..\"}[5m]) / rate(http_server_requests_seconds_count{job=\"stackscout-backend\"}[5m]))",
+          "expr": "topk(10, ((sum by (uri, method) (rate(http_server_requests_seconds_count{job=\"stackscout-backend\",status=~\"5..\"}[5m])) / clamp_min(sum by (uri, method) (rate(http_server_requests_seconds_count{job=\"stackscout-backend\"}[5m])), 0.001)) or on (uri, method) (sum by (uri, method) (rate(http_server_requests_seconds_count{job=\"stackscout-backend\"}[5m])) * 0)))",
           "format": "table",
           "instant": true,
           "refId": "A"
@@ -344,8 +344,8 @@
       },
       "targets": [
         {
-          "expr": "sum by (status) (rate(http_server_requests_seconds_count{job=\"stackscout-backend\",status=~\"4..|5..\"}[5m]))",
-          "legendFormat": "{{status}}",
+          "expr": "(sum by (status_class) (label_replace(rate(http_server_requests_seconds_count{job=\"stackscout-backend\",status=~\"4..|5..\"}[5m]), \"status_class\", \"$1xx\", \"status\", \"([45])..\")) or label_replace(vector(0), \"status_class\", \"4xx\", \"\", \"\") or label_replace(vector(0), \"status_class\", \"5xx\", \"\", \"\"))",
+          "legendFormat": "{{status_class}}",
           "refId": "A"
         }
       ],

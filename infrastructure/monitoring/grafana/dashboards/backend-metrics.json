@@ -86,7 +86,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "rate(http_requests_total[5m])",
+          "expr": "rate(http_server_requests_seconds_count{job=\"stackscout-backend\"}[5m])",
           "refId": "A"
         }
       ],
@@ -139,7 +139,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "http_requests_total",
+          "expr": "sum(increase(http_server_requests_seconds_count{job=\"stackscout-backend\"}[24h]))",
           "refId": "A"
         }
       ],
@@ -296,7 +296,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "jvm_threads_current",
+          "expr": "jvm_threads_live_threads{job=\"stackscout-backend\"}",
           "legendFormat": "Active Threads",
           "refId": "A"
         }

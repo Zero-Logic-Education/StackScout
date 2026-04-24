@@ -26,7 +26,13 @@ groups:
 
       # High Error Rate
       - alert: HighErrorRate
-        expr: rate(http_server_requests_seconds_count{job="stackscout-backend",status=~"5.."}[5m]) > 0.05
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{job="stackscout-backend",status=~"5.."}[5m])) /
+            clamp_min(sum(rate(http_server_requests_seconds_count{job="stackscout-backend"}[5m])), 0.001)
+          ) > 0.05
+          and
+          sum(rate(http_server_requests_seconds_count{job="stackscout-backend"}[5m])) > 0.1
         for: 5m
         labels:
           severity: warning
@@ -121,8 +127,10 @@ groups:
         expr: |
           (
             sum(rate(http_server_requests_seconds_count{job="stackscout-backend",status=~"5.."}[30d])) /
-            sum(rate(http_server_requests_seconds_count{job="stackscout-backend"}[30d]))
+            clamp_min(sum(rate(http_server_requests_seconds_count{job="stackscout-backend"}[30d])), 0.001)
           ) > 0.001
+          and
+          sum(increase(http_server_requests_seconds_count{job="stackscout-backend"}[30d])) > 1000
         for: 1h
         labels:
           severity: critical
@@ -134,7 +142,10 @@ groups:
 
       # Availability SLO
       - alert: AvailabilitySLOBreach
-        expr: avg_over_time(up{job="stackscout-backend"}[1h]) < 0.999
+        expr: |
+          avg_over_time(up{job="stackscout-backend"}[1h]) < 0.999
+          and
+          count_over_time(up{job="stackscout-backend"}[1h]) >= 100
         for: 5m
         labels:
           severity: critical

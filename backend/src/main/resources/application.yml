@@ -63,6 +63,9 @@ management:
   metrics:
     tags:
       application: StackScout
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
 
 # Custom application properties
 # JWT Configuration

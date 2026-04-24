@@ -2,7 +2,7 @@ services:
   # Основная база данных приложения
   postgres:
     image: postgres:16-alpine
-    container_name: stackscout-postgres
+    container_name: postgres
     environment:
       POSTGRES_DB: stackscout
       POSTGRES_USER: postgres
@@ -21,7 +21,7 @@ services:
   # Кэш и хранилище сессий (опционально)
   redis:
     image: redis:7-alpine
-    container_name: stackscout-redis
+    container_name: redis
     ports:
       - "6379:6379"
     volumes:
@@ -36,7 +36,7 @@ services:
   # Брокер сообщений для асинхронных задач
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: stackscout-rabbitmq
+    container_name: rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -58,7 +58,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:8081/api/v1
-    container_name: stackscout-frontend
+    container_name: frontend
     ports:
       - "3000:3000"
     environment:
@@ -79,7 +79,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: stackscout-app
+    container_name: app
     ports:
       - "8081:8081"
     environment:
@@ -111,7 +111,7 @@ services:
   # PostgreSQL Exporter для метрик БД
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:latest
-    container_name: stackscout-postgres-exporter
+    container_name: postgres-exporter
     environment:
       DATA_SOURCE_NAME: "postgresql://postgres:postgres@postgres:5432/stackscout?sslmode=disable"
     ports:
@@ -124,7 +124,7 @@ services:
   # Redis Exporter для метрик кэша
   redis-exporter:
     image: oliver006/redis_exporter:latest
-    container_name: stackscout-redis-exporter
+    container_name: redis-exporter
     environment:
       REDIS_ADDR: "redis:6379"
     ports:
@@ -137,7 +137,7 @@ services:
   # Blackbox Exporter для synthetic monitoring
   blackbox-exporter:
     image: prom/blackbox-exporter:latest
-    container_name: stackscout-blackbox-exporter
+    container_name: blackbox-exporter
     ports:
       - "9115:9115"
     volumes:
@@ -149,7 +149,7 @@ services:
   # Мониторинг метрик
   prometheus:
     image: prom/prometheus:latest
-    container_name: stackscout-prometheus
+    container_name: prometheus
     ports:
       - "9090:9090"
     volumes:
@@ -169,7 +169,7 @@ services:
   # Визуализация метрик
   grafana:
     image: grafana/grafana:latest
-    container_name: stackscout-grafana
+    container_name: grafana
     ports:
       - "3001:3000"
     volumes:
