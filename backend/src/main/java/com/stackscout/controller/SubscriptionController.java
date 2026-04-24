@@ -82,16 +82,20 @@ public class SubscriptionController {
             @RequestParam(defaultValue = "subscribedAt") String sortBy,
             @RequestParam(defaultValue = "DESC") String sortDirection,
             Authentication authentication) {
-        
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
+            return ResponseEntity.ok(Page.empty());
+        }
+
         User user = (User) authentication.getPrincipal();
-        
-        Sort sort = sortDirection.equalsIgnoreCase("ASC") 
-                ? Sort.by(sortBy).ascending() 
+
+        Sort sort = sortDirection.equalsIgnoreCase("ASC")
+                ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
-        
+
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<LibrarySubscriptionDto> subscriptions = subscriptionService.getUserSubscriptions(user.getId(), pageable);
-        
+
         return ResponseEntity.ok(subscriptions);
     }
 

@@ -245,3 +245,27 @@ npm run load:search
 # Нагрузочный тест admin/scraper endpoint'ов
 npm run load:scraper
 ```
+---
+
+## Мониторинг
+
+StackScout включает полноценную систему мониторинга на базе Prometheus и Grafana:
+
+- **Prometheus**: http://localhost:9090 - сбор метрик
+- **Grafana**: http://localhost:3001 (admin/admin) - визуализация
+- **Метрики приложения**: http://localhost:8081/actuator/prometheus
+
+### Что мониторится
+
+- Backend API (request rate, response time, errors)
+- JVM (memory, GC, threads)
+- PostgreSQL (connections, transactions, performance)
+- Redis (clients, operations, cache hit rate)
+- RabbitMQ (queues, messages, consumers)
+
+### Дашборды
+
+После входа в Grafana перейдите в **Dashboards → StackScout → StackScout System Overview**
+
+Подробная документация: [infrastructure/monitoring/README.md](infrastructure/monitoring/README.md)
+

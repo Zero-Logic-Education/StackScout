@@ -4,8 +4,7 @@ WORKDIR /app
 
 # Копируем только файлы для разрешения зависимостей
 COPY settings.gradle.kts ./
-COPY backend/build.gradle.kts ./backend/
-COPY backend/gradle.properties ./backend/
+COPY backend/build.gradle.kts backend/gradle.properties ./backend/
 
 # Скачиваем зависимости (кешируется отдельным слоем)
 RUN cd backend && gradle dependencies --no-daemon || true
@@ -28,7 +27,7 @@ RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
 # Копируем JAR файл
-COPY --from=build /app/backend/build/libs/*.jar app.jar
+COPY --from=build /app/backend/build/libs/*-SNAPSHOT.jar app.jar
 
 EXPOSE 8081
 

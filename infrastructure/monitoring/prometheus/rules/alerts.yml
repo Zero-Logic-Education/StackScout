@@ -1,0 +1,282 @@
+groups:
+  - name: stackscout_alerts
+    interval: 30s
+    rules:
+      # Application Health
+      - alert: ApplicationDown
+        expr: up{job="stackscout-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: backend
+        annotations:
+          summary: "StackScout Backend is down"
+          description: "Backend application has been down for more than 1 minute"
+
+      # High Response Time
+      - alert: HighResponseTime
+        expr: http_server_requests_seconds_sum{job="stackscout-backend"} / http_server_requests_seconds_count{job="stackscout-backend"} > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: backend
+        annotations:
+          summary: "High API response time"
+          description: "Average response time is above 1 second for 5 minutes"
+
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: rate(http_server_requests_seconds_count{job="stackscout-backend",status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: backend
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 5% for 5 minutes"
+
+      # Database Connection Pool
+      - alert: DatabaseConnectionPoolLow
+        expr: hikaricp_connections_active{job="stackscout-backend"} / hikaricp_connections{job="stackscout-backend"} > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Database connection pool usage is high"
+          description: "Connection pool usage is above 80% for 5 minutes"
+
+      # PostgreSQL Down
+      - alert: PostgresDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database has been down for more than 1 minute"
+
+      # Redis Down
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: cache
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache has been down for more than 1 minute"
+
+      # RabbitMQ Down
+      - alert: RabbitMQDown
+        expr: up{job="rabbitmq"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: queue
+        annotations:
+          summary: "RabbitMQ is down"
+          description: "RabbitMQ message broker has been down for more than 1 minute"
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: jvm_memory_used_bytes{job="stackscout-backend",area="heap"} / jvm_memory_max_bytes{job="stackscout-backend",area="heap"} > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: backend
+        annotations:
+          summary: "High JVM memory usage"
+          description: "JVM heap memory usage is above 90% for 5 minutes"
+
+      # RabbitMQ Queue Size
+      - alert: RabbitMQHighQueueSize
+        expr: rabbitmq_queue_messages{job="rabbitmq"} > 1000
+        for: 10m
+        labels:
+          severity: warning
+          component: queue
+        annotations:
+          summary: "RabbitMQ queue size is high"
+          description: "Queue has more than 1000 messages for 10 minutes"
+
+  - name: slo_alerts
+    interval: 30s
+    rules:
+      # Latency SLO (99th percentile should be < 1s)
+      - alert: LatencySLOBreach
+        expr: histogram_quantile(0.99, rate(http_server_requests_seconds_bucket{job="stackscout-backend"}[5m])) > 1
+        for: 10m
+        labels:
+          severity: warning
+          component: backend
+          slo: latency
+        annotations:
+          summary: "API latency SLO breach"
+          description: "99th percentile latency is above 1 second for 10 minutes"
+
+      # Error Budget (99.9% availability = 0.1% error budget)
+      - alert: ErrorBudgetExhausted
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{job="stackscout-backend",status=~"5.."}[30d])) /
+            sum(rate(http_server_requests_seconds_count{job="stackscout-backend"}[30d]))
+          ) > 0.001
+        for: 1h
+        labels:
+          severity: critical
+          component: backend
+          slo: availability
+        annotations:
+          summary: "Error budget exhausted"
+          description: "Error rate exceeds 0.1% over 30 days - SLA at risk"
+
+      # Availability SLO
+      - alert: AvailabilitySLOBreach
+        expr: avg_over_time(up{job="stackscout-backend"}[1h]) < 0.999
+        for: 5m
+        labels:
+          severity: critical
+          component: backend
+          slo: availability
+        annotations:
+          summary: "Availability SLO breach"
+          description: "Service availability below 99.9% in the last hour"
+
+  - name: anomaly_detection
+    interval: 1m
+    rules:
+      # Error Rate Spike (3x normal rate)
+      - alert: ErrorRateAnomaly
+        expr: |
+          rate(http_server_requests_seconds_count{job="stackscout-backend",status=~"5.."}[5m]) >
+          (avg_over_time(rate(http_server_requests_seconds_count{job="stackscout-backend",status=~"5.."}[1h])[1d:1h]) * 3)
+        for: 5m
+        labels:
+          severity: warning
+          component: backend
+          type: anomaly
+        annotations:
+          summary: "Anomalous error rate spike detected"
+          description: "Error rate is 3x higher than daily average"
+
+      # Traffic Spike
+      - alert: TrafficSpike
+        expr: |
+          rate(http_server_requests_seconds_count{job="stackscout-backend"}[5m]) >
+          (avg_over_time(rate(http_server_requests_seconds_count{job="stackscout-backend"}[1h])[1d:1h]) * 5)
+        for: 10m
+        labels:
+          severity: info
+          component: backend
+          type: anomaly
+        annotations:
+          summary: "Unusual traffic spike detected"
+          description: "Request rate is 5x higher than daily average"
+
+      # Latency Spike
+      - alert: LatencySpike
+        expr: |
+          histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job="stackscout-backend"}[5m])) >
+          (avg_over_time(histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job="stackscout-backend"}[5m]))[1h:5m]) * 2)
+        for: 10m
+        labels:
+          severity: warning
+          component: backend
+          type: anomaly
+        annotations:
+          summary: "Latency spike detected"
+          description: "P95 latency is 2x higher than hourly average"
+
+  - name: resource_leaks
+    interval: 1m
+    rules:
+      # Memory Leak Detection
+      - alert: MemoryLeakSuspected
+        expr: |
+          deriv(jvm_memory_used_bytes{job="stackscout-backend",area="heap"}[30m]) > 1048576 and
+          (jvm_memory_used_bytes{job="stackscout-backend",area="heap"} / jvm_memory_max_bytes{job="stackscout-backend",area="heap"}) > 0.8
+        for: 1h
+        labels:
+          severity: warning
+          component: backend
+          type: leak
+        annotations:
+          summary: "Potential memory leak detected"
+          description: "Heap memory growing steadily (>1MB/30min) and usage above 80%"
+
+      # Connection Leak Detection
+      - alert: ConnectionLeakSuspected
+        expr: |
+          hikaricp_connections_active{job="stackscout-backend"} > 5 and
+          deriv(hikaricp_connections_active{job="stackscout-backend"}[10m]) > 0
+        for: 30m
+        labels:
+          severity: warning
+          component: database
+          type: leak
+        annotations:
+          summary: "Potential connection leak detected"
+          description: "Active connections growing steadily for 30 minutes"
+
+      # Thread Leak Detection
+      - alert: ThreadLeakSuspected
+        expr: deriv(jvm_threads_live_threads{job="stackscout-backend"}[30m]) > 1
+        for: 1h
+        labels:
+          severity: warning
+          component: backend
+          type: leak
+        annotations:
+          summary: "Potential thread leak detected"
+          description: "Thread count growing steadily for 1 hour"
+
+  - name: performance_degradation
+    interval: 30s
+    rules:
+      # GC Pressure
+      - alert: HighGCPressure
+        expr: rate(jvm_gc_pause_seconds_sum{job="stackscout-backend"}[5m]) / rate(jvm_gc_pause_seconds_count{job="stackscout-backend"}[5m]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          component: backend
+        annotations:
+          summary: "High GC pressure detected"
+          description: "Average GC pause time above 100ms for 10 minutes"
+
+      # Database Slow Queries
+      - alert: SlowDatabaseQueries
+        expr: rate(hikaricp_connections_acquire_seconds_sum{job="stackscout-backend"}[5m]) / rate(hikaricp_connections_acquire_seconds_count{job="stackscout-backend"}[5m]) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Average connection acquire time above 500ms"
+
+      # Redis Slow Operations
+      - alert: RedisSlowOperations
+        expr: redis_commands_duration_seconds_total{job="redis"} / redis_commands_processed_total{job="redis"} > 0.01
+        for: 10m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Redis operations are slow"
+          description: "Average Redis command duration above 10ms"
+
+      # Cache Miss Rate High
+      - alert: HighCacheMissRate
+        expr: |
+          rate(redis_keyspace_misses_total{job="redis"}[5m]) /
+          (rate(redis_keyspace_hits_total{job="redis"}[5m]) + rate(redis_keyspace_misses_total{job="redis"}[5m])) > 0.5
+        for: 15m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "High cache miss rate"
+          description: "Cache miss rate above 50% for 15 minutes"

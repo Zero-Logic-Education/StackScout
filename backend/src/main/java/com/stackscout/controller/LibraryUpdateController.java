@@ -100,17 +100,25 @@ public class LibraryUpdateController {
     @GetMapping("/stats")
     @Operation(summary = "Получить статистику обновлений")
     public ResponseEntity<Map<String, Object>> getUpdateStats(Authentication authentication) {
-        User user = (User) authentication.getPrincipal();
-        
-        // Получаем последние обновления за разные периоды
-        List<LibraryUpdateDto> last7Days = updateService.getRecentUpdatesForUser(user.getId(), 7);
-        List<LibraryUpdateDto> last30Days = updateService.getRecentUpdatesForUser(user.getId(), 30);
-        
         Map<String, Object> stats = new HashMap<>();
-        stats.put("last7Days", last7Days.size());
-        stats.put("last30Days", last30Days.size());
-        stats.put("recentUpdates", last7Days);
-        
+
+        if (authentication != null && authentication.getPrincipal() instanceof User) {
+            User user = (User) authentication.getPrincipal();
+
+            // Получаем последние обновления за разные периоды для пользователя
+            List<LibraryUpdateDto> last7Days = updateService.getRecentUpdatesForUser(user.getId(), 7);
+            List<LibraryUpdateDto> last30Days = updateService.getRecentUpdatesForUser(user.getId(), 30);
+
+            stats.put("last7Days", last7Days.size());
+            stats.put("last30Days", last30Days.size());
+            stats.put("recentUpdates", last7Days);
+        } else {
+            // Для неавторизованных пользователей возвращаем общую статистику
+            stats.put("last7Days", 0);
+            stats.put("last30Days", 0);
+            stats.put("recentUpdates", List.of());
+        }
+
         return ResponseEntity.ok(stats);
     }
 }
