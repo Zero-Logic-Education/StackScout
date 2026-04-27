@@ -85,23 +85,7 @@ export default function AboutPage() {
             Актуальная платформа для анализа и мониторинга Open Source библиотек с фокусом
             на безопасность, лицензии и управляемость зависимостей
           </Typography>
-          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
-            <Link
-              href="https://github.com/Zero-Logic-Education/StackScout.git"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ textDecoration: 'none' }}
-            >
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={<GitHub />}
-                sx={{ px: 4, py: 1.5, fontWeight: 700 }}
-              >
-                Перейти в репозиторий
-              </Button>
-            </Link>
-          </Box>
+          
         </Box>
 
         {/* Mission */}
